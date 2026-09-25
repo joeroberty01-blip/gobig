@@ -1,0 +1,1063 @@
+// GO BIG schema (Phases 1–2). See docs/PHASE-0-ARCHITECTURE.md §2 for the full entity map;
+// entities for later phases are deliberately absent until their phase.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Locale {
+  sw
+  en
+}
+
+enum ProviderStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  SUSPENDED
+}
+
+enum ProviderMemberRole {
+  OWNER
+  STAFF
+}
+
+enum LocationType {
+  COUNTRY
+  REGION
+  DISTRICT
+  WARD
+  NEIGHBOURHOOD
+}
+
+/// How much of a provider's position the public may see (ADR-006).
+enum LocationVisibility {
+  EXACT
+  APPROXIMATE
+  AREA_ONLY
+}
+
+/// ON_QUOTE = no price published; shown as "Ask for price", never estimated (ADR-005).
+enum PriceType {
+  FIXED
+  FROM
+  RANGE
+  HOURLY
+  ON_QUOTE
+}
+
+enum OpeningHoursMode {
+  SCHEDULE
+  ALWAYS_OPEN
+  BY_APPOINTMENT
+}
+
+enum MediaKind {
+  LOGO
+  COVER
+  GALLERY
+}
+
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+  X
+  YOUTUBE
+  LINKEDIN
+}
+
+/// Ways a customer can reach a provider; the provider picks which ones appear (Phases 2 & 6).
+enum ConnectAction {
+  CALL
+  WHATSAPP
+  WEBSITE
+  EMAIL
+  DIRECTIONS
+  BOOK_SERVICE
+  BOOK_RIDE
+  REQUEST_QUOTE
+  MESSAGE
+}
+
+/// Where a contact button was tapped.
+enum ConnectSource {
+  PROFILE
+  CARD
+  MAP
+}
+
+model User {
+  id                String     @id @default(cuid())
+  name              String
+  /// Lower-cased. At least one of email / phone is required (enforced in lib/validators).
+  email             String?    @unique
+  /// Digits only, international form without "+", e.g. 255712345678.
+  phone             String?    @unique
+  passwordHash      String
+  role              Role       @default(CUSTOMER)
+  status            UserStatus @default(ACTIVE)
+  locale            Locale     @default(sw)
+  /// Sessions issued before this moment are rejected by proxy.ts (set on password reset).
+  passwordChangedAt DateTime   @default(now())
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  deletedAt         DateTime?
+
+  memberships         ProviderMember[]
+  passwordResetTokens PasswordResetToken[]
+  reviews             Review[]              @relation("ReviewAuthor")
+  reviewResponses     ReviewResponse[]      @relation("ReviewResponder")
+  reviewReports       ReviewReport[]        @relation("ReviewReporter")
+  resolvedReports     ReviewReport[]        @relation("ReportResolver")
+  verificationReviews VerificationRequest[] @relation("VerificationReviewer")
+  serviceRequests     ServiceRequest[]      @relation("RequestCustomer")
+  messagesSent        Message[]             @relation("MessageSender")
+  notifications       Notification[]        @relation("NotificationUser")
+  favorites           Favorite[]
+  reportsFiled        Report[]              @relation("ReportFiler")
+
+  @@index([role, status])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  /// SHA-256 of the token; the raw token only ever exists in the link sent to the user.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+/// The business. Holds state only admins (or the system) change: status, publishing.
+model Provider {
+  id                  String         @id @default(cuid())
+  slug                String         @unique
+  status              ProviderStatus @default(DRAFT)
+  publishedAt         DateTime?
+  /// Admin-controlled (approval of a VerificationRequest). Never writable by the provider.
+  verificationLevelId String?
+  verifiedAt          DateTime?
+  /// Denormalised from PUBLISHED reviews inside the same transaction as any review change.
+  ratingCount         Int            @default(0)
+  ratingAvg           Float?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  deletedAt           DateTime?
+
+  profile              ProviderProfile?
+  members              ProviderMember[]
+  services             ProviderService[]
+  serviceAreas         ProviderServiceArea[]
+  openingHours         ProviderOpeningHours[]
+  media                MediaAsset[]
+  socialLinks          ProviderSocialLink[]
+  verificationLevel    VerificationLevel?     @relation(fields: [verificationLevelId], references: [id], onDelete: SetNull)
+  verificationRequests VerificationRequest[]
+  reviews              Review[]
+  connectEvents        ConnectEvent[]
+  requestsTargeted     ServiceRequest[]       @relation("RequestTarget")
+  requestsAccepted     ServiceRequest[]       @relation("RequestAccepted")
+  requestMatches       RequestMatch[]
+  quotes               Quote[]
+  metrics              ProviderMetric[]
+  favoritedBy          Favorite[]
+  subscriptions        Subscription[]
+  campaigns            FeaturedCampaign[]
+  payments             Payment[]
+  reports              Report[]
+
+  @@index([status])
+}
+
+/// Who can act for a provider. One OWNER per provider; STAFF reserved for later.
+model ProviderMember {
+  id         String             @id @default(cuid())
+  providerId String
+  userId     String
+  role       ProviderMemberRole @default(OWNER)
+  createdAt  DateTime           @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, userId])
+  @@index([userId])
+}
+
+/// Public content the provider edits. Split from Provider so provider forms can never
+/// touch admin-controlled fields (ADR-003).
+model ProviderProfile {
+  id                 String             @id @default(cuid())
+  providerId         String             @unique
+  displayName        String
+  description        String?
+  phone              String?
+  whatsapp           String?
+  email              String?
+  website            String?
+  /// Provider's own booking page / app link for BOOK_SERVICE and BOOK_RIDE (http/https only).
+  bookingUrl         String?
+  rideUrl            String?
+  addressText        String?
+  primaryLocationId  String?
+  primaryCategoryId  String?
+  /// Exact position; never sent to the client as-is unless locationVisibility = EXACT.
+  latitude           Decimal?           @db.Decimal(9, 6)
+  longitude          Decimal?           @db.Decimal(9, 6)
+  locationVisibility LocationVisibility @default(AREA_ONLY)
+  /// How far the provider travels from their location, in km (Phase 4). Null = not set.
+  serviceRadiusKm    Int?
+  openingHoursMode   OpeningHoursMode   @default(SCHEDULE)
+  /// Free text shown under the hours, e.g. "Emergency call-outs any time".
+  hoursNote          String?
+  enabledActions     ConnectAction[]    @default([])
+  /// Last onboarding step the provider reached; lets the wizard resume where they left off.
+  onboardingStep     Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  provider        Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  primaryLocation Location? @relation(fields: [primaryLocationId], references: [id], onDelete: SetNull)
+  primaryCategory Category? @relation(fields: [primaryCategoryId], references: [id], onDelete: SetNull)
+
+  @@index([primaryLocationId])
+  @@index([primaryCategoryId])
+  @@index([latitude, longitude])
+}
+
+/// Self-referencing tree: top-level categories and their subcategories.
+model Category {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameEn    String
+  nameSw    String
+  parentId  String?
+  icon      String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent    Category?          @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children  Category[]         @relation("CategoryTree")
+  services  Service[]
+  providers ProviderProfile[]
+  requests  ServiceRequest[]
+  campaigns FeaturedCampaign[]
+
+  @@index([parentId, sortOrder])
+}
+
+/// Platform catalogue entry ("AC repair"). Admin-managed so search stays consistent.
+model Service {
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  categoryId String
+  nameEn     String
+  nameSw     String
+  /// Extra search terms in either language, e.g. ["fundi AC", "air conditioner"].
+  keywords   String[]
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category  Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  providers ProviderService[]
+  requests  ServiceRequest[]
+  metrics   ProviderMetric[]
+  campaigns FeaturedCampaign[]
+
+  @@index([categoryId, sortOrder])
+}
+
+/// A service a provider offers, with its own pricing. Amounts are whole TZS (ADR-008).
+model ProviderService {
+  id         String    @id @default(cuid())
+  providerId String
+  serviceId  String
+  priceType  PriceType @default(ON_QUOTE)
+  priceMin   Int?
+  priceMax   Int?
+  /// Free text unit, e.g. "per visit", "per hour".
+  priceUnit  String?
+  /// When the provider last saved this price — including deliberately choosing ON_QUOTE. Profile
+  /// completeness counts this, not whether an amount exists, so "Ask for price" is never penalised.
+  pricedAt   DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service  Service  @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+
+  @@unique([providerId, serviceId])
+  @@index([serviceId])
+}
+
+/// Administrative/area hierarchy: Tanzania → Dar es Salaam → district → ward/neighbourhood.
+/// Centroids stay null until Phase 4 fills them from a real source.
+model Location {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  name      String
+  type      LocationType
+  parentId  String?
+  latitude  Decimal?     @db.Decimal(9, 6)
+  longitude Decimal?     @db.Decimal(9, 6)
+  sortOrder Int          @default(0)
+  isActive  Boolean      @default(true)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  parent       Location?             @relation("LocationTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children     Location[]            @relation("LocationTree")
+  serviceAreas ProviderServiceArea[]
+  providers    ProviderProfile[]
+  requests     ServiceRequest[]
+  metrics      ProviderMetric[]
+  campaigns    FeaturedCampaign[]
+
+  @@index([parentId, sortOrder])
+  @@index([type])
+}
+
+/// Areas a provider serves (travels to). Radius-based areas arrive in Phase 4.
+model ProviderServiceArea {
+  providerId String
+  locationId String
+  createdAt  DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  location Location @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@id([providerId, locationId])
+  @@index([locationId])
+}
+
+/// Weekly schedule. Minutes from midnight; a day with no row is closed. 1 = Monday … 7 = Sunday.
+model ProviderOpeningHours {
+  id         String   @id @default(cuid())
+  providerId String
+  dayOfWeek  Int
+  opensAt    Int
+  closesAt   Int
+  createdAt  DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek, opensAt])
+}
+
+/// A processed image in object storage. Only the key is stored; the public URL is built from
+/// S3_ENDPOINT so a database branch always points at its own storage branch.
+model MediaAsset {
+  id         String    @id @default(cuid())
+  providerId String
+  kind       MediaKind
+  storageKey String    @unique
+  width      Int
+  height     Int
+  bytes      Int
+  sortOrder  Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, kind, sortOrder])
+}
+
+model ProviderSocialLink {
+  id         String         @id @default(cuid())
+  providerId String
+  platform   SocialPlatform
+  url        String
+  createdAt  DateTime       @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, platform])
+}
+
+// ─── Phase 5: trust & verification ──────────────────────────────────────────────────────────
+
+enum DocumentType {
+  NATIONAL_ID
+  PASSPORT
+  BUSINESS_LICENSE
+  TIN_CERTIFICATE
+  PROFESSIONAL_CERTIFICATE
+  OTHER
+}
+
+enum VerificationStatus {
+  DRAFT
+  SUBMITTED
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+}
+
+enum ReportReason {
+  SPAM
+  FAKE
+  OFFENSIVE
+  CONFLICT_OF_INTEREST
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  DISMISSED
+  ACTIONED
+}
+
+/// Configurable verification tiers (admin-managed). `rank` orders them: higher = stronger.
+model VerificationLevel {
+  id                String         @id @default(cuid())
+  slug              String         @unique
+  nameEn            String
+  nameSw            String
+  descriptionEn     String
+  descriptionSw     String
+  rank              Int            @default(1)
+  /// Every one of these document types must be attached before a request can be submitted.
+  requiredDocuments DocumentType[]
+  isActive          Boolean        @default(true)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  providers Provider[]
+  requests  VerificationRequest[]
+}
+
+model VerificationRequest {
+  id           String             @id @default(cuid())
+  providerId   String
+  levelId      String
+  status       VerificationStatus @default(DRAFT)
+  /// Written by the provider when submitting.
+  providerNote String?
+  /// Written by the reviewer; shown to the provider for CHANGES_REQUESTED / REJECTED.
+  decisionNote String?
+  submittedAt  DateTime?
+  reviewedById String?
+  reviewedAt   DateTime?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  provider   Provider               @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  level      VerificationLevel      @relation(fields: [levelId], references: [id], onDelete: Restrict)
+  reviewedBy User?                  @relation("VerificationReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  documents  VerificationDocument[]
+
+  @@index([providerId, status])
+  @@index([status, submittedAt])
+}
+
+/// Stored in the PRIVATE bucket; readable only through short-lived signed URLs issued to admins.
+model VerificationDocument {
+  id         String       @id @default(cuid())
+  requestId  String
+  type       DocumentType
+  storageKey String       @unique
+  mimeType   String
+  bytes      Int
+  createdAt  DateTime     @default(now())
+
+  request VerificationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+model Review {
+  id          String       @id @default(cuid())
+  providerId  String
+  authorId    String
+  rating      Int
+  body        String
+  status      ReviewStatus @default(PUBLISHED)
+  /// True when the author had a COMPLETED request accepted by this provider (Phase 7).
+  verifiedJob Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  editedAt    DateTime?
+
+  provider Provider        @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  author   User            @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  response ReviewResponse?
+  reports  ReviewReport[]
+
+  /// One review per customer per provider (edit it instead of posting again).
+  @@unique([providerId, authorId])
+  @@index([providerId, status, createdAt])
+}
+
+/// The provider's public reply. Separate row: a reply can never alter the customer's review.
+model ReviewResponse {
+  id        String   @id @default(cuid())
+  reviewId  String   @unique
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  author User   @relation("ReviewResponder", fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model ReviewReport {
+  id           String       @id @default(cuid())
+  reviewId     String
+  reporterId   String
+  reason       ReportReason
+  note         String?
+  status       ReportStatus @default(OPEN)
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime     @default(now())
+
+  review     Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  reporter   User   @relation("ReviewReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  resolvedBy User?  @relation("ReportResolver", fields: [resolvedById], references: [id], onDelete: SetNull)
+
+  @@unique([reviewId, reporterId])
+  @@index([status, createdAt])
+}
+
+/// Append-only record of security-relevant actions (enforced by DB triggers). Never holds
+/// secrets, tokens or document contents. actorId is deliberately NOT a foreign key: deleting a
+/// user must never rewrite history, so the id stays as recorded.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
+
+/// Fixed-window request counters for rate limiting (SEC-010).
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
+
+/// One row per (provider, button, anonymous visitor, day): "how many people tapped Call today",
+/// not raw taps, so repeated tapping can't inflate numbers. visitorHash is a salted daily hash of
+/// a random cookie — no IP, no account id — and can't be linked across days or providers.
+model ConnectEvent {
+  id          String        @id @default(cuid())
+  providerId  String
+  action      ConnectAction
+  source      ConnectSource
+  day         DateTime      @db.Date
+  visitorHash String
+  createdAt   DateTime      @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, action, visitorHash, day])
+  @@index([providerId, day])
+}
+
+// ─── Phase 7: service requests ──────────────────────────────────────────────────────────────
+
+enum RequestStatus {
+  OPEN
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum ContactPreference {
+  IN_APP
+  CALL
+  WHATSAPP
+  SMS
+}
+
+enum MatchStatus {
+  NOTIFIED
+  INTERESTED
+  QUOTED
+  DECLINED
+  ACCEPTED
+  NOT_SELECTED
+}
+
+enum QuoteStatus {
+  SENT
+  ACCEPTED
+  DECLINED
+  WITHDRAWN
+}
+
+enum SenderRole {
+  CUSTOMER
+  PROVIDER
+}
+
+/// "What service do you need?" Posted by a customer; matched to relevant providers.
+/// Contact details and the street address are revealed only to the provider the customer accepts.
+model ServiceRequest {
+  id                 String            @id @default(cuid())
+  customerId         String
+  categoryId         String?
+  serviceId          String?
+  description        String
+  locationId         String
+  /// Private until acceptance: shown only to the accepted provider.
+  addressText        String?
+  preferredDate      DateTime?         @db.Date
+  /// Minutes from midnight (Dar time); null = any time.
+  preferredTime      Int?
+  budgetMin          Int?
+  budgetMax          Int?
+  contactPreference  ContactPreference @default(IN_APP)
+  status             RequestStatus     @default(OPEN)
+  /// Set for a direct request to one provider (the Request Quote button).
+  targetProviderId   String?
+  acceptedProviderId String?
+  acceptedAt         DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  /// OPEN requests stop receiving responses after this moment.
+  expiresAt          DateTime
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  customer         User           @relation("RequestCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  category         Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  service          Service?       @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  location         Location       @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  targetProvider   Provider?      @relation("RequestTarget", fields: [targetProviderId], references: [id], onDelete: SetNull)
+  acceptedProvider Provider?      @relation("RequestAccepted", fields: [acceptedProviderId], references: [id], onDelete: SetNull)
+  photos           RequestPhoto[]
+  matches          RequestMatch[]
+  quotes           Quote[]
+
+  @@index([customerId, createdAt])
+  @@index([status, expiresAt])
+}
+
+/// Private bucket; readable only by the customer, matched providers and admins via signed URLs.
+model RequestPhoto {
+  id         String   @id @default(cuid())
+  requestId  String
+  storageKey String   @unique
+  bytes      Int
+  createdAt  DateTime @default(now())
+
+  request ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+/// A provider that received a request. Providers can only ever see requests they have a match for.
+/// Also the conversation between the customer and that provider.
+model RequestMatch {
+  id              String      @id @default(cuid())
+  requestId       String
+  providerId      String
+  status          MatchStatus @default(NOTIFIED)
+  notifiedAt      DateTime    @default(now())
+  /// First interest/quote/message from the provider — the raw data for "Fast response" (Phase 8).
+  firstResponseAt DateTime?
+  updatedAt       DateTime    @updatedAt
+
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([requestId, providerId])
+  @@index([providerId, status])
+}
+
+/// One quote per provider per request (a provider may revise it while it's SENT).
+model Quote {
+  id         String      @id @default(cuid())
+  requestId  String
+  providerId String
+  /// Whole TZS, entered by the provider. Never estimated by the platform.
+  amount     Int
+  note       String?
+  validUntil DateTime?   @db.Date
+  status     QuoteStatus @default(SENT)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, providerId])
+}
+
+model Message {
+  id         String     @id @default(cuid())
+  matchId    String
+  senderId   String
+  senderRole SenderRole
+  body       String
+  readAt     DateTime?
+  createdAt  DateTime   @default(now())
+
+  match  RequestMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, createdAt])
+}
+
+/// In-app notification. Stores a type + ids; the text is rendered in the reader's language.
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  data      Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+// ─── Phase 8: ranking ───────────────────────────────────────────────────────────────────────
+
+/// Admin-configured ranking weights. One row ("default"); every change is audit-logged.
+/// Holds organic-ranking weights only — nothing paid is ever an input (ADR-040).
+model RankingConfig {
+  id          String   @id
+  weights     Json
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+// ─── Phase 10: provider analytics ───────────────────────────────────────────────────────────
+
+enum MetricKind {
+  PROFILE_VIEW
+  SEARCH_APPEARANCE
+}
+
+/// Where the customer was when they saw or opened the provider.
+enum MetricSource {
+  SEARCH
+  AI_SEARCH
+  CATEGORY
+  HOME
+  REQUEST
+  SAVED
+  OTHER
+}
+
+/// One row per provider × kind × person × Dar calendar day (so counts mean people, not reloads).
+/// visitorHash = sha256(salt | day | provider | anonymous cookie): not reversible, not linkable
+/// across days or providers. No IP, account id or search text is stored.
+model ProviderMetric {
+  id          String       @id @default(cuid())
+  providerId  String
+  kind        MetricKind
+  source      MetricSource
+  /// For search appearances: the service / area the customer filtered by, if any.
+  serviceId   String?
+  locationId  String?
+  day         DateTime     @db.Date
+  visitorHash String
+  createdAt   DateTime     @default(now())
+
+  provider Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service  Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  @@unique([providerId, kind, visitorHash, day])
+  @@index([providerId, kind, day])
+}
+
+/// A customer's saved provider.
+model Favorite {
+  id         String   @id @default(cuid())
+  userId     String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, providerId])
+  @@index([providerId, createdAt])
+}
+
+// ─── Phase 11: monetization ─────────────────────────────────────────────────────────────────
+// Paid features never touch trust: no plan grants a badge, a verification level, a rating or an
+// organic ranking signal. Paid visibility is shown only in separately labelled slots (ADR-046).
+
+enum PlanCode {
+  FREE
+  PRO
+  PROFESSIONAL
+  FEATURED
+}
+
+enum SubscriptionStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum CampaignKind {
+  FEATURED_SEARCH
+  SPONSORED_CATEGORY
+}
+
+enum CampaignStatus {
+  REQUESTED
+  PENDING_PAYMENT
+  ACTIVE
+  PAUSED
+  ENDED
+  CANCELLED
+  REJECTED
+}
+
+enum PaymentMethod {
+  MPESA
+  TIGO_PESA
+  AIRTEL_MONEY
+  HALOPESA
+  BANK_TRANSFER
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  RECORDED
+  VOIDED
+}
+
+/// A plan's price is set by an admin; null = not on sale yet (GO BIG never invents prices).
+model Plan {
+  id                         String         @id @default(cuid())
+  code                       PlanCode       @unique
+  nameEn                     String
+  nameSw                     String
+  descriptionEn              String
+  descriptionSw              String
+  priceTzs                   Int?
+  periodDays                 Int            @default(30)
+  /// Extra photos beyond the free gallery allowance.
+  galleryLimit               Int            @default(12)
+  /// Requests a provider can answer per calendar month when paid leads are switched on; null = no limit.
+  leadsPerMonth              Int?
+  /// Verification applications from this plan are reviewed first. Never changes the outcome.
+  priorityVerificationReview Boolean        @default(false)
+  /// Featured campaigns may be bought on this plan.
+  allowsCampaigns            Boolean        @default(false)
+  isActive                   Boolean        @default(true)
+  sortOrder                  Int            @default(0)
+  updatedAt                  DateTime       @updatedAt
+  subscriptions              Subscription[]
+}
+
+/// A provider's paid plan. Providers without an ACTIVE subscription are on FREE.
+model Subscription {
+  id                 String             @id @default(cuid())
+  providerId         String
+  planId             String
+  status             SubscriptionStatus @default(PENDING_PAYMENT)
+  /// Price agreed when the subscription was requested (the plan price can change later).
+  priceTzs           Int
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  requestedById      String?
+  cancelledAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  provider Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([providerId, status])
+}
+
+/// Paid visibility, shown only in a labelled "Sponsored" slot. Must still match the search.
+model FeaturedCampaign {
+  id            String         @id @default(cuid())
+  providerId    String
+  kind          CampaignKind
+  /// Targeting: a campaign only shows on searches for this service / category / area (null = any).
+  serviceId     String?
+  categoryId    String?
+  locationId    String?
+  startsAt      DateTime       @db.Date
+  endsAt        DateTime       @db.Date
+  status        CampaignStatus @default(REQUESTED)
+  priceTzs      Int?
+  note          String?
+  requestedById String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  provider Provider  @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  service  Service?  @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  location Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  payments Payment[]
+
+  @@index([status, kind, startsAt, endsAt])
+  @@index([providerId])
+}
+
+/// A payment recorded by an admin (mobile money / bank / cash reference). No card data is stored.
+model Payment {
+  id             String        @id @default(cuid())
+  providerId     String
+  subscriptionId String?
+  campaignId     String?
+  amountTzs      Int
+  method         PaymentMethod
+  reference      String
+  status         PaymentStatus @default(RECORDED)
+  paidAt         DateTime
+  recordedById   String
+  voidReason     String?
+  createdAt      DateTime      @default(now())
+
+  provider     Provider          @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  subscription Subscription?     @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  campaign     FeaturedCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@unique([method, reference])
+  @@index([providerId, paidAt])
+}
+
+/// Platform-wide monetization switches, one row ("default"). Changes are audit-logged.
+model MonetizationSettings {
+  id                    String   @id
+  paidLeadsEnabled      Boolean  @default(false)
+  featuredSlots         Int      @default(2)
+  /// Shown to providers when they request a plan or campaign (e.g. the M-Pesa till number). Set by an admin.
+  paymentInstructionsEn String?
+  paymentInstructionsSw String?
+  updatedById           String?
+  updatedAt             DateTime @updatedAt
+}
+
+// ─── Phase 12: admin platform ───────────────────────────────────────────────────────────────
+
+enum ReportTarget {
+  PROVIDER
+  REQUEST
+  CONVERSATION
+}
+
+enum ContentReportReason {
+  SPAM
+  FAKE
+  FRAUD
+  OFFENSIVE
+  UNSAFE
+  OTHER
+}
+
+enum ContentReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+/// A user's report of a provider listing, a service request or a conversation. Review reports
+/// keep their own table (Phase 5). The target is identified by type + id; providerId is kept for
+/// provider-level views. Reporters see nothing of the outcome beyond "received".
+model Report {
+  id           String              @id @default(cuid())
+  targetType   ReportTarget
+  targetId     String
+  providerId   String?
+  reason       ContentReportReason
+  note         String?
+  reporterId   String
+  status       ContentReportStatus @default(OPEN)
+  resolvedById String?
+  resolution   String?
+  resolvedAt   DateTime?
+  createdAt    DateTime            @default(now())
+
+  reporter User      @relation("ReportFiler", fields: [reporterId], references: [id], onDelete: Cascade)
+  provider Provider? @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([reporterId, targetType, targetId])
+  @@index([status, createdAt])
+}
+
+enum AnnouncementAudience {
+  ALL
+  CUSTOMERS
+  PROVIDERS
+}
+
+/// An admin message to many users, delivered as in-app notifications. Written by staff (not
+/// private), so its text is stored here; notifications carry only its id.
+model Announcement {
+  id          String               @id @default(cuid())
+  titleEn     String
+  titleSw     String
+  bodyEn      String
+  bodySw      String
+  audience    AnnouncementAudience
+  recipients  Int                  @default(0)
+  createdById String
+  createdAt   DateTime             @default(now())
+}
+
+/// Platform-wide settings editable in Admin → Settings (one row, "default"; audit-logged).
+model PlatformSettings {
+  id                String   @id
+  supportEmail      String?
+  supportPhone      String?
+  supportWhatsapp   String?
+  maxOpenRequests   Int      @default(5)
+  maxRequestMatches Int      @default(15)
+  requestTtlDays    Int      @default(14)
+  aiSearchEnabled   Boolean  @default(true)
+  updatedById       String?
+  updatedAt         DateTime @updatedAt
+}

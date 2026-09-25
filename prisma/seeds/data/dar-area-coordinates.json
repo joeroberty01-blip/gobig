@@ -1,0 +1,382 @@
+{
+  "source": "OpenStreetMap Nominatim, geocoded 2026-09-24. Data © OpenStreetMap contributors, ODbL 1.0 (https://osm.org/copyright).",
+  "note": "Points are OSM place/ward centroids, used as area centres for distance. null = not found in OSM; left empty rather than guessed. District centres are the mean of their areas.",
+  "areas": [
+    {
+      "area": "Bunju",
+      "district": "Kinondoni",
+      "lat": null,
+      "lng": null,
+      "osm": null,
+      "osmName": null
+    },
+    {
+      "area": "Kawe",
+      "district": "Kinondoni",
+      "lat": -6.73663,
+      "lng": 39.22224,
+      "osm": "relation/5997194",
+      "osmName": "Kawe"
+    },
+    {
+      "area": "Kijitonyama",
+      "district": "Kinondoni",
+      "lat": -6.77666,
+      "lng": 39.24339,
+      "osm": "relation/6503869",
+      "osmName": "Kijitonyama"
+    },
+    {
+      "area": "Kinondoni",
+      "district": "Kinondoni",
+      "lat": -6.78407,
+      "lng": 39.27007,
+      "osm": "relation/5476809",
+      "osmName": "Kinondoni"
+    },
+    {
+      "area": "Magomeni",
+      "district": "Kinondoni",
+      "lat": -6.80358,
+      "lng": 39.26046,
+      "osm": "relation/5466597",
+      "osmName": "Magomeni"
+    },
+    {
+      "area": "Masaki",
+      "district": "Kinondoni",
+      "lat": -6.75762,
+      "lng": 39.27683,
+      "osm": "relation/6503946",
+      "osmName": "Masaki"
+    },
+    {
+      "area": "Mbezi Beach",
+      "district": "Kinondoni",
+      "lat": null,
+      "lng": null,
+      "osm": null,
+      "osmName": null
+    },
+    {
+      "area": "Mikocheni",
+      "district": "Kinondoni",
+      "lat": -6.7637,
+      "lng": 39.25425,
+      "osm": "relation/7578556",
+      "osmName": "Mikocheni"
+    },
+    {
+      "area": "Msasani",
+      "district": "Kinondoni",
+      "lat": -6.76779,
+      "lng": 39.26656,
+      "osm": "relation/6024568",
+      "osmName": "Msasani"
+    },
+    {
+      "area": "Mwananyamala",
+      "district": "Kinondoni",
+      "lat": -6.78889,
+      "lng": 39.2584,
+      "osm": "relation/5476810",
+      "osmName": "Mwananyamala"
+    },
+    {
+      "area": "Mwenge",
+      "district": "Kinondoni",
+      "lat": -6.76666,
+      "lng": 39.23134,
+      "osm": "node/279284066",
+      "osmName": "Mwenge"
+    },
+    {
+      "area": "Oysterbay",
+      "district": "Kinondoni",
+      "lat": -6.7686,
+      "lng": 39.28047,
+      "osm": "relation/6503948",
+      "osmName": "Oysterbay"
+    },
+    {
+      "area": "Tegeta",
+      "district": "Kinondoni",
+      "lat": null,
+      "lng": null,
+      "osm": null,
+      "osmName": null
+    },
+    {
+      "area": "Buguruni",
+      "district": "Ilala",
+      "lat": -6.83838,
+      "lng": 39.24359,
+      "osm": "relation/5477348",
+      "osmName": "Buguruni"
+    },
+    {
+      "area": "City Centre (Posta)",
+      "district": "Ilala",
+      "lat": -6.81756,
+      "lng": 39.28484,
+      "osm": "node/273092525",
+      "osmName": "City Centre"
+    },
+    {
+      "area": "Gongo la Mboto",
+      "district": "Ilala",
+      "lat": -6.87923,
+      "lng": 39.15039,
+      "osm": "relation/9566841",
+      "osmName": "Gongolamboto"
+    },
+    {
+      "area": "Ilala",
+      "district": "Ilala",
+      "lat": -6.82941,
+      "lng": 39.26289,
+      "osm": "node/279284598",
+      "osmName": "Ilala"
+    },
+    {
+      "area": "Kariakoo",
+      "district": "Ilala",
+      "lat": -6.82042,
+      "lng": 39.27581,
+      "osm": "relation/5559150",
+      "osmName": "Kariakoo"
+    },
+    {
+      "area": "Kinyerezi",
+      "district": "Ilala",
+      "lat": -6.83864,
+      "lng": 39.15406,
+      "osm": "node/4020199189",
+      "osmName": "Kinyerezi"
+    },
+    {
+      "area": "Kiwalani",
+      "district": "Ilala",
+      "lat": -6.85982,
+      "lng": 39.23125,
+      "osm": "relation/5997065",
+      "osmName": "Kiwalani"
+    },
+    {
+      "area": "Segerea",
+      "district": "Ilala",
+      "lat": -6.84099,
+      "lng": 39.19861,
+      "osm": "relation/9576984",
+      "osmName": "Segerea"
+    },
+    {
+      "area": "Tabata",
+      "district": "Ilala",
+      "lat": -6.82815,
+      "lng": 39.22621,
+      "osm": "relation/5605405",
+      "osmName": "Tabata"
+    },
+    {
+      "area": "Ukonga",
+      "district": "Ilala",
+      "lat": -6.8753,
+      "lng": 39.1693,
+      "osm": "node/279286057",
+      "osmName": "Ukonga"
+    },
+    {
+      "area": "Upanga",
+      "district": "Ilala",
+      "lat": -6.80772,
+      "lng": 39.28068,
+      "osm": "node/273092587",
+      "osmName": "Upanga"
+    },
+    {
+      "area": "Vingunguti",
+      "district": "Ilala",
+      "lat": -6.84611,
+      "lng": 39.22736,
+      "osm": "relation/5507097",
+      "osmName": "Vingunguti"
+    },
+    {
+      "area": "Goba",
+      "district": "Ubungo",
+      "lat": -6.72779,
+      "lng": 39.15268,
+      "osm": "relation/5995041",
+      "osmName": "Goba"
+    },
+    {
+      "area": "Kibamba",
+      "district": "Ubungo",
+      "lat": -6.77461,
+      "lng": 39.04299,
+      "osm": "node/4018215740",
+      "osmName": "Kibamba"
+    },
+    {
+      "area": "Kimara",
+      "district": "Ubungo",
+      "lat": -6.79605,
+      "lng": 39.18072,
+      "osm": "relation/5990992",
+      "osmName": "Kimara"
+    },
+    {
+      "area": "Mabibo",
+      "district": "Ubungo",
+      "lat": -6.80835,
+      "lng": 39.22734,
+      "osm": "relation/5477216",
+      "osmName": "Mabibo"
+    },
+    {
+      "area": "Makuburi",
+      "district": "Ubungo",
+      "lat": -6.80837,
+      "lng": 39.20118,
+      "osm": "relation/5990754",
+      "osmName": "Makuburi"
+    },
+    {
+      "area": "Manzese",
+      "district": "Ubungo",
+      "lat": -6.79638,
+      "lng": 39.2309,
+      "osm": "relation/5554306",
+      "osmName": "Manzese"
+    },
+    {
+      "area": "Mbezi",
+      "district": "Ubungo",
+      "lat": -6.74233,
+      "lng": 39.08975,
+      "osm": "relation/5995024",
+      "osmName": "Mbezi"
+    },
+    {
+      "area": "Sinza",
+      "district": "Ubungo",
+      "lat": -6.78305,
+      "lng": 39.22364,
+      "osm": "relation/6505583",
+      "osmName": "Sinza"
+    },
+    {
+      "area": "Ubungo",
+      "district": "Ubungo",
+      "lat": -6.79362,
+      "lng": 39.20966,
+      "osm": "relation/5601189",
+      "osmName": "Ubungo"
+    },
+    {
+      "area": "Chang'ombe",
+      "district": "Temeke",
+      "lat": -6.84295,
+      "lng": 39.26265,
+      "osm": "relation/6056649",
+      "osmName": "Chang'ombe"
+    },
+    {
+      "area": "Keko",
+      "district": "Temeke",
+      "lat": -6.83786,
+      "lng": 39.27607,
+      "osm": "relation/6525256",
+      "osmName": "Keko"
+    },
+    {
+      "area": "Kijichi",
+      "district": "Temeke",
+      "lat": -6.88605,
+      "lng": 39.29151,
+      "osm": "relation/6056668",
+      "osmName": "Kijichi"
+    },
+    {
+      "area": "Kurasini",
+      "district": "Temeke",
+      "lat": -6.8497,
+      "lng": 39.28418,
+      "osm": "relation/6000987",
+      "osmName": "Kurasini"
+    },
+    {
+      "area": "Mbagala",
+      "district": "Temeke",
+      "lat": -6.90011,
+      "lng": 39.26435,
+      "osm": "relation/6056799",
+      "osmName": "Mbagala"
+    },
+    {
+      "area": "Mtoni",
+      "district": "Temeke",
+      "lat": -6.86798,
+      "lng": 39.28051,
+      "osm": "relation/6024806",
+      "osmName": "Mtoni"
+    },
+    {
+      "area": "Tandika",
+      "district": "Temeke",
+      "lat": -6.86711,
+      "lng": 39.25592,
+      "osm": "relation/6037205",
+      "osmName": "Tandika"
+    },
+    {
+      "area": "Temeke",
+      "district": "Temeke",
+      "lat": -6.85097,
+      "lng": 39.25672,
+      "osm": "relation/5661995",
+      "osmName": "Temeke"
+    },
+    {
+      "area": "Kibada",
+      "district": "Kigamboni",
+      "lat": null,
+      "lng": null,
+      "osm": null,
+      "osmName": null
+    },
+    {
+      "area": "Kigamboni",
+      "district": "Kigamboni",
+      "lat": -6.82549,
+      "lng": 39.30941,
+      "osm": "relation/6054330",
+      "osmName": "Kigamboni"
+    },
+    {
+      "area": "Mjimwema",
+      "district": "Kigamboni",
+      "lat": null,
+      "lng": null,
+      "osm": null,
+      "osmName": null
+    },
+    {
+      "area": "Somangila",
+      "district": "Kigamboni",
+      "lat": -6.90115,
+      "lng": 39.46422,
+      "osm": "relation/6054633",
+      "osmName": "Somangila"
+    },
+    {
+      "area": "Tungi",
+      "district": "Kigamboni",
+      "lat": -6.83425,
+      "lng": 39.32234,
+      "osm": "relation/6054425",
+      "osmName": "Tungi"
+    }
+  ]
+}
