@@ -1,4 +1,3 @@
-import "server-only";
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 // Phase 16: encryption at rest for sensitive fields (exact trip coordinates, recipient phone numbers).

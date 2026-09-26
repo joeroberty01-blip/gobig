@@ -1,4 +1,3 @@
-import "server-only";
 import Redis from "ioredis";
 import { log } from "@/lib/log";
 

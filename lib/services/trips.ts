@@ -1,4 +1,3 @@
-import "server-only";
 import { randomInt, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
