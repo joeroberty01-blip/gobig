@@ -81,7 +81,7 @@ function Uploader({
     <div>
       <div className={`relative overflow-hidden rounded-2xl border border-dashed border-line bg-canvas ${aspect}`}>
         {current ? (
-          <Image src={current.url} alt={label} fill sizes="(max-width: 640px) 100vw, 600px" className="object-cover" />
+          <Image src={current.url} alt={label} fill sizes="(max-width: 640px) 100vw, 600px" className="object-cover object-[center_20%]" />
         ) : (
           <button type="button" onClick={() => input.current?.click()} disabled={busy} className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-ink-subtle">
             <ImagePlus aria-hidden className="size-6" />

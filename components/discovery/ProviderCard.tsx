@@ -42,12 +42,12 @@ const TONE = {
 const ACTION_ORDER: Card["actions"][number]["action"][] = ["WHATSAPP", "CALL", "REQUEST_QUOTE", "BOOK_SERVICE", "MESSAGE", "DIRECTIONS", "BOOK_RIDE", "WEBSITE", "EMAIL"];
 
 /** Cover photo, else logo, else the business initial on the brand gradient — never a stock photo. */
-function Photo({ p, sizes, className = "", faces = false }: { p: Card; sizes: string; className?: string; faces?: boolean }) {
+function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className?: string }) {
   const src = p.coverUrl ?? p.logoUrl;
   return (
     <div className={`relative overflow-hidden bg-hero ${className}`}>
       {src ? (
-        <Image src={src} alt="" fill sizes={sizes} className={`object-cover transition duration-500 group-hover:scale-[1.03] ${faces ? "object-[center_20%]" : ""}`} />
+        <Image src={src} alt="" fill sizes={sizes} className="object-cover object-[center_20%] transition duration-500 group-hover:scale-[1.03]" />
       ) : (
         <span className="grid size-full place-items-center text-4xl font-black text-white/90">{p.name.trim().slice(0, 1).toUpperCase()}</span>
       )}
@@ -221,7 +221,7 @@ export function ProviderCard({
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-lift has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-500">
       <div className="relative">
         {/* Portrait: provider photos are mostly people at work, so keep faces in frame. */}
-        <Photo p={p} sizes="(max-width: 768px) 50vw, 300px" className="aspect-[4/5]" faces />
+        <Photo p={p} sizes="(max-width: 768px) 50vw, 300px" className="aspect-[4/5]" />
         <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
         {verified && <VerifiedPill t={t} className="absolute top-2 left-2" />}
         {p.demo && (

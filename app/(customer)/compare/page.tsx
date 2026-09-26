@@ -130,7 +130,7 @@ export default async function ComparePage({ searchParams }: Props) {
             <div key={i.card.id} className="flex flex-col gap-2 border-b border-l border-line p-3">
               <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-hero">
                 {i.card.coverUrl || i.card.logoUrl ? (
-                  <Image src={(i.card.coverUrl ?? i.card.logoUrl)!} alt="" fill sizes="240px" className="object-cover" />
+                  <Image src={(i.card.coverUrl ?? i.card.logoUrl)!} alt="" fill sizes="240px" className="object-cover object-[center_20%]" />
                 ) : (
                   <span className="grid size-full place-items-center text-3xl font-black text-white/90">{i.card.name.slice(0, 1).toUpperCase()}</span>
                 )}

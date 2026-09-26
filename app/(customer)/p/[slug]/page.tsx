@@ -124,7 +124,7 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
 
       {/* Photo header with the business on it (reference design). */}
       <section className="relative -mx-4 -mt-6 overflow-hidden bg-hero text-white sm:mx-0 sm:mt-0 sm:rounded-[2rem]">
-        {p.cover && <Image src={p.cover.url} alt="" fill loading="eager" fetchPriority="high" sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />}
+        {p.cover && <Image src={p.cover.url} alt="" fill loading="eager" fetchPriority="high" sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover object-[center_20%]" />}
         <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-night-900 via-night-900/55 to-night-900/10" />
         <div className="absolute top-3 right-3 z-10 flex gap-2 sm:top-4 sm:right-4">
           {!p.preview && (!viewer || viewer.role === "CUSTOMER") && (

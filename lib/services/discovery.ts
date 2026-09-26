@@ -549,6 +549,9 @@ export async function searchProviders(
       return { card: c, id: c.id, publishedAt: c.publishedAt, score: scored.score, scored, rating: values.rating };
     })
     .sort(compareScored);
+  // Owner's decision (2026-09-26): businesses with a cover photo come before those without; the
+  // score still orders each group. A photo is the provider's own data, never paid (ADR-040 holds).
+  ranked.sort((a, b) => Number(!!b.card.coverUrl) - Number(!!a.card.coverUrl));
   // Phase 14 "Top rated": the customer's explicit choice to order by the (review-count aware)
   // rating signal alone; ties keep the normal ranking. Paid placement is still never an input.
   if (params.sort === "top") ranked.sort((a, b) => b.rating - a.rating);

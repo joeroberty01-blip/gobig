@@ -508,3 +508,18 @@ settings, announcements, other admins).
 - *Search chips.* "Verified" filters to providers with a GO BIG verification level; "Top rated" orders by the review-count-aware rating signal alone. Both are customer choices; paid placement is still never an input (ADR-040).
 - *States.* Every area has `loading.tsx` skeletons shaped like the page, an `error.tsx` with retry, and a branded 404. Micro-interactions are limited to a press-in on tap, a lift on hover and a short rise-in for lists, all disabled under `prefers-reduced-motion`.
 **Consequences.** New colours must be added as tokens (both themes). The hero uses a drawn skyline silhouette; if the business wants photography, a licensed image can replace it without layout changes.
+
+## ADR-053 — Photos first, covers kept whole, labelled sample businesses (2026-09-26)
+
+**Context.** The owner wanted the test deployment full, and businesses with photos shown first. Cover
+photos were cut to 16:9, which removed the heads of people in portrait photos.
+
+**Decision.**
+- In the default order, businesses with a cover photo come before those without; the ranking score
+  still orders each group. "Top rated" (the customer's explicit sort) is unchanged. A photo is the
+  provider's own data, so nothing paid enters ranking (ADR-040 holds).
+- Covers are stored whole (max 1600 px, no crop). Pages crop on display with `object-[center_20%]`,
+  keeping faces in frame on cards, profiles, compare and the setup preview.
+- Sample businesses (`Provider.isDemo`) carry a "Sample" label, their Call/WhatsApp buttons explain
+  instead of dialling, and `npm run db:demo:remove` deletes all of them. Only an owner-supplied photo
+  becomes a sample's cover, so placeholders never jump the photo-first order. Remove before launch.

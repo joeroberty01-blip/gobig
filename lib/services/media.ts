@@ -16,7 +16,9 @@ const ALLOWED_FORMATS = new Set(["jpeg", "png", "webp"]);
 
 const SIZES: Record<MediaKind, { width: number; height: number }> = {
   LOGO: { width: 512, height: 512 },
-  COVER: { width: 1600, height: 900 },
+  // Kept whole (not cut to 16:9): portrait photos of people lost their heads. Pages crop on display,
+  // biased to the top where faces usually are.
+  COVER: { width: 1600, height: 1600 },
   GALLERY: { width: 1600, height: 1600 },
 };
 
@@ -36,7 +38,7 @@ export async function processImage(
     const { width, height } = SIZES[kind];
     const { data, info } = await image
       .rotate() // apply EXIF orientation before the metadata is dropped
-      .resize({ width, height, fit: kind === "COVER" ? "cover" : "inside", withoutEnlargement: true })
+      .resize({ width, height, fit: "inside", withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer({ resolveWithObject: true });
     return { ok: true, data, width: info.width, height: info.height };

@@ -66,14 +66,14 @@ const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").repla
 const initials = (s: string) => s.split(/\s+/).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
 
-/** Clean branded placeholder photos (no stock images): gradient, initials, service name. */
-async function image(kind: "logo" | "cover" | "work", spec: Spec, label: string, n = 0): Promise<Buffer> {
-  const [w, h] = kind === "logo" ? [600, 600] : kind === "cover" ? [1400, 900] : [1200, 900];
+/** Branded placeholder images (logo and work photos): gradient, initials, service name. */
+async function image(kind: "logo" | "work", spec: Spec, label: string, n = 0): Promise<Buffer> {
+  const [w, h] = kind === "logo" ? [600, 600] : [1200, 900];
   const angle = [135, 160, 110, 200][n % 4];
   const svg =
     kind === "logo"
       ? `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><rect width="100%" height="100%" rx="0" fill="${spec.tint}"/><circle cx="300" cy="300" r="210" fill="#ffffff" opacity="0.15"/><text x="50%" y="54%" font-family="Arial, Helvetica, sans-serif" font-size="210" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="middle">${esc(initials(spec.name))}</text></svg>`
-      : `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><linearGradient id="g" gradientTransform="rotate(${angle} .5 .5)"><stop offset="0" stop-color="${spec.tint}"/><stop offset="1" stop-color="#0b1b33"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="${w * 0.8}" cy="${h * 0.25}" r="${h * 0.35}" fill="#ffffff" opacity="0.07"/><circle cx="${w * 0.15}" cy="${h * 0.9}" r="${h * 0.4}" fill="#ffffff" opacity="0.05"/>${kind === "cover" ? "" : `<text x="60" y="${h - 90}" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700" fill="#ffffff" opacity="0.92">${esc(label)}</text><text x="60" y="${h - 40}" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#ffffff" opacity="0.6">NEXA sample</text>`}</svg>`;
+      : `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><linearGradient id="g" gradientTransform="rotate(${angle} .5 .5)"><stop offset="0" stop-color="${spec.tint}"/><stop offset="1" stop-color="#0b1b33"/></linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/><circle cx="${w * 0.8}" cy="${h * 0.25}" r="${h * 0.35}" fill="#ffffff" opacity="0.07"/><circle cx="${w * 0.15}" cy="${h * 0.9}" r="${h * 0.4}" fill="#ffffff" opacity="0.05"/><text x="60" y="${h - 90}" font-family="Arial, Helvetica, sans-serif" font-size="56" font-weight="700" fill="#ffffff" opacity="0.92">${esc(label)}</text><text x="60" y="${h - 40}" font-family="Arial, Helvetica, sans-serif" font-size="30" fill="#ffffff" opacity="0.6">NEXA sample</text></svg>`;
   return sharp(Buffer.from(svg)).jpeg({ quality: 82 }).toBuffer();
 }
 
@@ -125,7 +125,6 @@ async function seed() {
 
     const label = chosen[0]!.nameEn;
     await saveProviderImage(providerId, "LOGO", await image("logo", spec, label));
-    await saveProviderImage(providerId, "COVER", await image("cover", spec, spec.name));
     for (let n = 1; n <= 3; n++) await saveProviderImage(providerId, "GALLERY", await image("work", spec, label, n));
 
     const pub = await profile.publishProvider(providerId);
@@ -162,12 +161,22 @@ function photoFor(spec: Spec): Buffer | null {
   return null;
 }
 
-/** Makes each supplied photo the business's cover (replacing the placeholder). */
+/**
+ * Makes each supplied photo the business's cover. Without one a sample has no cover (the card shows
+ * its logo), so it ranks after businesses with a real photo.
+ */
 async function photos() {
   let used = 0;
   for (const spec of SPECS) {
     const photo = photoFor(spec);
-    if (!photo) continue;
+    if (!photo) {
+      const covers = await prisma.mediaAsset.findMany({ where: { kind: "COVER", provider: { isDemo: true, members: { some: { role: "OWNER", user: { email: `owner-${slugify(spec.name)}${DOMAIN}` } } } } } });
+      for (const c of covers) {
+        await prisma.mediaAsset.delete({ where: { id: c.id } });
+        await deleteObject(c.storageKey).catch(() => undefined);
+      }
+      continue;
+    }
     const provider = await prisma.provider.findFirst({ where: { isDemo: true, members: { some: { role: "OWNER", user: { email: `owner-${slugify(spec.name)}${DOMAIN}` } } } }, select: { id: true } });
     if (!provider) {
       console.log("no sample business yet for", spec.name, "- run db:demo:seed first");
