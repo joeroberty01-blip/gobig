@@ -30,7 +30,7 @@ export function LanguageSwitch() {
           aria-pressed={locale === l}
           lang={l}
           title={l === "sw" ? t.common.swahili : t.common.english}
-          className={`min-h-8 min-w-9 rounded-md px-2 uppercase ${locale === l ? "bg-brand-700 text-white" : "text-ink-muted"}`}
+          className={`min-h-8 min-w-9 rounded-md px-2 uppercase ${locale === l ? "bg-action text-white" : "text-ink-muted"}`}
         >
           {l}
         </button>

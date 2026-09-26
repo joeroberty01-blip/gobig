@@ -5,16 +5,12 @@ import { Monitor, Moon, Sun } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { THEME_COOKIE, type ThemeChoice } from "@/lib/theme";
 
-/** Applies a theme to the page at once and remembers it for a year ("system" forgets the choice). */
+/** Applies a theme to the page at once and remembers it for a year. */
 function applyTheme(next: ThemeChoice) {
   const root = document.documentElement;
-  if (next === "system") {
-    root.removeAttribute("data-theme");
-    document.cookie = `${THEME_COOKIE}=; path=/; max-age=0; samesite=lax`;
-  } else {
-    root.setAttribute("data-theme", next);
-    document.cookie = `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
-  }
+  // "light" is the default, so choosing it just forgets the choice; the others are remembered.
+  root.setAttribute("data-theme", next);
+  document.cookie = next === "light" ? `${THEME_COOKIE}=; path=/; max-age=0; samesite=lax` : `${THEME_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
 }
 
 /** Device / light / dark. */
@@ -23,9 +19,9 @@ export function ThemeSwitch({ initial }: { initial: ThemeChoice }) {
   const [choice, setChoice] = useState(initial);
 
   const options = [
-    { value: "system", label: t.ui.theme.system, Icon: Monitor },
     { value: "light", label: t.ui.theme.light, Icon: Sun },
     { value: "dark", label: t.ui.theme.dark, Icon: Moon },
+    { value: "system", label: t.ui.theme.system, Icon: Monitor },
   ] as const;
 
   return (

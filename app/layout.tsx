@@ -18,10 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#111a2c" },
-  ],
+  // Light by default (the approved design), even on phones set to dark mode.
+  themeColor: "#ffffff",
   viewportFit: "cover",
 };
 
@@ -29,7 +27,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const [{ t, locale }, jar] = await Promise.all([getServerDictionary(), cookies()]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
-    <html lang={locale} className={sans.variable} data-theme={theme === "system" ? undefined : theme} suppressHydrationWarning>
+    <html lang={locale} className={sans.variable} data-theme={theme} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <I18nProvider t={publicDictionary(t)} locale={locale}>
           {children}

@@ -103,7 +103,7 @@
     --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -8px rgb(0 0 0 / 0.55);
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
+    :root[data-theme="system"] {
       color-scheme: dark;
       --color-action: #19946f;
       --color-link: #7aa7ff;
@@ -217,7 +217,7 @@ html .leaflet-container {
   filter: brightness(0.78) contrast(1.05) saturate(0.8);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .leaflet-tile-pane {
+  :root[data-theme="system"] .leaflet-tile-pane {
     filter: brightness(0.78) contrast(1.05) saturate(0.8);
   }
 }
@@ -234,7 +234,7 @@ html .leaflet-container {
   --palms: #1f5a3a;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .hero-sky {
+  :root[data-theme="system"] .hero-sky {
     background: linear-gradient(180deg, #16325a 0%, #10223d 55%, var(--color-canvas) 100%);
     --skyline: #2d4f78;
     --palms: #1f5a3a;
