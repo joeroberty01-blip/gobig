@@ -16,7 +16,7 @@ services:
       - key: AUTH_TRUST_HOST
         value: "true"
       - key: APP_URL
-        value: https://gobig.onrender.com
+        value: https://gobig-jfcp.onrender.com
       - key: S3_REGION
         value: eu-central-1
       - key: S3_MEDIA_BUCKET
