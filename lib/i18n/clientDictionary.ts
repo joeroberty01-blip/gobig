@@ -12,5 +12,7 @@ export function publicDictionary(t: Dictionary): Dictionary {
   for (const k of ADMIN_ONLY_SECTIONS) trimmed[k] = {};
   // The report button on public pages needs these two parts of the admin text.
   trimmed.adminPlatform = { report: t.adminPlatform.report, reports: t.adminPlatform.reports };
+  // Review-moderation wording is only shown on /admin/reviews.
+  trimmed.ui = { ...t.ui, moderation: { hiddenTitle: "", hiddenIntro: "", noneHidden: "" } };
   return trimmed as Dictionary;
 }
