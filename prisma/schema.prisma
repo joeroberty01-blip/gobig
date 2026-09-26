@@ -170,6 +170,9 @@ model Provider {
   /// Denormalised from PUBLISHED reviews inside the same transaction as any review change.
   ratingCount         Int            @default(0)
   ratingAvg           Float?
+  /// Test-deployment sample business (owner's request, 2026-09-26). Shown with a "Sample" label,
+  /// its call/WhatsApp buttons don't dial anyone, and `npm run db:demo:remove` deletes them all.
+  isDemo              Boolean        @default(false)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   deletedAt           DateTime?

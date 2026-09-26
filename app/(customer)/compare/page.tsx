@@ -112,7 +112,7 @@ export default async function ComparePage({ searchParams }: Props) {
       cell: (i) => (
         <div className="flex flex-col gap-2">
           {i.card.actions.slice(0, 3).map(({ action, href }) => (
-            <ConnectButton key={action} slug={i.card.slug} action={action} href={href} label={t.profile.actions[action]} source="CARD" primary={action === "CALL"} className="min-h-10" />
+            <ConnectButton key={action} slug={i.card.slug} action={action} href={href} label={t.profile.actions[action]} source="CARD" primary={action === "CALL"} demo={i.card.demo} className="min-h-10" />
           ))}
         </div>
       ),

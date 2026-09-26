@@ -139,6 +139,10 @@ export const en = {
     contact: "Contact",
     someUnavailable: "{count} provider(s) in this link aren't listed any more.",
   },
+  demo: {
+    tag: "Sample",
+    contactDisabled: "This is a sample business for testing NEXA. Calls and WhatsApp are switched off so no real number is dialled.",
+  },
   moderation: {
     hiddenTitle: "Recently hidden",
     hiddenIntro: "Reviews a moderator hid. Restore one if it was hidden by mistake.",
@@ -294,6 +298,10 @@ export const sw: typeof en = {
     trust: "Pia",
     contact: "Mawasiliano",
     someUnavailable: "Watoa huduma {count} kwenye kiungo hiki hawapo tena.",
+  },
+  demo: {
+    tag: "Mfano",
+    contactDisabled: "Hii ni biashara ya mfano kwa ajili ya kujaribu NEXA. Simu na WhatsApp zimezimwa ili isipigwe namba halisi.",
   },
   moderation: {
     hiddenTitle: "Yaliyofichwa hivi karibuni",

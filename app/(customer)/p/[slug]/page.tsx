@@ -147,6 +147,7 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
               </span>
             )}
           </div>
+          {p.demo && <span className="w-fit rounded-full bg-cta px-2 py-0.5 text-[11px] font-bold tracking-wide text-white uppercase">{t.ui.demo.tag}</span>}
           <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">{p.displayName}</h1>
           <p className="flex flex-wrap items-center gap-x-2 text-sm">
             {p.rating.count && p.rating.avg != null ? (
@@ -184,7 +185,7 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
               .filter((a) => a.href)
               .slice(0, 4)
               .map(({ action, href }) => (
-                <ConnectButton key={action} slug={p.slug} action={action} href={href!} label={t.profile.actions[action]} source="PROFILE" tile className="flex-1" />
+                <ConnectButton key={action} slug={p.slug} action={action} href={href!} label={t.profile.actions[action]} source="PROFILE" tile demo={p.demo} className="flex-1" />
               ))}
           </div>
         ) : (

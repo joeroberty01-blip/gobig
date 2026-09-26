@@ -54,3 +54,7 @@ next-env.d.ts
 
 # Claude Code local settings (per-developer)
 .claude/settings.local.json
+
+# owner-supplied photos for the sample businesses (uploaded to storage by db:demo:photos)
+/prisma/seeds/demo-photos/*
+!/prisma/seeds/demo-photos/README.md

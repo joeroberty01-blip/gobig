@@ -16,6 +16,9 @@
     "db:seed:catalog": "tsx prisma/seeds/catalog.ts",
     "db:seed:super-admin": "tsx prisma/seeds/super-admin.ts",
     "db:seed:plans": "tsx prisma/seeds/plans.ts",
+    "db:demo:seed": "tsx prisma/seeds/demo.ts",
+    "db:demo:photos": "tsx prisma/seeds/demo.ts photos",
+    "db:demo:remove": "tsx prisma/seeds/demo.ts remove",
     "db:studio": "prisma studio"
   },
   "dependencies": {

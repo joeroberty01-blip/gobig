@@ -2,6 +2,7 @@
 
 import { CalendarCheck, Car, Globe, Mail, MessageSquare, Navigation, Phone, ReceiptText, type LucideIcon } from "lucide-react";
 import type { ConnectAction } from "@/lib/provider/connect";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /** WhatsApp-style glyph: a chat bubble with a handset (drawn here, no brand asset needed). */
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -51,6 +52,7 @@ export function ConnectButton({
   primary = false,
   iconOnly = false,
   tile = false,
+  demo = false,
   className = "",
 }: {
   slug: string;
@@ -63,8 +65,11 @@ export function ConnectButton({
   iconOnly?: boolean;
   /** Icon above its label, as in the profile's Call · WhatsApp · Directions row. */
   tile?: boolean;
+  /** Sample business: tapping explains instead of calling a number that may belong to someone. */
+  demo?: boolean;
   className?: string;
 }) {
+  const { t } = useI18n();
   const Icon = ACTION_ICON[action];
   const external = EXTERNAL.includes(action);
   // WhatsApp always wears its own green, so customers recognise it at a glance.
@@ -80,8 +85,15 @@ export function ConnectButton({
     return (
       <a
         href={href}
-        onClick={() => trackConnect(slug, action, source)}
-        {...(external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
+        onClick={(e) => {
+          if (demo && action !== "REQUEST_QUOTE") {
+            e.preventDefault();
+            window.alert(t.ui.demo.contactDisabled);
+            return;
+          }
+          trackConnect(slug, action, source);
+        }}
+        {...(external && !demo ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
         className={`flex flex-col items-center gap-1.5 rounded-xl py-1 text-xs font-semibold text-ink transition active:scale-[0.97] ${className}`}
       >
         <span className={`grid size-12 place-items-center rounded-full ring-1 ring-line ${action === "WHATSAPP" ? "text-whatsapp" : "text-ink"}`}>
@@ -94,8 +106,15 @@ export function ConnectButton({
   return (
     <a
       href={href}
-      onClick={() => trackConnect(slug, action, source)}
-      {...(external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
+      onClick={(e) => {
+        if (demo && action !== "REQUEST_QUOTE") {
+          e.preventDefault();
+          window.alert(t.ui.demo.contactDisabled);
+          return;
+        }
+        trackConnect(slug, action, source);
+      }}
+      {...(external && !demo ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
       {...(iconOnly ? { "aria-label": label, title: label } : {})}
       className={`flex items-center justify-center gap-2 text-sm font-semibold transition active:scale-[0.97] ${
         iconOnly ? "size-11 rounded-xl" : "min-h-12 rounded-xl px-3 whitespace-nowrap"

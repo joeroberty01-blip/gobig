@@ -170,6 +170,8 @@ export async function listAreas() {
 export type ProviderCard = {
   id: string;
   slug: string;
+  /** Test-deployment sample business: labelled, and its contact buttons dial no one. */
+  demo: boolean;
   name: string;
   logoUrl: string | null;
   coverUrl: string | null;
@@ -204,6 +206,7 @@ const toPoint = (lat: Prisma.Decimal | null | undefined, lng: Prisma.Decimal | n
 const cardSelect = {
   id: true,
   slug: true,
+  isDemo: true,
   publishedAt: true,
   ratingAvg: true,
   ratingCount: true,
@@ -310,6 +313,7 @@ function toCard(
   return {
     id: p.id,
     slug: p.slug,
+    demo: p.isDemo,
     name: pr.displayName,
     logoUrl: media("LOGO"),
     coverUrl: media("COVER"),

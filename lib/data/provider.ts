@@ -142,6 +142,7 @@ export async function getPublicProfile(
     select: {
       id: true,
       slug: true,
+      isDemo: true,
       status: true,
       deletedAt: true,
       ratingAvg: true,
@@ -220,6 +221,7 @@ export async function getPublicProfile(
   return {
     id: p.id,
     slug: p.slug,
+    demo: p.isDemo,
     status: p.status,
     rating: { avg: p.ratingAvg, count: p.ratingCount },
     verificationLevel: p.verificationLevel,

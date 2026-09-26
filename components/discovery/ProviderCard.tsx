@@ -55,6 +55,11 @@ function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className
   );
 }
 
+/** Marks a test-deployment sample business. */
+export function SampleTag({ t }: { t: Dictionary }) {
+  return <span className="shrink-0 rounded-full bg-cta/15 px-1.5 py-0.5 text-[9.5px] font-bold tracking-wide text-cta uppercase">{t.ui.demo.tag}</span>;
+}
+
 function VerifiedPill({ t, className = "", light = false }: { t: Dictionary; className?: string; light?: boolean }) {
   return (
     <span
@@ -138,6 +143,7 @@ export function ProviderCard({
           <h3 className="flex min-w-0 items-center gap-1 text-[13px] font-bold tracking-tight sm:text-[15px]">
             <span className="truncate">{title}</span>
             {verified && <BadgeCheck aria-label={t.ui.home.verified} className="size-4 shrink-0 fill-link text-white" />}
+            {p.demo && <SampleTag t={t} />}
           </h3>
           <div className="mt-1 text-xs">{rating}</div>
           {distance && (
@@ -172,7 +178,10 @@ export function ProviderCard({
           {verified && <VerifiedPill t={t} className="absolute bottom-1.5 left-1.5 origin-bottom-left scale-90" light />}
         </div>
         <div className="flex min-w-0 flex-1 flex-col">
-          <h3 className="truncate text-[15px] font-bold tracking-tight">{title}</h3>
+          <h3 className="flex min-w-0 items-center gap-1.5 text-[15px] font-bold tracking-tight">
+            <span className="truncate">{title}</span>
+            {p.demo && <SampleTag t={t} />}
+          </h3>
           <div className="mt-1 text-xs">{rating}</div>
           <p className="mt-1 flex min-w-0 items-center gap-1 text-xs text-ink-muted">
             <MapPin aria-hidden className="size-3.5 shrink-0" />
@@ -194,7 +203,7 @@ export function ProviderCard({
         {actions.length > 0 && (
           <div className="relative z-10 flex shrink-0 flex-col gap-2">
             {actions.map(({ action, href }) => (
-              <ConnectButton key={action} slug={p.slug} action={action} href={href} label={t.profile.actions[action]} source="CARD" iconOnly />
+              <ConnectButton key={action} slug={p.slug} action={action} href={href} label={t.profile.actions[action]} source="CARD" iconOnly demo={p.demo} />
             ))}
           </div>
         )}
@@ -220,7 +229,10 @@ export function ProviderCard({
         )}
       </div>
       <div className="flex flex-1 flex-col p-3">
-        <h3 className="truncate text-sm font-bold tracking-tight">{title}</h3>
+        <h3 className="flex min-w-0 items-center gap-1.5 text-sm font-bold tracking-tight">
+          <span className="truncate">{title}</span>
+          {p.demo && <SampleTag t={t} />}
+        </h3>
         <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
           {rating}
           {distance && <span className="truncate text-ink-muted">{distance}</span>}
