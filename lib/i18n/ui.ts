@@ -7,6 +7,7 @@ export const en = {
     more: "More",
     analytics: "Analytics",
     menu: "Menu",
+    close: "Close",
   },
   theme: {
     label: "Appearance",
@@ -162,6 +163,7 @@ export const sw: typeof en = {
     more: "Zaidi",
     analytics: "Takwimu",
     menu: "Menyu",
+    close: "Funga",
   },
   theme: {
     label: "Mwonekano",
