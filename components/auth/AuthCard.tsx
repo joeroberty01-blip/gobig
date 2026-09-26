@@ -2,11 +2,11 @@ import Link from "next/link";
 import { BadgeCheck, LocateFixed, Star } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { LanguageSwitch } from "@/components/layout/LanguageSwitch";
-import { Logo } from "@/components/layout/Logo";
+import { Logo, Wordmark } from "@/components/layout/Logo";
 
 /**
  * Frame for login / sign-up / password reset (Phase 14): the form alone on phones; on large
- * screens a brand panel beside it stating what GO BIG actually guarantees.
+ * screens a brand panel beside it stating what NEXA actually guarantees.
  */
 export async function AuthCard({
   title,
@@ -26,7 +26,7 @@ export async function AuthCard({
       <aside className="bg-hero relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden p-12 text-white lg:flex">
         <Link href="/" className="flex items-center gap-2.5">
           <Logo className="size-9" />
-          <span className="text-xl font-black tracking-tight">{t.app.name}</span>
+          <Wordmark className="text-xl" />
         </Link>
         <div>
           <p className="text-4xl leading-tight font-extrabold tracking-tight text-balance">{a.panelTitle}</p>
@@ -55,7 +55,7 @@ export async function AuthCard({
         <header className="mx-auto flex h-16 w-full max-w-md items-center justify-between px-4 lg:max-w-lg">
           <Link href="/" className="flex items-center gap-2 lg:invisible">
             <Logo className="size-8" />
-            <span className="text-lg font-black tracking-tight">{t.app.name}</span>
+            <Wordmark className="text-lg" />
           </Link>
           <LanguageSwitch />
         </header>

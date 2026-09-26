@@ -1,11 +1,15 @@
 import { forwardRef } from "react";
 import Link from "next/link";
 
-type Variant = "primary" | "night" | "accent" | "onDark" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "cta" | "green" | "night" | "accent" | "onDark" | "secondary" | "ghost" | "danger";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-brand-700 text-white shadow-soft hover:bg-brand-600 disabled:opacity-60",
-  night: "bg-night-900 text-white shadow-soft hover:bg-night-700 disabled:opacity-60",
+  // Approved design: main actions are navy; green is kept for trust signals and WhatsApp.
+  primary: "bg-action text-white shadow-soft hover:bg-action-hover disabled:opacity-60",
+  green: "bg-brand-700 text-white shadow-soft hover:bg-brand-600 disabled:opacity-60",
+  // The one orange call to action per screen (Request Service, Respond).
+  cta: "bg-cta text-white shadow-soft hover:bg-cta-hover disabled:opacity-60",
+  night: "bg-action text-white shadow-soft hover:bg-action-hover disabled:opacity-60",
   accent: "bg-accent-400 text-night-900 hover:bg-accent-500",
   onDark: "border border-white/25 bg-white/10 text-white backdrop-blur hover:bg-white/20",
   secondary: "bg-surface text-ink border border-line hover:border-ink-subtle/40 hover:bg-canvas",

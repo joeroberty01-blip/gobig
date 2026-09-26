@@ -30,7 +30,7 @@ export function FilterBar({
   const base = { ...params, area: params.area ?? areaSlug };
   const chip = (on: boolean) =>
     `flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition active:scale-[0.97] ${
-      on ? "border-night-900 bg-night-900 text-white" : "border-line bg-surface text-ink hover:border-ink-subtle/50"
+      on ? "border-action bg-action text-white" : "border-line bg-surface text-ink hover:border-ink-subtle/50"
     }`;
   const hasFilters = !!(params.category || params.service || params.openNow || params.priced || params.verified || params.sort === "top");
   const toggle = (on: boolean, next: Partial<SearchParams>, Icon: typeof Clock, label: string) => (

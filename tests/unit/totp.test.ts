@@ -70,7 +70,7 @@ describe("codes", () => {
 
   it("otpauth links carry issuer, account and parameters", () => {
     const uri = otpauthUri(secret, "admin@gobig.co.tz");
-    expect(uri).toContain("otpauth://totp/GO%20BIG%3Aadmin%40gobig.co.tz?");
+    expect(uri).toContain("otpauth://totp/NEXA%3Aadmin%40gobig.co.tz?");
     expect(uri).toContain(`secret=${secret}`);
     expect(uri).toContain("digits=6&period=30");
   });

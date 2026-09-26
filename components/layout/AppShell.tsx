@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui";
 import { BottomNav, SideNav, TopNav } from "./NavLinks";
 import type { Nav } from "./navItems";
 import { LanguageSwitch } from "./LanguageSwitch";
-import { Logo } from "./Logo";
+import { Logo, Wordmark } from "./Logo";
 import { SignOutLink } from "./SignOutButton";
 
 /**
@@ -21,12 +21,15 @@ export async function AppShell({
   nav,
   homeHref,
   areaLabel,
+  location,
   children,
 }: {
   user: CurrentUser | null;
   nav: Nav;
   homeHref: string;
   areaLabel?: string;
+  /** Customer area: the "Dar es Salaam ▾" pill beside the logo. */
+  location?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { t } = await getServerDictionary();
@@ -34,6 +37,16 @@ export async function AppShell({
   const bellHref = user?.status === "ACTIVE" ? (user.role === "PROVIDER" ? "/provider/notifications" : user.role === "CUSTOMER" ? "/notifications" : null) : null;
   const unread = bellHref ? await unreadCount(user!.id) : 0;
   const sidebar = !!nav.side;
+  const accountHref = user ? (user.role === "PROVIDER" ? "/provider/account" : user.role === "CUSTOMER" ? "/account" : "/admin/account") : "/login";
+  const avatar = user && (
+    <Link
+      href={accountHref}
+      aria-label={t.ui.nav.profile}
+      className="grid size-10 place-items-center rounded-xl border-2 border-surface bg-gradient-to-br from-brand-600 to-night-900 text-sm font-bold text-white shadow-soft"
+    >
+      {user.name.trim().slice(0, 1).toUpperCase()}
+    </Link>
+  );
 
   const bell = bellHref && (
     <Link
@@ -57,13 +70,20 @@ export async function AppShell({
           <Link href={homeHref} className="mb-6 flex items-center gap-2.5 px-3">
             <Logo className="size-8" />
             <span className="flex flex-col leading-tight">
-              <span className="text-base font-black tracking-tight">{t.app.name}</span>
+              <Wordmark className="text-lg" />
               {areaLabel && <span className="text-[11px] font-medium text-white/50">{areaLabel}</span>}
             </span>
           </Link>
           <div className="flex-1 overflow-y-auto no-scrollbar">
             <SideNav items={nav.side!} />
           </div>
+          {!user && homeHref === "/" && (
+            <Link href="/signup?role=provider" className="mt-4 block rounded-2xl bg-white/[0.06] p-4 transition hover:bg-white/10">
+              <span className="block text-sm font-bold">{t.ui.home.listBusinessTitle}</span>
+              <span className="mt-1 block text-xs leading-relaxed text-white/60">{t.ui.home.listBusinessBody}</span>
+              <span className="mt-3 inline-flex min-h-8 items-center rounded-lg bg-brand-600 px-3 text-xs font-bold">{t.discovery.listBusiness}</span>
+            </Link>
+          )}
           {user && (
             <div className="mt-4 border-t border-white/10 pt-4">
               <p className="truncate px-3 text-sm font-semibold">{user.name}</p>
@@ -78,15 +98,22 @@ export async function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/85 backdrop-blur-xl">
-          <div className={`mx-auto flex h-16 items-center gap-3 px-4 ${sidebar ? "max-w-6xl lg:px-8" : "max-w-6xl"}`}>
-            <Link href={homeHref} className={`flex items-center gap-2 ${sidebar ? "lg:hidden" : ""}`}>
+          <div className={`mx-auto flex h-16 items-center gap-2 px-4 sm:gap-3 ${sidebar ? "max-w-6xl lg:px-8" : "max-w-6xl"}`}>
+            {/* Customer phones: the reference header is the location pill and EN | SW; the logo shows from tablet width. */}
+            <Link href={homeHref} className={`shrink-0 items-center gap-2 ${location ? "hidden sm:flex" : "flex"} ${sidebar ? "lg:hidden" : ""}`}>
               <Logo className="size-8" />
-              <span className="text-lg font-black tracking-tight text-ink">{t.app.name}</span>
+              <Wordmark className="text-lg text-ink" />
               {areaLabel && <span className="hidden text-xs font-semibold text-ink-subtle uppercase sm:inline">{areaLabel}</span>}
             </Link>
-            <div className="ml-6 flex-1">{!sidebar && <TopNav items={nav.tabs} />}</div>
+            <div className="flex min-w-0 flex-1 items-center">
+              {location}
+              {!sidebar && <TopNav items={nav.tabs} />}
+            </div>
+            <div className={location ? "" : "hidden sm:block"}>
+              <LanguageSwitch />
+            </div>
             {bell}
-            <LanguageSwitch />
+            {avatar}
             {!user && (
               <div className="hidden items-center gap-2 sm:flex">
                 <ButtonLink href="/login" variant="ghost" className="min-h-9">

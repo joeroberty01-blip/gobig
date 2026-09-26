@@ -62,8 +62,8 @@ export function CompareToggle({ slug, name, round = false }: { slug: string; nam
       title={label}
       className={
         round
-          ? `grid size-11 place-items-center rounded-full border shadow-soft backdrop-blur transition active:scale-95 disabled:opacity-50 ${on ? "border-night-900 bg-night-900 text-white" : "border-line bg-surface/90 text-ink"}`
-          : `inline-flex min-h-8 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold transition active:scale-95 disabled:opacity-50 ${on ? "border-night-900 bg-night-900 text-white" : "border-line bg-surface/90 text-ink-muted hover:text-ink"}`
+          ? `grid size-11 place-items-center rounded-full border shadow-soft backdrop-blur transition active:scale-95 disabled:opacity-50 ${on ? "border-action bg-action text-white" : "border-line bg-surface/90 text-ink"}`
+          : `inline-flex min-h-8 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold transition active:scale-95 disabled:opacity-50 ${on ? "border-action bg-action text-white" : "border-line bg-surface/90 text-ink-muted hover:text-ink"}`
       }
     >
       {on ? <Check aria-hidden className={round ? "size-5" : "size-3.5"} /> : <GitCompareArrows aria-hidden className={round ? "size-5" : "size-3.5"} />}
@@ -77,9 +77,21 @@ export function CompareBar() {
   const { t } = useI18n();
   const picked = usePicked();
   const pathname = usePathname();
-  if (!picked.length || pathname.startsWith("/compare")) return null;
+  // Only while browsing providers; never over forms (a request, an account page).
+  const browsing = pathname === "/" || ["/search", "/c/", "/categories", "/p/", "/saved", "/ask"].some((p) => pathname.startsWith(p));
+  if (!picked.length || !browsing) return null;
   return (
-    <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 px-4 lg:bottom-6">
+    <>
+    {/* Keeps the end of the page reachable above the bar. */}
+    <div aria-hidden className={pathname.startsWith("/p/") ? "h-20 md:h-16" : "h-16"} />
+    {/* On a profile, phones also show the request bar above the tabs: sit above both. */}
+    <div
+      className={`fixed inset-x-0 z-30 px-4 lg:bottom-6 ${
+        pathname.startsWith("/p/")
+          ? "bottom-[calc(9rem+env(safe-area-inset-bottom))] md:bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"
+          : "bottom-[calc(4.5rem+env(safe-area-inset-bottom))]"
+      }`}
+    >
       <div className="mx-auto flex max-w-md items-center gap-2 rounded-2xl bg-night-900 p-2 pl-4 text-white shadow-lift animate-rise">
         <GitCompareArrows aria-hidden className="size-5 shrink-0 text-brand-500" />
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{picked.map((p) => p.name).join(" · ")}</span>
@@ -95,6 +107,7 @@ export function CompareBar() {
         </Link>
       </div>
     </div>
+    </>
   );
 }
 

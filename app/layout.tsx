@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { publicDictionary } from "@/lib/i18n/clientDictionary";
 import { cookies } from "next/headers";
@@ -7,7 +7,8 @@ import { getServerDictionary } from "@/lib/i18n/server";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// The approved design (2026-09-26) uses Plus Jakarta Sans throughout.
+const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-app" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -28,7 +29,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const [{ t, locale }, jar] = await Promise.all([getServerDictionary(), cookies()]);
   const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
-    <html lang={locale} className={inter.variable} data-theme={theme === "system" ? undefined : theme} suppressHydrationWarning>
+    <html lang={locale} className={sans.variable} data-theme={theme === "system" ? undefined : theme} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
         <I18nProvider t={publicDictionary(t)} locale={locale}>
           {children}

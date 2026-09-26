@@ -313,17 +313,19 @@ async function customerJourney(browser: Browser) {
 
   await step(page, J, "location (choose area)", async () => {
     await go(page, "/");
-    await page.locator("main select").first().selectOption({ label: "Sinza" });
+    await page.locator("header select").first().selectOption({ label: "Sinza" });
     await page.waitForFunction(() => document.cookie.includes("gobig") || true);
     await page.waitForTimeout(2500);
     await go(page, "/");
-    const val = await page.locator("main select").first().inputValue();
+    const val = await page.locator("header select").first().inputValue();
     if (val !== "sinza") throw new Error(`area picker shows "${val}"`);
     await noOverflow(page);
     await snap(page, "customer-home-phone");
   });
 
   await step(page, J, "search", async () => {
+    // Home now sends typed requests to the AI search; the plain search is under Explore.
+    await go(page, "/search");
     await page.getByRole("searchbox").first().fill("fundi bomba");
     await page.getByRole("searchbox").first().press("Enter");
     await page.waitForURL(/\/search\?/, { timeout: 20_000 });

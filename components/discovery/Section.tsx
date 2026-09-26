@@ -22,7 +22,7 @@ export function Section({
           {subtitle && <p className="mt-0.5 truncate text-sm text-ink-muted">{subtitle}</p>}
         </div>
         {href && linkLabel && (
-          <Link href={href} className="flex shrink-0 items-center text-sm font-semibold text-brand-700">
+          <Link href={href} className="flex shrink-0 items-center text-sm font-semibold text-link">
             {linkLabel}
             <ChevronRight aria-hidden className="size-4" />
           </Link>

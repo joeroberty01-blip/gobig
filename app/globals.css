@@ -16,18 +16,26 @@
   --color-accent-500: #f59e0b;
 
   /* Deep navy for the hero, the AI card and the provider sidebar. Same in both themes. */
-  --color-night-700: #1c2a44;
-  --color-night-800: #111c31;
-  --color-night-900: #0a1322;
+  --color-night-700: #1d3354;
+  --color-night-800: #12243f;
+  --color-night-900: #0b1b33;
 
-  --color-whatsapp: #1fa855;
+  --color-whatsapp: #22c55e;
+  /* Call-to-action orange (search button, Request Service, Respond) — the reference design. */
+  --color-cta: #f7931e;
+  /* Links, active tabs and small icons: the reference's royal blue. */
+  --color-link: #1d4ed8;
+  --color-cta-hover: #e3800b;
+  /* Other main actions: navy; green in the dark theme. */
+  --color-action: #0b1b33;
+  --color-action-hover: #1d3354;
 
-  --color-ink: #0f172a;
+  --color-ink: #0b1b33;
   --color-ink-muted: #475569;
   --color-ink-subtle: #64748b;
-  --color-line: #e2e8f0;
+  --color-line: #e8ebf0;
   --color-surface: #ffffff;
-  --color-canvas: #f6f8fb;
+  --color-canvas: #f7f8fa;
   --color-danger: #dc2626;
   --color-danger-soft: #fef2f2;
   --color-success: #15803d;
@@ -35,7 +43,7 @@
   --color-warning: #b45309;
   --color-warning-soft: #fffbeb;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-app), ui-sans-serif, system-ui, sans-serif;
 
   --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
   --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 32px -8px rgb(15 23 42 / 0.16);
@@ -70,6 +78,9 @@
   }
   :root[data-theme="dark"] {
     color-scheme: dark;
+    --color-action: #19946f;
+    --color-link: #7aa7ff;
+    --color-action-hover: #22aa80;
     --color-brand-50: #0f2a23;
     --color-brand-100: #15392f;
     --color-brand-500: #2cc596;
@@ -94,6 +105,9 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       color-scheme: dark;
+      --color-action: #19946f;
+      --color-link: #7aa7ff;
+      --color-action-hover: #22aa80;
       --color-brand-50: #0f2a23;
       --color-brand-100: #15392f;
       --color-brand-500: #2cc596;
@@ -205,5 +219,24 @@ html .leaflet-container {
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .leaflet-tile-pane {
     filter: brightness(0.78) contrast(1.05) saturate(0.8);
+  }
+}
+
+/* Approved home hero (2026-09-26): a light sky behind the Dar skyline, darker in the dark theme. */
+.hero-sky {
+  background: linear-gradient(180deg, #cfe4f7 0%, #e8f2fb 55%, var(--color-canvas) 100%);
+  --skyline: #8fb3d6;
+  --palms: #2f7a4f;
+}
+:root[data-theme="dark"] .hero-sky {
+  background: linear-gradient(180deg, #16325a 0%, #10223d 55%, var(--color-canvas) 100%);
+  --skyline: #2d4f78;
+  --palms: #1f5a3a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .hero-sky {
+    background: linear-gradient(180deg, #16325a 0%, #10223d 55%, var(--color-canvas) 100%);
+    --skyline: #2d4f78;
+    --palms: #1f5a3a;
   }
 }

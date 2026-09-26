@@ -191,6 +191,9 @@ describe("reviews", () => {
     p = await prisma.provider.findUniqueOrThrow({ where: { id: providerId } });
     expect(p.ratingCount).toBe(1);
     expect(await prisma.auditLog.count({ where: { action: "review.hidden", entityId: review.id } })).toBe(1);
+    // Hiding closed its reports, so it left the queue — but admins can still find it to restore.
+    expect((await reviews.moderationQueue()).map((r) => r.id)).not.toContain(review.id);
+    expect((await reviews.recentlyHiddenReviews(100)).map((r) => r.id)).toContain(review.id);
   });
 
   it("public review data carries no reviewer contact details", async () => {

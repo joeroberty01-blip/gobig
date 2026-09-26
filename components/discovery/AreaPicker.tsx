@@ -19,11 +19,14 @@ export function AreaPicker({
   value,
   search,
   compact = false,
+  pill = false,
 }: {
   districts: AreaOption[];
   value: string | null;
   search?: Partial<SearchParams>;
   compact?: boolean;
+  /** The small "Dar es Salaam ▾" pill in the header (approved design). */
+  pill?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -37,14 +40,21 @@ export function AreaPicker({
     });
 
   return (
-    <label className={`flex items-center gap-2 rounded-xl border border-line bg-surface px-3 text-ink shadow-soft ${compact ? "min-h-10" : "min-h-12"} ${pending ? "opacity-60" : ""}`}>
-      <MapPin aria-hidden className="size-4 shrink-0 text-brand-700" />
+    // `relative`: the screen-reader label below is absolutely positioned; keep it inside.
+    <label
+      className={`relative flex items-center text-ink ${
+        pill
+          ? "min-h-9 max-w-44 gap-1 rounded-full bg-surface/80 px-2.5 hover:bg-surface"
+          : `gap-2 rounded-xl border border-line bg-surface px-3 shadow-soft ${compact ? "min-h-10" : "min-h-12"}`
+      } ${pending ? "opacity-60" : ""}`}
+    >
+      <MapPin aria-hidden className={`shrink-0 ${pill ? "size-3.5 text-ink-muted" : "size-4 text-brand-700"}`} />
       <span className="sr-only">{t.discovery.yourArea}</span>
       <select
         value={value ?? ""}
         onChange={(e) => choose(e.target.value)}
         disabled={pending}
-        className="min-w-0 flex-1 bg-transparent py-2 text-sm font-medium focus:outline-none"
+        className={`min-w-0 flex-1 bg-transparent py-2 font-medium focus:outline-none ${pill ? "text-xs" : "text-sm"}`}
       >
         <option value="">{t.discovery.allOfDar}</option>
         {districts.map((d) => (

@@ -50,6 +50,7 @@ export function ConnectButton({
   source,
   primary = false,
   iconOnly = false,
+  tile = false,
   className = "",
 }: {
   slug: string;
@@ -60,6 +61,8 @@ export function ConnectButton({
   primary?: boolean;
   /** Round icon button (search result rows); the label becomes its accessible name. */
   iconOnly?: boolean;
+  /** Icon above its label, as in the profile's Call · WhatsApp · Directions row. */
+  tile?: boolean;
   className?: string;
 }) {
   const Icon = ACTION_ICON[action];
@@ -69,8 +72,25 @@ export function ConnectButton({
     action === "WHATSAPP"
       ? "bg-whatsapp text-white hover:opacity-90"
       : primary
-        ? "bg-night-900 text-white hover:bg-night-700"
-        : "border border-line bg-surface text-ink hover:bg-canvas";
+        ? "bg-action text-white hover:bg-action-hover"
+        : iconOnly
+          ? "bg-canvas text-ink ring-1 ring-line hover:bg-line/60"
+          : "border border-line bg-surface text-ink hover:bg-canvas";
+  if (tile) {
+    return (
+      <a
+        href={href}
+        onClick={() => trackConnect(slug, action, source)}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
+        className={`flex flex-col items-center gap-1.5 rounded-xl py-1 text-xs font-semibold text-ink transition active:scale-[0.97] ${className}`}
+      >
+        <span className={`grid size-12 place-items-center rounded-full ring-1 ring-line ${action === "WHATSAPP" ? "text-whatsapp" : "text-ink"}`}>
+          <Icon aria-hidden className="size-5.5" />
+        </span>
+        {label}
+      </a>
+    );
+  }
   return (
     <a
       href={href}
@@ -78,7 +98,7 @@ export function ConnectButton({
       {...(external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
       {...(iconOnly ? { "aria-label": label, title: label } : {})}
       className={`flex items-center justify-center gap-2 text-sm font-semibold transition active:scale-[0.97] ${
-        iconOnly ? "size-11 rounded-full" : "min-h-12 rounded-xl px-3 whitespace-nowrap"
+        iconOnly ? "size-11 rounded-xl" : "min-h-12 rounded-xl px-3 whitespace-nowrap"
       } ${tone} ${className}`}
     >
       <Icon aria-hidden className={iconOnly ? "size-5" : "size-4"} />

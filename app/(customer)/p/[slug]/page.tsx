@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowRight, BadgeCheck, Clock, MapPin, Pencil } from "lucide-react";
+import { ArrowRight, BadgeCheck, Clock, MapPin, Pencil, Star, Tag, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { getCurrentUser } from "@/lib/session";
 import { getPublicProfile } from "@/lib/data/provider";
@@ -62,7 +62,6 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
   const u = t.ui.profile;
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
   const today = darWeekday();
-  const categoryLabel = p.category ? [p.category.parent && name(p.category.parent), name(p.category)].filter(Boolean).join(" · ") : null;
   const areaLabel = p.area ? [p.area.name, p.area.district].filter(Boolean).join(", ") : null;
   const stats = (await providerStats([p.id])).get(p.id);
   const avail = availability(p.openingHoursMode, p.openingHours);
@@ -98,13 +97,20 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
   // A "From …" price already says so; don't repeat the word.
   const fromLabel = cheapest && cheapest.priceType !== "FROM" ? u.fromPrice : null;
   const requestHref = `/requests/new?provider=${encodeURIComponent(p.slug)}`;
+  // Earned or measured facts only — never marketing claims the platform can't back.
+  const reasons = [
+    verified && { key: "verified", label: t.ui.home.verified, Icon: BadgeCheck, tint: "#16a34a" },
+    badges.some((b) => b.kind === "FAST_RESPONSE") && { key: "fast", label: t.trust.badges.FAST_RESPONSE, Icon: Zap, tint: "#2563eb" },
+    badges.some((b) => b.kind === "TOP_RATED") && { key: "top", label: t.trust.badges.TOP_RATED, Icon: Star, tint: "#d97706" },
+    p.services.some((s) => s.priceType !== "ON_QUOTE" && s.priceMin != null) && { key: "prices", label: u.pricesListed, Icon: Tag, tint: "#7c3aed" },
+  ].filter((r): r is { key: string; label: string; Icon: typeof Star; tint: string } => !!r);
 
   const sections = [
-    { id: "overview", label: u.overview, show: true },
     { id: "services", label: u.services, show: true },
+    { id: "photos", label: u.portfolio, show: p.gallery.length > 0 },
     { id: "reviews", label: u.reviews, show: true },
-    { id: "photos", label: u.photos, show: p.gallery.length > 0 },
-    { id: "hours", label: u.hours, show: true },
+    { id: "overview", label: u.about, show: true },
+    { id: "hours", label: u.availability, show: true },
     { id: "location", label: u.location, show: true },
   ].filter((s) => s.show);
 
@@ -116,121 +122,99 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
         </div>
       )}
 
-      {/* Cover */}
-      <div className="relative -mx-4 -mt-6 aspect-[16/9] overflow-hidden bg-hero sm:mx-0 sm:mt-0 sm:aspect-[3/1] sm:rounded-[2rem]">
+      {/* Photo header with the business on it (reference design). */}
+      <section className="relative -mx-4 -mt-6 overflow-hidden bg-hero text-white sm:mx-0 sm:mt-0 sm:rounded-[2rem]">
         {p.cover && <Image src={p.cover.url} alt="" fill loading="eager" fetchPriority="high" sizes="(max-width: 1024px) 100vw, 1024px" className="object-cover" />}
-        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-night-900/50 via-transparent to-night-900/25" />
-        <div className="absolute top-3 right-3 flex gap-2 sm:top-4 sm:right-4">
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-night-900 via-night-900/55 to-night-900/10" />
+        <div className="absolute top-3 right-3 z-10 flex gap-2 sm:top-4 sm:right-4">
           {!p.preview && (!viewer || viewer.role === "CUSTOMER") && (
             <FavoriteButton providerId={p.id} slug={p.slug} initial={favorite} signedInCustomer={viewer?.role === "CUSTOMER" && viewer.status === "ACTIVE"} round />
           )}
           {customerView && <CompareToggle slug={p.slug} name={p.displayName} round />}
           <ShareButton title={p.displayName} />
         </div>
-      </div>
-
-      {/* Identity + contact */}
-      <div className="relative -mt-12 grid gap-4 sm:-mt-16 sm:px-6 md:grid-cols-[1fr_320px] md:items-end">
-        <header className="rounded-3xl border border-line bg-surface p-5 shadow-lift sm:p-6">
-          <div className="flex items-start gap-4">
-            <div className="size-18 shrink-0 overflow-hidden rounded-2xl border border-line bg-brand-50 shadow-soft sm:size-22">
-              {p.logo ? (
-                <Image src={p.logo.url} alt="" width={88} height={88} className="size-full object-cover" />
-              ) : (
-                <span className="grid size-full place-items-center bg-hero text-3xl font-black text-white">{p.displayName.slice(0, 1).toUpperCase()}</span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-2xl leading-tight font-extrabold tracking-tight sm:text-3xl">
-                <span className="min-w-0 break-words">{p.displayName}</span>
-                {verified && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-700 px-2 py-0.5 text-xs font-semibold text-white">
-                    <BadgeCheck aria-hidden className="size-3.5" />
-                    {t.ui.home.verified}
-                  </span>
-                )}
-              </h1>
-              <div className="mt-1.5 text-sm">
-                <RatingSummary avg={p.rating.avg} count={p.rating.count} t={t} />
-              </div>
-              {areaLabel && (
-                <p className="mt-1 flex items-center gap-1 text-sm text-ink-muted">
-                  <MapPin aria-hidden className="size-4 shrink-0" />
-                  <span>
-                    {areaLabel}
-                    {p.distance && ` · ${fill(t.location.away, { distance: formatDistance(p.distance.km, p.distance.precision) })}`}
-                  </span>
-                </p>
-              )}
-            </div>
+        <div className="relative flex min-h-[25rem] flex-col justify-end gap-2 p-5 pb-9 sm:min-h-[22rem] sm:p-8 sm:pb-10">
+          <div className="flex items-center gap-3">
+            {p.logo && (
+              <span className="relative size-12 shrink-0 overflow-hidden rounded-xl bg-white ring-2 ring-white/70">
+                <Image src={p.logo.url} alt="" fill sizes="48px" className="object-cover" />
+              </span>
+            )}
+            {verified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-brand-600 px-2 py-0.5 text-[11px] font-bold text-white">
+                <BadgeCheck aria-hidden className="size-3.5" />
+                {t.ui.home.verified}
+              </span>
+            )}
           </div>
-          {categoryLabel && <p className="mt-3 text-sm font-medium text-brand-700">{categoryLabel}</p>}
-          {(badges.some((b) => b.kind !== "VERIFIED") || availText) && (
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          <h1 className="text-[1.75rem] leading-tight font-extrabold tracking-tight sm:text-4xl">{p.displayName}</h1>
+          <p className="flex flex-wrap items-center gap-x-2 text-sm">
+            {p.rating.count && p.rating.avg != null ? (
+              <>
+                <Star aria-hidden className="size-4 fill-accent-400 text-accent-400" />
+                <b>{p.rating.avg.toFixed(1)}</b>
+                <span className="text-white/75">· {p.rating.count === 1 ? t.trust.rating.reviewsCountOne : fill(t.trust.rating.reviewsCount, { count: p.rating.count })}</span>
+              </>
+            ) : (
+              <span className="text-white/75">{t.trust.rating.noReviews}</span>
+            )}
+          </p>
+          {areaLabel && (
+            <p className="flex items-center gap-1 text-sm text-white/85">
+              <MapPin aria-hidden className="size-4 shrink-0" />
+              {areaLabel}
+              {p.distance && ` · ${fill(t.location.away, { distance: formatDistance(p.distance.km, p.distance.precision) })}`}
+            </p>
+          )}
+          {p.description && <p className="line-clamp-3 max-w-2xl text-sm leading-relaxed text-white/85">{p.description}</p>}
+          {(availText || badges.some((b) => b.kind === "FAST_RESPONSE" || b.kind === "TOP_RATED")) && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
               {availText && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${AVAIL_TONE[availText.tone]}`}>{availText.text}</span>}
-              <TrustBadges badges={badges.filter((b) => b.kind !== "VERIFIED" && b.kind !== "AVAILABLE")} t={t} locale={locale} />
+              <TrustBadges badges={badges.filter((b) => b.kind === "FAST_RESPONSE" || b.kind === "TOP_RATED")} t={t} locale={locale} />
             </div>
           )}
-          {p.isOwner && (
-            <ButtonLink href="/provider/profile" variant="secondary" className="mt-4 min-h-9">
-              <Pencil aria-hidden className="size-4" />
-              {t.profile.public.editProfile}
-            </ButtonLink>
-          )}
-        </header>
+        </div>
+      </section>
 
-        {/* Contact buttons: only the ones the provider chose, and only when the data exists. */}
-        <section aria-label={t.profile.public.contact} className="rounded-3xl border border-line bg-surface p-4 shadow-soft">
-          {p.actions.length ? (
-            <div className="grid grid-cols-2 gap-2">
-              {p.actions.map(
-                ({ action, href }, i) =>
-                  href && (
-                    <ConnectButton
-                      key={action}
-                      slug={p.slug}
-                      action={action}
-                      href={href}
-                      label={t.profile.actions[action]}
-                      source="PROFILE"
-                      primary={i === 0 || action === "CALL"}
-                      className={p.actions.length % 2 === 1 && i === p.actions.length - 1 ? "col-span-2" : ""}
-                    />
-                  ),
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-ink-muted">{t.profile.public.noContact}</p>
-          )}
-          {customerView && (
-            <div className="mt-3 hidden border-t border-line pt-3 md:block">
-              {priceText && (
-                <p className="mb-2 text-sm">
-                  {fromLabel && <span className="text-ink-muted">{fromLabel} · </span>}
-                  <span className="font-bold">{priceText}</span>
-                </p>
-              )}
-              <ButtonLink href={requestHref} variant="night" className="w-full">
-                {u.requestService}
-                <ArrowRight aria-hidden className="size-4" />
-              </ButtonLink>
-            </div>
-          )}
-          {/* Phase 12: report a listing (fake, fraud, unsafe…). The provider's own team doesn't see it. */}
-          {!p.preview && !p.isOwner && viewer && (viewer.role === "CUSTOMER" || viewer.role === "PROVIDER") && (
-            <div className="mt-2">
-              <ReportButton targetType="PROVIDER" targetId={p.id} />
-            </div>
-          )}
-        </section>
-      </div>
+      {/* Contact row and the one orange action. Only the buttons the provider chose, with real data. */}
+      <section aria-label={t.profile.public.contact} className="relative -mt-5 rounded-3xl border border-line bg-surface p-4 shadow-lift sm:mx-6 sm:p-5">
+        {p.actions.length ? (
+          <div className="flex justify-around gap-2">
+            {p.actions
+              .filter((a) => a.href)
+              .slice(0, 4)
+              .map(({ action, href }) => (
+                <ConnectButton key={action} slug={p.slug} action={action} href={href!} label={t.profile.actions[action]} source="PROFILE" tile className="flex-1" />
+              ))}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-muted">{t.profile.public.noContact}</p>
+        )}
+        {customerView && (
+          <ButtonLink href={requestHref} variant="cta" className="mt-4 min-h-12 w-full text-base">
+            {u.requestService}
+          </ButtonLink>
+        )}
+        {p.isOwner && (
+          <ButtonLink href="/provider/profile" variant="secondary" className="mt-4 min-h-10 w-full">
+            <Pencil aria-hidden className="size-4" />
+            {t.profile.public.editProfile}
+          </ButtonLink>
+        )}
+        {/* Phase 12: report a listing (fake, fraud, unsafe…). The provider's own team doesn't see it. */}
+        {!p.preview && !p.isOwner && viewer && (viewer.role === "CUSTOMER" || viewer.role === "PROVIDER") && (
+          <div className="mt-2">
+            <ReportButton targetType="PROVIDER" targetId={p.id} />
+          </div>
+        )}
+      </section>
 
       {/* Sticky jump bar */}
       <nav aria-label={u.sections} className="sticky top-16 z-10 -mx-4 mt-6 border-b border-line bg-canvas/90 px-4 backdrop-blur-xl sm:mx-0 sm:rounded-2xl sm:border sm:bg-surface/90">
         <ul className="flex gap-1 overflow-x-auto no-scrollbar">
           {sections.map((s) => (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="flex min-h-12 items-center px-3 text-sm font-semibold whitespace-nowrap text-ink-muted transition hover:text-ink">
+              <a href={`#${s.id}`} className="flex min-h-12 items-center border-b-2 border-transparent px-3 text-sm font-semibold whitespace-nowrap text-ink-muted transition hover:border-link hover:text-ink focus-visible:border-link">
                 {s.label}
               </a>
             </li>
@@ -240,17 +224,8 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
 
       <div className="mt-6 grid gap-5 md:grid-cols-[1fr_320px]">
         <div className="flex min-w-0 flex-col gap-5">
-          <Card id="overview" className="scroll-mt-32">
-            <h2 className="mb-2 text-lg font-bold">{t.profile.public.about}</h2>
-            {p.description ? (
-              <p className="text-sm leading-relaxed whitespace-pre-line text-ink-muted">{p.description}</p>
-            ) : (
-              <p className="text-sm text-ink-subtle">—</p>
-            )}
-          </Card>
-
           <Card id="services" className="scroll-mt-32">
-            <h2 className="mb-2 text-lg font-bold">{t.profile.public.services}</h2>
+            <h2 className="mb-2 text-lg font-bold">{u.ourServices}</h2>
             <ul className="divide-y divide-line">
               {p.services.map((s) => (
                 <li key={s.id} className="flex items-baseline justify-between gap-4 py-3 text-sm">
@@ -317,6 +292,29 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
               </div>
             </Card>
           )}
+          <Card id="overview" className="scroll-mt-32">
+            <h2 className="mb-2 text-lg font-bold">{t.profile.public.about}</h2>
+            {p.description ? (
+              <p className="text-sm leading-relaxed whitespace-pre-line text-ink-muted">{p.description}</p>
+            ) : (
+              <p className="text-sm text-ink-subtle">—</p>
+            )}
+            {reasons.length > 0 && (
+              <div className="mt-5">
+                <h3 className="text-sm font-bold">{u.whyTitle}</h3>
+                <p className="text-xs text-ink-subtle">{u.whyNote}</p>
+                <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {reasons.map((r) => (
+                    <li key={r.key} className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-semibold" style={{ background: `color-mix(in oklab, ${r.tint} 11%, transparent)` }}>
+                      <r.Icon aria-hidden className="size-4 shrink-0" style={{ color: r.tint }} />
+                      {r.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+
         </div>
 
         <aside className="flex min-w-0 flex-col gap-5">

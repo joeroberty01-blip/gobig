@@ -6,7 +6,7 @@ export const en = {
     TOP_RATED: "Top rated",
     AVAILABLE: "Available now",
     FAST_RESPONSE: "Fast response",
-    verifiedTitle: "{level} — checked by GO BIG",
+    verifiedTitle: "{level} — checked by NEXA",
   },
   rating: {
     noReviews: "No reviews yet",
@@ -34,7 +34,7 @@ export const en = {
     navTitle: "Verification",
     title: "Get verified",
     intro:
-      "Verification shows customers that GO BIG has checked your documents. It is free, can't be bought, and is separate from any paid promotion.",
+      "Verification shows customers that NEXA has checked your documents. It is free, can't be bought, and is separate from any paid promotion.",
     currentLevel: "Your badge",
     notVerified: "Not verified yet",
     chooseLevel: "Choose what to verify",
@@ -45,7 +45,7 @@ export const en = {
     docType: "Document type",
     addDocument: "Add document",
     uploading: "Uploading…",
-    docHint: "Photo (JPG/PNG/WebP) or PDF, up to 10 MB. Only GO BIG reviewers can see these files.",
+    docHint: "Photo (JPG/PNG/WebP) or PDF, up to 10 MB. Only NEXA reviewers can see these files.",
     noteLabel: "Note for the reviewer (optional)",
     submit: "Submit for review",
     submitting: "Submitting…",
@@ -155,7 +155,7 @@ export const sw: TrustDictionary = {
     TOP_RATED: "Wanaopendwa zaidi",
     AVAILABLE: "Wanapatikana sasa",
     FAST_RESPONSE: "Hujibu haraka",
-    verifiedTitle: "{level} — imekaguliwa na GO BIG",
+    verifiedTitle: "{level} — imekaguliwa na NEXA",
   },
   rating: {
     noReviews: "Bado hakuna maoni",
@@ -183,7 +183,7 @@ export const sw: TrustDictionary = {
     navTitle: "Uthibitisho",
     title: "Thibitishwa",
     intro:
-      "Uthibitisho unaonyesha wateja kwamba GO BIG imekagua hati zako. Ni bure, hauwezi kununuliwa, na ni tofauti na matangazo ya kulipia.",
+      "Uthibitisho unaonyesha wateja kwamba NEXA imekagua hati zako. Ni bure, hauwezi kununuliwa, na ni tofauti na matangazo ya kulipia.",
     currentLevel: "Beji yako",
     notVerified: "Bado hujathibitishwa",
     chooseLevel: "Chagua unachotaka kuthibitisha",
@@ -194,7 +194,7 @@ export const sw: TrustDictionary = {
     docType: "Aina ya hati",
     addDocument: "Ongeza hati",
     uploading: "Inapakia…",
-    docHint: "Picha (JPG/PNG/WebP) au PDF, hadi MB 10. Wakaguzi wa GO BIG pekee ndio wanaoweza kuona faili hizi.",
+    docHint: "Picha (JPG/PNG/WebP) au PDF, hadi MB 10. Wakaguzi wa NEXA pekee ndio wanaoweza kuona faili hizi.",
     noteLabel: "Ujumbe kwa mkaguzi (si lazima)",
     submit: "Tuma kwa ukaguzi",
     submitting: "Inatuma…",

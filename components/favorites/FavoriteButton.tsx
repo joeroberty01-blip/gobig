@@ -13,6 +13,7 @@ export function FavoriteButton({
   initial,
   signedInCustomer,
   round = false,
+  small = false,
 }: {
   providerId: string;
   slug: string;
@@ -20,12 +21,14 @@ export function FavoriteButton({
   signedInCustomer: boolean;
   /** Round icon button over the cover photo (Phase 14); the label stays as its accessible name. */
   round?: boolean;
+  /** Smaller round button for the photo cards. */
+  small?: boolean;
 }) {
   const { t } = useI18n();
   const [saved, setSaved] = useState(initial);
   const [pending, start] = useTransition();
   const cls = round
-    ? "grid size-11 place-items-center rounded-full border shadow-soft backdrop-blur transition active:scale-95 [&>span]:sr-only"
+    ? `grid place-items-center rounded-full border shadow-soft backdrop-blur transition active:scale-95 [&>span]:sr-only ${small ? "size-8 [&>svg]:size-4" : "size-11"}`
     : "flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition active:scale-[0.98]";
 
   if (!signedInCustomer) {

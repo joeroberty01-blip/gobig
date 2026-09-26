@@ -21,6 +21,7 @@ import {
   Search,
   Settings,
   SlidersHorizontal,
+  Sparkles,
   Store,
   UserRound,
   Users,
@@ -50,9 +51,10 @@ const ICONS = {
   ranking: SlidersHorizontal,
   audit: ScrollText,
   settings: Settings,
+  sparkles: Sparkles,
 } as const;
 
-export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; exact?: boolean; mobileOnly?: boolean };
+export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; exact?: boolean; mobileOnly?: boolean; /** The raised round button in the middle of the tab bar. */ fab?: boolean };
 
 function isActive(pathname: string, item: NavItem) {
   return item.exact ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -71,18 +73,30 @@ export function BottomNav({ items, hideFrom = "md" }: { items: NavItem[]; hideFr
         {items.map((item) => {
           const Icon = ICONS[item.icon];
           const active = isActive(pathname, item);
+          if (item.fab) {
+            return (
+              <li key={item.href} className="flex flex-1 justify-center">
+                <Link
+                  href={item.href}
+                  aria-label={item.label}
+                  aria-current={active ? "page" : undefined}
+                  className="-mt-6 grid size-15 place-items-center rounded-full border-4 border-surface bg-action text-white shadow-lift transition active:scale-95"
+                >
+                  <Icon aria-hidden className="size-6" strokeWidth={2.4} />
+                </Link>
+              </li>
+            );
+          }
           return (
             <li key={item.href} className="flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`group flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors ${
-                  active ? "text-brand-700" : "text-ink-subtle hover:text-ink"
+                className={`group flex h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+                  active ? "font-bold text-link" : "font-medium text-ink-subtle hover:text-ink"
                 }`}
               >
-                <span className={`grid h-7 w-12 place-items-center rounded-full transition-colors ${active ? "bg-brand-50" : "group-active:bg-canvas"}`}>
-                  <Icon aria-hidden className="size-5.5" strokeWidth={active ? 2.3 : 1.8} />
-                </span>
+                <Icon aria-hidden className="size-5.5" strokeWidth={active ? 2.4 : 1.8} />
                 {item.label}
               </Link>
             </li>

@@ -1,7 +1,7 @@
 // AI search (Phase 9). Every sentence shown to customers is written here — never by the model.
 
 export const en = {
-  title: "Ask GO BIG",
+  title: "Ask NEXA",
   intro: "Describe what you need in your own words — in Swahili or English. We'll find the service, the area and when you need it.",
   placeholder: "e.g. I need AC repair in Mikocheni today",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],
@@ -23,14 +23,14 @@ export const en = {
   noResults: "No providers match this yet.",
   seeAll: "See all {count} results",
   postRequest: "Or post a request — providers will come to you",
-  rulesNote: "Results are matched from GO BIG's own provider listings.",
+  rulesNote: "Results are matched from NEXA's own provider listings.",
   tooLong: "Please keep it under 300 characters.",
 };
 
 export type AiDictionary = typeof en;
 
 export const sw: AiDictionary = {
-  title: "Uliza GO BIG",
+  title: "Uliza NEXA",
   intro: "Eleza unachohitaji kwa maneno yako — kwa Kiswahili au Kiingereza. Tutatambua huduma, eneo na lini unaihitaji.",
   placeholder: "mf. Nahitaji fundi AC Mikocheni leo",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],
@@ -52,6 +52,6 @@ export const sw: AiDictionary = {
   noResults: "Bado hakuna watoa huduma wanaolingana.",
   seeAll: "Ona matokeo yote {count}",
   postRequest: "Au tuma ombi — watoa huduma watakujia",
-  rulesNote: "Matokeo yanatoka kwenye orodha za watoa huduma za GO BIG pekee.",
+  rulesNote: "Matokeo yanatoka kwenye orodha za watoa huduma za NEXA pekee.",
   tooLong: "Tafadhali andika chini ya herufi 300.",
 };

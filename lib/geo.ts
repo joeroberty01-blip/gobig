@@ -2,7 +2,7 @@
 
 export type Point = { lat: number; lng: number };
 
-/** Where GO BIG operates today: Dar es Salaam with a margin. Points outside are refused. */
+/** Where NEXA operates today: Dar es Salaam with a margin. Points outside are refused. */
 export const SERVICE_REGION = { minLat: -7.35, maxLat: -6.4, minLng: 38.85, maxLng: 39.7 };
 export const DAR_CENTER: Point = { lat: -6.7924, lng: 39.2083 };
 

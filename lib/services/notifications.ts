@@ -14,8 +14,8 @@ export type NotificationType =
   | "REQUEST_NOT_SELECTED" // provider: the customer chose someone else
   | "REQUEST_CANCELLED" // provider: the customer cancelled
   | "REQUEST_COMPLETED" // provider: the customer marked the job done
-  | "REQUEST_CANCELLED_BY_ADMIN" // customer: GO BIG closed your request (Phase 12)
-  | "ANNOUNCEMENT"; // everyone: a message from GO BIG (Phase 12)
+  | "REQUEST_CANCELLED_BY_ADMIN" // customer: NEXA closed your request (Phase 12)
+  | "ANNOUNCEMENT"; // everyone: a message from NEXA (Phase 12)
 
 export type NotificationData = { requestId?: string; matchId?: string; providerName?: string; announcementId?: string };
 

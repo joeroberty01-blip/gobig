@@ -82,7 +82,7 @@ export function verifyTotp(secretB32: string, code: string, now: Date = new Date
 }
 
 /** otpauth:// link for authenticator apps (also rendered as a QR code). */
-export function otpauthUri(secretB32: string, account: string, issuer = "GO BIG"): string {
+export function otpauthUri(secretB32: string, account: string, issuer = "NEXA"): string {
   const label = encodeURIComponent(`${issuer}:${account}`);
   return `otpauth://totp/${label}?secret=${secretB32}&issuer=${encodeURIComponent(issuer)}&algorithm=SHA1&digits=${DIGITS}&period=${STEP_SECONDS}`;
 }

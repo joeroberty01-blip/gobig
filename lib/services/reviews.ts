@@ -203,6 +203,28 @@ export async function moderationQueue() {
   });
 }
 
+/**
+ * Reviews a moderator hid, newest first (Phase 15). Hiding closes the reports, so without this
+ * list a hidden review could never be found again to restore.
+ */
+export async function recentlyHiddenReviews(take = 30) {
+  return prisma.review.findMany({
+    where: { status: "HIDDEN" },
+    orderBy: { updatedAt: "desc" },
+    take,
+    select: {
+      id: true,
+      rating: true,
+      body: true,
+      status: true,
+      createdAt: true,
+      updatedAt: true,
+      author: { select: { name: true } },
+      provider: { select: { slug: true, profile: { select: { displayName: true } } } },
+    },
+  });
+}
+
 export type Moderation = "HIDE" | "RESTORE" | "DISMISS";
 
 export async function moderate(adminId: string, reviewId: string, action: Moderation, note: string | null): Promise<RResult> {

@@ -25,7 +25,7 @@ export function ErrorView({ error, reset }: { error: Error & { digest?: string }
         <button
           type="button"
           onClick={reset}
-          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-night-900 px-4 text-sm font-semibold text-white transition hover:bg-night-700 active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-action px-4 text-sm font-semibold text-white transition hover:bg-action-hover active:scale-[0.98]"
         >
           <RotateCcw aria-hidden className="size-4" />
           {t.ui.states.retry}
@@ -50,7 +50,7 @@ export function NotFoundView() {
       <p className="mt-2 text-sm text-ink-muted">{t.ui.states.notFoundBody}</p>
       <Link
         href="/"
-        className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-night-900 px-4 text-sm font-semibold text-white transition hover:bg-night-700 active:scale-[0.98]"
+        className="mt-6 inline-flex min-h-11 items-center rounded-xl bg-action px-4 text-sm font-semibold text-white transition hover:bg-action-hover active:scale-[0.98]"
       >
         {t.ui.states.goHome}
       </Link>

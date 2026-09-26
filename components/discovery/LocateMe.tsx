@@ -66,7 +66,7 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
         type="button"
         onClick={locate}
         disabled={locating || pending}
-        className={`inline-flex min-h-10 w-fit items-center gap-2 rounded-xl px-1 text-sm font-semibold ${onDark ? "text-accent-400" : "text-brand-700"}`}
+        className={`inline-flex min-h-10 w-fit items-center gap-2 rounded-xl px-1 text-sm font-semibold ${onDark ? "text-accent-400" : "text-link"}`}
       >
         <LocateFixed aria-hidden className="size-4" />
         {locating || pending ? t.location.locating : t.location.useMyLocation}

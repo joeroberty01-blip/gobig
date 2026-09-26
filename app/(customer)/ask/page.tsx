@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { CalendarClock, MapPin, SearchX, Siren, Sparkles, Wrench } from "lucide-react";
+import { Search, SearchX, SlidersHorizontal, Sparkles, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { searchHref } from "@/lib/discovery/query";
@@ -58,77 +58,58 @@ export default async function AskPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <section className="bg-hero relative overflow-hidden rounded-[2rem] px-5 py-7 text-white shadow-lift sm:px-9 sm:py-9">
-        <AiOrb />
-        <div className="relative max-w-2xl">
-          {q && !tooLong ? (
-            <>
-              <h1 className="sr-only">{a.title}</h1>
-              <p className="text-xs font-semibold tracking-wide text-white/55 uppercase">{t.ui.ask.youSaid}</p>
-              <p className="mt-2 text-2xl leading-snug font-bold tracking-tight text-balance sm:text-3xl">
-                <span aria-hidden className="text-white/40">“</span>
-                {q}
-                <span aria-hidden className="text-white/40">”</span>
-              </p>
-              {intent && (
-                <div className="mt-6">
-                  <h2 id="understood" className="text-xs font-semibold tracking-wide text-white/55 uppercase">
-                    {t.ui.ask.understood}
-                  </h2>
-                  <ul className="mt-2.5 flex flex-wrap gap-2">
-                    {intent.service && serviceOf.get(intent.service) && (
-                      <Chip icon={<Wrench aria-hidden className="size-4" />} label={a.service} value={name(serviceOf.get(intent.service)!)} />
-                    )}
-                    {!intent.service && intent.category && categoryOf.get(intent.category) && (
-                      <Chip icon={<Wrench aria-hidden className="size-4" />} label={a.category} value={name(categoryOf.get(intent.category)!)} />
-                    )}
-                    <Chip icon={<MapPin aria-hidden className="size-4" />} label={a.area} value={intent.area ? (areaOf.get(intent.area)?.name ?? a.anyArea) : a.anyArea} />
-                    <Chip icon={<CalendarClock aria-hidden className="size-4" />} label="" value={a.timing[intent.timing]} />
-                    {intent.urgency === "EMERGENCY" && <Chip icon={<Siren aria-hidden className="size-4" />} label="" value={a.urgency.EMERGENCY} tone="danger" />}
-                  </ul>
-                  {filters && (filters.service || filters.category) && (
-                    <Link href={searchHref(filters)} className="mt-3 inline-block text-sm font-semibold text-white/75 underline decoration-white/30 underline-offset-4 hover:text-white">
-                      {a.change}
-                    </Link>
-                  )}
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <h1 className="flex items-center gap-2 text-3xl font-extrabold tracking-tight sm:text-4xl">{a.title}</h1>
-              <p className="mt-2 text-white/75">{a.intro}</p>
-            </>
-          )}
-          {/* Plain GET form: works before JavaScript loads, like the main search box. */}
-          <form action="/ask" method="get" role="search" className="relative mt-6">
-            <Sparkles aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-accent-500" />
-            <input
-              type="search"
-              name="q"
-              defaultValue={q && !tooLong ? "" : q}
-              placeholder={a.placeholder}
-              aria-label={a.placeholder}
-              maxLength={MAX_QUERY_CHARS}
-              autoFocus={!q}
-              enterKeyHint="search"
-              className="block min-h-14 w-full rounded-2xl border border-white/10 bg-surface pr-28 pl-12 text-base text-ink shadow-soft placeholder:text-ink-subtle focus:outline-2 focus:outline-accent-400"
-            />
-            <button type="submit" className="absolute top-1/2 right-2 min-h-10 -translate-y-1/2 rounded-xl bg-accent-400 px-4 text-sm font-bold text-night-900 transition hover:bg-accent-500 active:scale-95">
-              {a.ask}
-            </button>
-          </form>
-          {!q && (
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-white/65">
-              <span>{a.examplesLabel}</span>
-              {a.examples.map((ex) => (
-                <Link key={ex} href={`/ask?${new URLSearchParams({ q: ex })}`} className="rounded-full border border-white/15 bg-white/[0.07] px-3 py-1.5 text-white/90 transition hover:bg-white/15">
-                  {ex}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Reference design: a light page — the question, the search box, and what the AI understood. */}
+      <section>
+        <h1 className="max-w-[13ch] text-[2rem] leading-[1.1] font-extrabold tracking-tight sm:max-w-none sm:text-4xl">{t.ui.ask.findExactly}</h1>
+        {!q && <p className="mt-2 max-w-xl text-sm text-ink-muted">{a.intro}</p>}
+        {/* Plain GET form: works before JavaScript loads, like the main search box. */}
+        <form action="/ask" method="get" role="search" className="relative mt-5">
+          <Search aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-subtle" />
+          <input
+            type="search"
+            name="q"
+            defaultValue={tooLong ? "" : q}
+            placeholder={a.placeholder}
+            aria-label={a.placeholder}
+            maxLength={MAX_QUERY_CHARS}
+            autoFocus={!q}
+            enterKeyHint="search"
+            className="block min-h-14 w-full rounded-2xl border border-transparent bg-surface pr-16 pl-12 text-base text-ink shadow-soft placeholder:text-ink-subtle focus:border-link focus:outline-2 focus:outline-link/30"
+          />
+          <button type="submit" aria-label={a.ask} className="absolute top-1/2 right-2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-cta text-white transition hover:bg-cta-hover active:scale-95">
+            <Search aria-hidden className="size-5" />
+          </button>
+        </form>
+        {!q && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+            <span>{a.examplesLabel}</span>
+            {a.examples.map((ex) => (
+              <Link key={ex} href={`/ask?${new URLSearchParams({ q: ex })}`} className="rounded-full border border-line bg-surface px-3 py-1.5 text-ink transition hover:border-link/40">
+                {ex}
+              </Link>
+            ))}
+          </div>
+        )}
+        {q && !tooLong && intent && (
+          <div className="mt-4 rounded-2xl p-4" style={{ background: "color-mix(in oklab, var(--color-link) 8%, var(--color-surface))" }}>
+            <h2 id="understood" className="flex items-center gap-1.5 text-sm font-semibold text-link">
+              <Sparkles aria-hidden className="size-4" />
+              {t.ui.ask.understoodRequest}
+            </h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {intent.service && serviceOf.get(intent.service) && <Chip label={a.service} value={name(serviceOf.get(intent.service)!)} />}
+              {!intent.service && intent.category && categoryOf.get(intent.category) && <Chip label={a.category} value={name(categoryOf.get(intent.category)!)} />}
+              <Chip label={a.area} value={intent.area ? (areaOf.get(intent.area)?.name ?? a.anyArea) : a.anyArea} />
+              <Chip label="" value={a.timing[intent.timing]} />
+              {intent.urgency === "EMERGENCY" && <Chip label="" value={a.urgency.EMERGENCY} tone="urgent" />}
+            </ul>
+            {filters && (filters.service || filters.category) && (
+              <Link href={searchHref(filters)} className="mt-3 inline-block text-xs font-semibold text-link underline underline-offset-4">
+                {a.change}
+              </Link>
+            )}
+          </div>
+        )}
       </section>
 
       {tooLong && (
@@ -180,11 +161,33 @@ export default async function AskPage({ searchParams }: Props) {
                 <EmptyState icon={<SearchX aria-hidden />} title={a.noResults} />
               ) : (
                 <>
-                  <h2 className="mb-3 text-xl font-bold tracking-tight">{t.ui.ask.bestMatches}</h2>
+                  <h2 className="mb-3 text-lg font-bold tracking-tight">{t.ui.ask.matching}</h2>
+                  {filters && (
+                    <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
+                      <span className="flex min-h-9 shrink-0 items-center rounded-full bg-action px-4 text-[13px] font-semibold text-white">{t.ui.search.bestMatch}</span>
+                      <Link href={searchHref({ ...filters, openNow: true })} className="flex min-h-9 shrink-0 items-center rounded-full border border-line bg-surface px-4 text-[13px] font-medium">
+                        {t.ui.home.availableNow}
+                      </Link>
+                      <Link href={searchHref({ ...filters, sort: "top" })} className="flex min-h-9 shrink-0 items-center rounded-full border border-line bg-surface px-4 text-[13px] font-medium">
+                        {t.ui.home.topRated}
+                      </Link>
+                      <Link href={searchHref(filters)} className="ml-auto flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface px-4 text-[13px] font-medium">
+                        <SlidersHorizontal aria-hidden className="size-4" />
+                        {t.ui.search.filtersTitle}
+                      </Link>
+                    </div>
+                  )}
                   <ul className="grid gap-3 lg:grid-cols-2">
                     {search.results.slice(0, 10).map((p, i) => (
                       <li key={p.id} className="min-w-0 animate-rise" style={{ animationDelay: `${i * 40}ms` }}>
-                        <ProviderCard p={p} t={t} locale={locale} originArea={search.origin?.kind === "area" ? (search.area?.name ?? null) : null} variant="row" />
+                        <ProviderCard
+                          p={p}
+                          t={t}
+                          locale={locale}
+                          originArea={search.origin?.kind === "area" ? (search.area?.name ?? null) : null}
+                          variant="row"
+                          requestHref={`/requests/new?provider=${encodeURIComponent(p.slug)}`}
+                        />
                       </li>
                     ))}
                   </ul>
@@ -212,27 +215,16 @@ export default async function AskPage({ searchParams }: Props) {
   );
 }
 
-function Chip({ icon, label, value, tone = "default" }: { icon: React.ReactNode; label: string; value: string; tone?: "default" | "danger" }) {
+function Chip({ label, value, tone = "default" }: { label: string; value: string; tone?: "default" | "urgent" }) {
   return (
     <li
-      className={`inline-flex min-h-10 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold animate-rise ${
-        tone === "danger" ? "border-red-400/40 bg-red-500/15 text-red-200" : "border-white/15 bg-white/[0.08] text-white"
+      className={`inline-flex min-h-9 items-center gap-1 rounded-full px-3.5 text-[13px] font-semibold ${
+        tone === "urgent" ? "bg-cta/15 text-cta" : "bg-surface text-ink shadow-soft"
       }`}
     >
-      <span className={tone === "danger" ? "text-red-300" : "text-brand-500"}>{icon}</span>
+      {tone === "urgent" && <Zap aria-hidden className="size-3.5" />}
       {label && <span className="sr-only">{label}: </span>}
       {value}
     </li>
-  );
-}
-
-/** Soft animated glow in the corner of the AI card — decoration only. */
-function AiOrb() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute -top-8 -right-8 size-32 opacity-60 sm:top-1/2 sm:right-8 sm:size-44 sm:-translate-y-1/2 sm:opacity-100">
-      <div className="absolute inset-0 animate-pulse rounded-full bg-[conic-gradient(from_180deg,#2cc596,#38bdf8,#a78bfa,#2cc596)] opacity-40 blur-2xl" />
-      <div className="absolute inset-6 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm" />
-      <Sparkles className="absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2 text-white/70 sm:size-10" />
-    </div>
   );
 }

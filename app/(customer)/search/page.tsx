@@ -95,7 +95,7 @@ export default async function SearchPage({ searchParams }: Props) {
     <Link
       href={searchHref(current, { view, page: 1 })}
       aria-current={params.view === view ? "page" : undefined}
-      className={`flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition ${params.view === view ? "bg-night-900 text-white shadow-soft" : "text-ink-muted hover:text-ink"}`}
+      className={`flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition ${params.view === view ? "bg-action text-white shadow-soft" : "text-ink-muted hover:text-ink"}`}
     >
       <Icon aria-hidden className="size-4" />
       {label}

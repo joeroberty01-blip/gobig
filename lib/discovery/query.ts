@@ -8,7 +8,7 @@ export type SearchParams = {
   service: string | null; // Service slug
   openNow: boolean;
   priced: boolean;
-  /** Phase 14: only providers verified by GO BIG. */
+  /** Phase 14: only providers verified by NEXA. */
   verified: boolean;
   /** Phase 14: "top" = highest rated first (the rating signal alone); default is the full ranking. */
   sort: "best" | "top";

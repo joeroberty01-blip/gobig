@@ -1,8 +1,9 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import type { NavItem } from "./NavLinks";
 
-// Phase 14 navigation. Phones: five bottom tabs. Desktop: customers keep the tabs in the header;
-// providers and admins get a sidebar with every section (`side`), so "More" isn't needed there.
+// Navigation (approved design, 2026-09-26). Phones and tablets: bottom tabs — for customers with
+// a raised round search button in the middle (`fab`). Desktop: every area gets the navy sidebar
+// with all of its sections (`side`).
 
 export type Nav = { tabs: NavItem[]; side?: NavItem[] };
 
@@ -10,6 +11,14 @@ export const customerNav = (t: Dictionary): Nav => ({
   tabs: [
     { href: "/", label: t.nav.home, icon: "home", exact: true },
     { href: "/search", label: t.ui.nav.explore, icon: "search" },
+    { href: "/requests", label: t.nav.requests, icon: "requests" },
+    { href: "/saved", label: t.nav.saved, icon: "saved" },
+    { href: "/account", label: t.ui.nav.profile, icon: "account" },
+  ],
+  side: [
+    { href: "/", label: t.nav.home, icon: "home", exact: true },
+    { href: "/search", label: t.ui.nav.explore, icon: "search" },
+    { href: "/ask", label: t.ai.title, icon: "sparkles" },
     { href: "/requests", label: t.nav.requests, icon: "requests" },
     { href: "/saved", label: t.nav.saved, icon: "saved" },
     { href: "/account", label: t.ui.nav.profile, icon: "account" },

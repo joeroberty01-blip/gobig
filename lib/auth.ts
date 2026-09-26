@@ -35,7 +35,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Credentials({
       id: "credentials",
-      name: "GO BIG",
+      name: "NEXA",
       credentials: {
         identifier: { label: "Email or phone", type: "text" },
         password: { label: "Password", type: "password" },
