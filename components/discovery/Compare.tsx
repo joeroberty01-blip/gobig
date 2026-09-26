@@ -29,7 +29,7 @@ function write(list: Picked[]) {
   window.dispatchEvent(new Event(COMPARE_EVENT));
 }
 
-function usePicked(): Picked[] {
+export function usePicked(): Picked[] {
   const [list, setList] = useState<Picked[]>([]);
   useEffect(() => {
     const sync = () => setList(read());

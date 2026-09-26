@@ -4,6 +4,7 @@ import { getAreaPickerOptions } from "@/lib/data/discovery";
 import { AreaPicker } from "@/components/discovery/AreaPicker";
 import { getCurrentUser } from "@/lib/session";
 import { AppShell } from "@/components/layout/AppShell";
+import { AskFab } from "@/components/layout/AskFab";
 import { customerNav } from "@/components/layout/navItems";
 import { CompareBar } from "@/components/discovery/Compare";
 
@@ -14,6 +15,7 @@ export default async function CustomerLayout({ children }: { children: React.Rea
     <AppShell user={user} nav={customerNav(t)} homeHref="/" location={<AreaPicker districts={districts} value={point ? null : area} pill />}>
       {children}
       <CompareBar />
+      <AskFab />
     </AppShell>
   );
 }
