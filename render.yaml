@@ -35,6 +35,10 @@ services:
         sync: false
       - key: TOTP_ENCRYPTION_KEY
         sync: false
+      # Phase 16/17: encrypts exact trip locations and recipient phones. Rides & deliveries stay
+      # switched off until it is set (32 random bytes, base64 — Render's "Generate" gives one).
+      - key: DATA_ENCRYPTION_KEY
+        sync: false
       - key: ANALYTICS_SALT
         sync: false
       - key: S3_ENDPOINT

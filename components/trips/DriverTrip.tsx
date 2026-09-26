@@ -10,6 +10,7 @@ import { Alert, Button, Card, Field, Input } from "@/components/ui";
 import { acceptOfferAction, arrivedAction, completeTripAction, driverCancelAction, startTripAction } from "@/lib/actions/trips";
 import { formatTzs } from "@/lib/provider/format";
 import type { DriverTrip as Trip } from "@/lib/services/trips";
+import { TripChat } from "./TripChat";
 
 const LIVE = ["REQUESTED", "ACCEPTED", "ARRIVED", "IN_PROGRESS"];
 const METHODS = ["CASH", "MPESA", "TIGO_PESA", "AIRTEL_MONEY", "HALOPESA", "BANK_TRANSFER"] as const;
@@ -106,6 +107,21 @@ export function DriverTrip({ initial }: { initial: Trip }) {
             </a>
           )}
         </Card>
+      )}
+
+      {trip.mine && (
+        <TripChat
+          tripId={trip.id}
+          me="DRIVER"
+          other={trip.customerFirstName}
+          messages={trip.messages}
+          canChat={trip.canChat}
+          whatsapp={trip.customerPhone}
+          onSent={async () => {
+            const r = await fetch(`/api/trips/${trip.id}`, { cache: "no-store" });
+            if (r.ok) setTrip(await r.json());
+          }}
+        />
       )}
 
       {trip.kind === "DELIVERY" && (trip.packageDescription || trip.recipientName) && (

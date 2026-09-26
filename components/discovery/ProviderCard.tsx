@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, MapPin, Star } from "lucide-react";
+import { BadgeCheck, Bike, MapPin, Package, Star } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import { fill } from "@/lib/i18n/dictionaries";
 import { formatPrice, formatTzs, minutesToTime } from "@/lib/provider/format";
@@ -51,6 +51,25 @@ function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className
       ) : (
         <span className="grid size-full place-items-center text-4xl font-black text-white/90">{p.name.trim().slice(0, 1).toUpperCase()}</span>
       )}
+    </div>
+  );
+}
+
+/**
+ * Phase 17 (owner's request): every business offers transport to it — a ride there, or a rider
+ * bringing something from it. Above the card's link overlay so they don't open the profile.
+ */
+function GoButtons({ slug, t, className = "" }: { slug: string; t: Dictionary; className?: string }) {
+  return (
+    <div className={`relative z-10 grid grid-cols-2 gap-1.5 ${className}`}>
+      <Link href={`/ride?to=${slug}`} title={t.trips.takeMeThereHint} className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1 leading-none sm:min-h-9 sm:flex-row sm:gap-1 bg-cta/12 px-1.5 text-[11px] font-bold text-cta transition hover:bg-cta/20 active:scale-95 sm:text-xs">
+        <Bike aria-hidden className="size-3.5 shrink-0" />
+        <span className="max-w-full truncate">{t.trips.cardRide}</span>
+      </Link>
+      <Link href={`/delivery?from=${slug}`} title={t.trips.deliverToMeHint} className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1 leading-none sm:min-h-9 sm:flex-row sm:gap-1 bg-link/10 px-1.5 text-[11px] font-bold text-link transition hover:bg-link/20 active:scale-95 sm:text-xs">
+        <Package aria-hidden className="size-3.5 shrink-0" />
+        <span className="max-w-full truncate">{t.trips.cardDelivery}</span>
+      </Link>
     </div>
   );
 }
@@ -164,6 +183,7 @@ export function ProviderCard({
               {t.ui.home.viewProfile}
             </span>
           </div>
+          <GoButtons slug={p.slug} t={t} className="mt-2" />
         </div>
       </article>
     );
@@ -208,6 +228,7 @@ export function ProviderCard({
           </div>
         )}
       </div>
+      <GoButtons slug={p.slug} t={t} className="mt-2.5" />
       {requestHref && (
         <Link href={requestHref} className="relative z-10 mt-3 flex min-h-11 items-center justify-center rounded-xl bg-action text-sm font-semibold text-white transition hover:bg-action-hover active:scale-[0.99]">
           {t.ui.profile.requestService}
@@ -247,6 +268,7 @@ export function ProviderCard({
           </p>
         )}
         {availPill && <div className="mt-2">{availPill}</div>}
+        <GoButtons slug={p.slug} t={t} className="mt-auto pt-2.5" />
       </div>
     </article>
   );

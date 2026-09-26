@@ -144,6 +144,8 @@ const baseRequest = z.object({
   vehicleType: z.enum(["BODA", "BAJAJI", "CAR", "VAN"]),
   note: z.string().trim().max(200).optional().default(""),
   destinationSlug: z.string().trim().max(80).optional(),
+  /** Delivery from a business: the pickup is labelled with its name if the pin is near it. */
+  originSlug: z.string().trim().max(80).optional(),
 });
 export const rideRequestSchema = baseRequest.extend({ kind: z.literal("RIDE") });
 export const deliveryRequestSchema = baseRequest.extend({
@@ -182,6 +184,11 @@ export async function requestTrip(customer: { id: string; role: string; status: 
     const d = await destinationFor(input.destinationSlug);
     if (d && distanceKm(d.point, input.dropoff) <= 1) destination = { id: d.id, name: d.name };
   }
+  let origin: { name: string } | null = null;
+  if (input.originSlug) {
+    const o = await destinationFor(input.originSlug);
+    if (o && distanceKm(o.point, input.pickup) <= 1) origin = { name: o.name };
+  }
   const [pickupArea, dropoffArea] = await Promise.all([nearestAreaName(input.pickup), nearestAreaName(input.dropoff)]);
   const c = coarse(input.pickup);
 
@@ -194,7 +201,7 @@ export async function requestTrip(customer: { id: string; role: string; status: 
       dropoffSealed: sealPoint(input.dropoff, P.dropoff),
       pickupLatCoarse: c.lat,
       pickupLngCoarse: c.lng,
-      pickupLabel: pickupArea ?? "Dar es Salaam",
+      pickupLabel: origin?.name ?? pickupArea ?? "Dar es Salaam",
       dropoffLabel: destination?.name ?? dropoffArea ?? "Dar es Salaam",
       destinationProviderId: destination?.id ?? null,
       noteSealed: input.note ? seal(input.note, P.note) : null,
@@ -449,13 +456,36 @@ export async function rateTrip(customerId: string, tripId: string, raw: unknown,
   return done ? { ok: true } : fail("alreadyRated");
 }
 
+// ─── Chat ───────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * A message from the trip's customer or its driver, only while the trip is active. The caller's
+ * side comes from who they are (session), never from the request.
+ */
+export async function sendTripMessage(
+  who: { userId: string; customerId?: string; providerId?: string },
+  tripId: string,
+  text: string,
+): Promise<TResult> {
+  const body = String(text ?? "").trim().slice(0, 500);
+  if (!body) return fail("invalid");
+  const t = await prisma.trip.findUnique({ where: { id: tripId }, select: { customerId: true, driverProviderId: true, status: true } });
+  if (!t) return fail("notFound");
+  const sender = who.customerId && t.customerId === who.customerId ? "CUSTOMER" : who.providerId && t.driverProviderId === who.providerId ? "DRIVER" : null;
+  if (!sender) return fail("notFound");
+  if (!["ACCEPTED", "ARRIVED", "IN_PROGRESS"].includes(t.status)) return fail("notAllowed");
+  if (!(await hit(LIMITS.messagePerUser, who.userId)).ok) return fail("rateLimited");
+  await prisma.tripMessage.create({ data: { tripId, sender, body } });
+  return { ok: true };
+}
+
 // ─── Reading ────────────────────────────────────────────────────────────────────────────────
 
 const driverCard = {
   id: true,
   slug: true,
   verificationLevelId: true,
-  profile: { select: { displayName: true, phone: true } },
+  profile: { select: { displayName: true, phone: true, whatsapp: true } },
   media: { where: { kind: "LOGO" as const }, select: { storageKey: true }, take: 1 },
   driver: { select: { vehicleType: true, vehicleModel: true, vehicleColor: true, plateNumber: true, ratingAvg: true, ratingCount: true, lastLat: true, lastLng: true, lastSeenAt: true, online: true } },
 };
@@ -473,7 +503,10 @@ export type CustomerTrip = NonNullable<Awaited<ReturnType<typeof tripForCustomer
 export type DriverTrip = NonNullable<Awaited<ReturnType<typeof tripForDriver>>>;
 
 export async function tripForCustomer(customerId: string, tripId: string) {
-  const t = await prisma.trip.findFirst({ where: { id: tripId, customerId }, include: { driver: { select: driverCard } } });
+  const t = await prisma.trip.findFirst({
+    where: { id: tripId, customerId },
+    include: { driver: { select: driverCard }, messages: { orderBy: { createdAt: "asc" }, take: 100, select: { id: true, sender: true, body: true, createdAt: true } } },
+  });
   if (!t) return null;
   const live = t.status === "ACCEPTED" || t.status === "ARRIVED" || t.status === "IN_PROGRESS";
   const d = t.driver?.driver;
@@ -485,12 +518,15 @@ export async function tripForCustomer(customerId: string, tripId: string) {
     code: live && t.codeSealed ? safeOpen(() => open(t.codeSealed!, P.code)) : null,
     recipientName: t.recipientNameSealed ? safeOpen(() => open(t.recipientNameSealed!, P.rName)) : null,
     recipientPhone: t.recipientPhoneSealed ? safeOpen(() => open(t.recipientPhoneSealed!, P.rPhone)) : null,
+    messages: t.messages,
+    canChat: live && !!t.driverProviderId,
     driver: t.driver
       ? {
           name: t.driver.profile?.displayName ?? "",
           slug: t.driver.slug,
           verified: !!t.driver.verificationLevelId,
           phone: live ? (t.driver.profile?.phone ?? null) : null,
+          whatsapp: live ? (t.driver.profile?.whatsapp ?? t.driver.profile?.phone ?? null) : null,
           logoUrl: t.driver.media[0] ? mediaUrl(t.driver.media[0].storageKey) : null,
           vehicle: d ? { type: d.vehicleType, model: d.vehicleModel, color: d.vehicleColor, plate: d.plateNumber } : null,
           rating: d ? { avg: d.ratingAvg, count: d.ratingCount } : null,
@@ -557,7 +593,14 @@ function base(t: {
  * exact points and the customer's contact only once the trip is theirs and still active.
  */
 export async function tripForDriver(providerId: string, tripId: string) {
-  const t = await prisma.trip.findUnique({ where: { id: tripId }, include: { customer: { select: { name: true, phone: true } }, offers: { where: { providerId }, select: { id: true, status: true, distanceKm: true } } } });
+  const t = await prisma.trip.findUnique({
+    where: { id: tripId },
+    include: {
+      customer: { select: { name: true, phone: true } },
+      offers: { where: { providerId }, select: { id: true, status: true, distanceKm: true } },
+      messages: { orderBy: { createdAt: "asc" }, take: 100, select: { id: true, sender: true, body: true, createdAt: true } },
+    },
+  });
   if (!t) return null;
   const mine = t.driverProviderId === providerId;
   const offer = t.offers[0] ?? null;
@@ -575,6 +618,8 @@ export async function tripForDriver(providerId: string, tripId: string) {
     note: active && t.noteSealed ? safeOpen(() => open(t.noteSealed!, P.note)) : null,
     recipientName: active && t.recipientNameSealed ? safeOpen(() => open(t.recipientNameSealed!, P.rName)) : null,
     recipientPhone: active && t.recipientPhoneSealed ? safeOpen(() => open(t.recipientPhoneSealed!, P.rPhone)) : null,
+    messages: mine ? t.messages : [],
+    canChat: active,
   };
 }
 
@@ -639,6 +684,7 @@ export async function purgeOldTrips(now = new Date()): Promise<number> {
     where: { purgedAt: null, status: { in: ["COMPLETED", "CANCELLED", "EXPIRED"] }, updatedAt: { lt: before } },
     data: { pickupSealed: null, dropoffSealed: null, noteSealed: null, recipientNameSealed: null, recipientPhoneSealed: null, codeSealed: null, purgedAt: now },
   });
+  await prisma.tripMessage.deleteMany({ where: { trip: { purgedAt: { not: null } } } });
   // Drivers who closed the app without going offline stop sharing their position.
   await prisma.driverProfile.updateMany({ where: { online: true, lastSeenAt: { lt: new Date(now.getTime() - 30 * 60_000) } }, data: { online: false, lastLat: null, lastLng: null } });
   return count;

@@ -1253,6 +1253,7 @@ model Trip {
   driver              Provider?   @relation("TripDriver", fields: [driverProviderId], references: [id], onDelete: SetNull)
   destinationProvider Provider?   @relation("TripDestination", fields: [destinationProviderId], references: [id], onDelete: SetNull)
   offers              TripOffer[]
+  messages            TripMessage[]
 
   @@index([customerId, createdAt])
   @@index([driverProviderId, status])
@@ -1276,4 +1277,18 @@ model TripOffer {
 
   @@unique([tripId, providerId])
   @@index([providerId, status, offeredAt])
+}
+
+/// Phase 17: chat between a trip's customer and its driver, open while the trip is active.
+/// Deleted with the trip's other private details at purge.
+model TripMessage {
+  id        String    @id @default(cuid())
+  tripId    String
+  sender    TripParty
+  body      String
+  createdAt DateTime  @default(now())
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([tripId, createdAt])
 }

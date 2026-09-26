@@ -575,3 +575,9 @@ payment settled off-app (cash / mobile money / bank); a Bolt integration may com
 
 **Consequences.** Needs `DATA_ENCRYPTION_KEY` on the host (features show "not switched on" without
 it). Sample businesses never drive, so testing needs a real verified provider account.
+
+**Update (same day, owner's direction).** Rides and deliveries are reached from each business,
+not from the top of Home: every card and profile has "Take me there" (`/ride?to=<slug>`, the
+business's public point as destination) and "Deliver to me" (`/delivery?from=<slug>`, the business
+as pickup). A live trip has in-app chat between the customer and the driver (`TripMessage`, open
+only while active, deleted at purge) and a WhatsApp button as the alternative.

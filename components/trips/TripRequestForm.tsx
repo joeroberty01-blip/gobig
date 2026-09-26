@@ -19,14 +19,16 @@ const VEHICLE_ICON: Record<Vehicle, typeof Car> = { BODA: Bike, BAJAJI: Car, CAR
  * once, where they're encrypted. Nothing about price is invented here: each driver's own rates
  * give the fare once someone accepts.
  */
-export function TripRequestForm({ kind, destination }: { kind: Kind; destination?: { slug: string; name: string; point: Point } | null }) {
+type Place = { slug: string; name: string; point: Point };
+
+export function TripRequestForm({ kind, destination, origin }: { kind: Kind; destination?: Place | null; origin?: Place | null }) {
   const { t } = useI18n();
   const tr = t.trips;
   const router = useRouter();
   const [pending, start] = useTransition();
-  const [pickup, setPickup] = useState<Point | null>(null);
+  const [pickup, setPickup] = useState<Point | null>(origin?.point ?? null);
   const [dropoff, setDropoff] = useState<Point | null>(destination?.point ?? null);
-  const [stage, setStage] = useState<"pickup" | "dropoff">("pickup");
+  const [stage, setStage] = useState<"pickup" | "dropoff">(origin ? "dropoff" : "pickup");
   const [locating, setLocating] = useState(false);
   const [vehicle, setVehicle] = useState<Vehicle>("BODA");
   const [note, setNote] = useState("");
@@ -51,8 +53,7 @@ export function TripRequestForm({ kind, destination }: { kind: Kind; destination
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        setPickup({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        if (!dropoff) setStage("dropoff");
+        place({ lat: pos.coords.latitude, lng: pos.coords.longitude });
       },
       () => {
         setLocating(false);
@@ -69,7 +70,7 @@ export function TripRequestForm({ kind, destination }: { kind: Kind; destination
     e.preventDefault();
     if (!pickup || !dropoff) return;
     setError(null);
-    const common = { pickup, dropoff, vehicleType: vehicle, note, destinationSlug: destination?.slug };
+    const common = { pickup, dropoff, vehicleType: vehicle, note, destinationSlug: destination?.slug, originSlug: origin?.slug };
     const input =
       kind === "RIDE"
         ? { kind, ...common }
@@ -83,7 +84,7 @@ export function TripRequestForm({ kind, destination }: { kind: Kind; destination
 
   const center = pickup ?? dropoff ?? DAR_CENTER;
   const markers = [
-    ...(pickup && stage !== "pickup" ? [{ id: "pickup", ...pickup, precision: "exact" as const, label: tr.pickup }] : []),
+    ...(pickup && stage !== "pickup" ? [{ id: "pickup", ...pickup, precision: "exact" as const, label: origin?.name ?? tr.pickup }] : []),
     ...(dropoff && stage !== "dropoff" ? [{ id: "dropoff", ...dropoff, precision: "exact" as const, label: destination?.name ?? tr.dropoff }] : []),
   ];
 
@@ -105,7 +106,9 @@ export function TripRequestForm({ kind, destination }: { kind: Kind; destination
               <Icon aria-hidden className={`size-5 shrink-0 ${s === "pickup" ? "text-brand-700" : "text-cta"}`} />
               <span className="min-w-0">
                 <span className="block text-xs text-ink-muted">{s === "pickup" ? tr.pickup : kind === "DELIVERY" ? tr.deliverTo : tr.dropoff}</span>
-                <span className="block truncate font-semibold">{set ? (s === "dropoff" && destination ? destination.name : tr.pointSet) : s === "pickup" ? tr.setPickup : tr.setDropoff}</span>
+                <span className="block truncate font-semibold">
+                  {set ? (s === "dropoff" && destination ? destination.name : s === "pickup" && origin ? origin.name : tr.pointSet) : s === "pickup" ? tr.setPickup : tr.setDropoff}
+                </span>
               </span>
             </button>
           );
@@ -120,6 +123,7 @@ export function TripRequestForm({ kind, destination }: { kind: Kind; destination
         <p className="text-xs text-ink-muted">{stage === "pickup" ? tr.tapMapPickup : tr.tapMapDropoff}</p>
         <MapView center={center} zoom={pickup || dropoff ? 14 : 12} pin={stage === "pickup" ? pickup : dropoff} onPinChange={place} markers={markers} className="h-72 sm:h-80" />
         {destination && <p className="text-xs text-ink-muted">{fill(tr.goingTo, { name: destination.name })}</p>}
+        {origin && <p className="text-xs text-ink-muted">{fill(tr.fromBusiness, { name: origin.name })}</p>}
         {km != null && <p className="text-sm font-semibold">{fill(tr.distance, { km: km.toFixed(1) })}</p>}
       </div>
 

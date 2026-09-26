@@ -121,3 +121,16 @@ export async function driverCancelAction(tripId: string, reason: string): Promis
   refresh();
   return r;
 }
+
+// ─── Chat (either side) ─────────────────────────────────────────────────────────────────────
+
+export async function sendTripMessageAction(tripId: string, text: string): Promise<TripActionResult> {
+  const user = await getCurrentUser();
+  if (!user || !ID.test(tripId)) return forbidden;
+  if (can(user, "trips:request")) return trips.sendTripMessage({ userId: user.id, customerId: user.id }, tripId, text);
+  if (can(user, "trips:drive")) {
+    const providerId = await getOwnedProviderId(user.id);
+    if (providerId) return trips.sendTripMessage({ userId: user.id, providerId }, tripId, text);
+  }
+  return forbidden;
+}

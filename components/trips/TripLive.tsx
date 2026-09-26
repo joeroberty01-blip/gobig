@@ -11,6 +11,7 @@ import { Alert, Button, ButtonLink, Card } from "@/components/ui";
 import { cancelTripAction, rateTripAction } from "@/lib/actions/trips";
 import { formatTzs } from "@/lib/provider/format";
 import type { CustomerTrip } from "@/lib/services/trips";
+import { TripChat } from "./TripChat";
 
 const LIVE = ["REQUESTED", "ACCEPTED", "ARRIVED", "IN_PROGRESS"];
 const POLL_MS = 5_000;
@@ -43,6 +44,10 @@ export function TripLive({ initial }: { initial: CustomerTrip }) {
     };
   }, [live, trip.id]);
 
+  const refresh = async () => {
+    const res = await fetch(`/api/trips/${trip.id}`, { cache: "no-store" });
+    if (res.ok) setTrip(await res.json());
+  };
   const statusText = (trip.kind === "DELIVERY" ? tr.statusDelivery : tr.status)[trip.status as keyof typeof tr.status];
   const d = trip.driver;
   const time = (v: string | Date | null | undefined) =>
@@ -144,6 +149,8 @@ export function TripLive({ initial }: { initial: CustomerTrip }) {
           )}
         </Card>
       )}
+
+      {d && <TripChat tripId={trip.id} me="CUSTOMER" other={d.name} messages={trip.messages} canChat={trip.canChat} whatsapp={d.whatsapp} onSent={refresh} />}
 
       {/* PIN / handover code */}
       {trip.code && (

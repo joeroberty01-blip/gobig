@@ -200,6 +200,27 @@ describe("a delivery", () => {
   });
 });
 
+describe("trip chat", () => {
+  it("only the customer and the accepted driver can write, and only while the trip is live", async () => {
+    const r = await trips.requestTrip(customer(customerId), { kind: "RIDE", pickup: KARIAKOO, dropoff: MIKOCHENI, vehicleType: "BODA" });
+    if (!r.ok) throw new Error("request failed");
+    const offer = await prisma.tripOffer.findFirstOrThrow({ where: { tripId: r.tripId, providerId: drivers.a } });
+    // Not accepted yet: nobody can chat.
+    expect(await trips.sendTripMessage({ userId: customerId, customerId }, r.tripId, "Hello")).toEqual({ ok: false, error: "notAllowed" });
+    expect((await trips.acceptOffer(drivers.a, offer.id)).ok).toBe(true);
+    expect(await trips.sendTripMessage({ userId: customerId, customerId }, r.tripId, "Niko getini")).toEqual({ ok: true });
+    expect(await trips.sendTripMessage({ userId: "x", providerId: drivers.a }, r.tripId, "Nakuja")).toEqual({ ok: true });
+    expect(await trips.sendTripMessage({ userId: customer2Id, customerId: customer2Id }, r.tripId, "hi")).toEqual({ ok: false, error: "notFound" });
+    expect(await trips.sendTripMessage({ userId: "y", providerId: drivers.b }, r.tripId, "hi")).toEqual({ ok: false, error: "notFound" });
+    expect(await trips.sendTripMessage({ userId: customerId, customerId }, r.tripId, "   ")).toEqual({ ok: false, error: "invalid" });
+    const seen = await trips.tripForCustomer(customerId, r.tripId);
+    expect(seen?.messages.map((m) => [m.sender, m.body])).toEqual([["CUSTOMER", "Niko getini"], ["DRIVER", "Nakuja"]]);
+    expect(seen?.canChat).toBe(true);
+    await trips.cancelByCustomer(customerId, r.tripId);
+    expect(await trips.sendTripMessage({ userId: customerId, customerId }, r.tripId, "still there?")).toEqual({ ok: false, error: "notAllowed" });
+  });
+});
+
 describe("limits, cancelling, expiry and retention", () => {
   const ride = { kind: "RIDE", pickup: KARIAKOO, dropoff: MIKOCHENI, vehicleType: "CAR" };
 
