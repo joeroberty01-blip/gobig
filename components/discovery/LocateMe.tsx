@@ -66,7 +66,7 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
         type="button"
         onClick={locate}
         disabled={locating || pending}
-        className={`inline-flex min-h-10 w-fit items-center gap-2 rounded-xl px-1 text-sm font-semibold ${onDark ? "text-accent-400" : "text-link"}`}
+        className={`inline-flex min-h-9 w-fit items-center gap-1.5 rounded-xl px-1 text-xs font-semibold sm:text-sm ${onDark ? "text-accent-400" : "text-link"}`}
       >
         <LocateFixed aria-hidden className="size-4" />
         {locating || pending ? t.location.locating : t.location.useMyLocation}
@@ -76,7 +76,7 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
           {error}
         </p>
       ) : (
-        <p className={`text-xs ${tone}`}>{t.location.locationPrivacyNote}</p>
+        <p className={`text-[11px] leading-snug ${tone}`}>{t.location.locationPrivacyNote}</p>
       )}
     </div>
   );

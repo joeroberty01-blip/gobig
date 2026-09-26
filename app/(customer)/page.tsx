@@ -69,33 +69,33 @@ export default async function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <section className="relative -mx-4 -mt-6 overflow-hidden px-5 pt-6 pb-2 sm:mx-0 sm:mt-0 sm:rounded-[2rem] sm:px-10 sm:pt-12 sm:pb-8">
+      <section className="relative -mx-4 -mt-6 overflow-hidden px-4 pt-5 pb-1 sm:mx-0 sm:mt-0 sm:rounded-[2rem] sm:px-10 sm:pt-12 sm:pb-8">
         <HeroScene />
         <div className="relative max-w-xl">
-          <p className="mb-1.5 text-sm font-medium text-ink-muted">{user ? `${greeting}, ${user.name.split(" ")[0] ?? user.name}` : greeting}</p>
-          <h1 className="max-w-[11ch] text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-ink sm:max-w-none sm:text-5xl">{h.heroTitle}</h1>
-          <p className="mt-2.5 text-[15px] text-ink-muted sm:text-lg">{h.heroSubtitle}</p>
+          <p className="mb-1 text-xs font-medium text-ink-muted sm:text-sm">{user ? `${greeting}, ${user.name.split(" ")[0] ?? user.name}` : greeting}</p>
+          <h1 className="max-w-[12ch] text-[1.7rem] leading-[1.12] font-extrabold tracking-tight text-ink sm:max-w-none sm:text-5xl">{h.heroTitle}</h1>
+          <p className="mt-1.5 text-[13px] text-ink-muted sm:text-lg">{h.heroSubtitle}</p>
 
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             {/* Straight to the AI search: people type what they need in their own words. */}
             <SearchBox t={t} size="lg" action="/ask" placeholder={h.askPlaceholder} />
           </div>
 
-          <ul className="-mx-5 mt-3.5 flex gap-2 overflow-x-auto px-5 no-scrollbar sm:mx-0 sm:flex-wrap sm:px-0">
+          <ul className="-mx-4 mt-3 flex gap-1.5 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:flex-wrap sm:gap-2 sm:px-0">
             {quick.map(({ href, label, Icon }) => (
               <li key={label} className="shrink-0">
                 <Link
                   href={href}
-                  className="flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-surface px-3.5 text-[13px] font-medium text-ink shadow-soft transition hover:border-ink-subtle/40 active:scale-[0.97]"
+                  className="flex min-h-8 items-center gap-1 rounded-full border border-line bg-surface px-2.5 text-[11px] font-medium text-ink shadow-soft transition hover:border-ink-subtle/40 active:scale-[0.97] sm:min-h-9 sm:gap-1.5 sm:px-3.5 sm:text-[13px]"
                 >
-                  <Icon aria-hidden className="size-3.5 text-link" />
+                  <Icon aria-hidden className="size-3 text-link sm:size-3.5" />
                   {label}
                 </Link>
               </li>
             ))}
           </ul>
 
-          <Link href="/ask" className="mt-4 inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-ink">
+          <Link href="/ask" className="mt-2 inline-flex min-h-9 items-center gap-1.5 text-xs font-semibold text-ink sm:mt-4 sm:text-sm">
             <Sparkles aria-hidden className="size-4 text-accent-500" />
             {h.askLink}
             <ChevronRight aria-hidden className="size-4 text-ink-subtle" />
@@ -110,12 +110,12 @@ export default async function HomePage() {
       </section>
 
       <Section title={h.explore} href="/categories" linkLabel={h.viewAll}>
-        <ul className="grid grid-cols-4 gap-x-2 gap-y-4 sm:grid-cols-8">
+        <ul className="grid grid-cols-4 gap-x-1 gap-y-3 sm:grid-cols-8 sm:gap-x-2 sm:gap-y-4">
           {categories.slice(0, HOME_CATEGORIES).map((c) => (
             <li key={c.slug}>
-              <Link href={`/c/${c.slug}`} className="group flex h-full flex-col items-center gap-2 text-center text-[11px] font-medium transition active:scale-[0.97] sm:text-xs">
-                <span className="grid size-15 place-items-center rounded-full bg-surface text-ink shadow-soft ring-1 ring-line transition group-hover:ring-link/40">
-                  <CategoryIcon name={c.icon} className="size-6" />
+              <Link href={`/c/${c.slug}`} className="group flex h-full flex-col items-center gap-1.5 text-center text-[10.5px] leading-tight font-medium transition active:scale-[0.97] sm:gap-2 sm:text-xs">
+                <span className="grid size-12 place-items-center rounded-full bg-surface text-ink shadow-soft ring-1 ring-line transition group-hover:ring-link/40 sm:size-15">
+                  <CategoryIcon name={c.icon} className="size-5 sm:size-6" />
                 </span>
                 <span className="line-clamp-2 leading-tight">{name(c)}</span>
               </Link>
@@ -128,7 +128,7 @@ export default async function HomePage() {
               <li key={s.slug}>
                 <Link
                   href={searchHref(base, { service: s.slug })}
-                  className="flex min-h-8 items-center rounded-full border border-line bg-surface px-3 text-xs font-medium transition hover:border-ink-subtle/40 active:scale-[0.97]"
+                  className="flex min-h-7 items-center rounded-full border border-line bg-surface px-2.5 text-[11px] font-medium transition hover:border-ink-subtle/40 active:scale-[0.97] sm:min-h-8 sm:px-3 sm:text-xs"
                 >
                   {name(s)}
                 </Link>
@@ -192,7 +192,7 @@ export default async function HomePage() {
  */
 function HeroScene() {
   return (
-    <div aria-hidden className="pointer-events-none absolute top-0 right-0 h-64 w-[70%] overflow-hidden rounded-bl-[9rem] sm:h-[26rem] sm:w-[58%] sm:rounded-bl-[16rem]">
+    <div aria-hidden className="pointer-events-none absolute top-0 right-0 h-52 w-[62%] overflow-hidden rounded-bl-[7rem] sm:h-[26rem] sm:w-[58%] sm:rounded-bl-[16rem]">
       <Image src="/hero-dar.webp" alt="" fill priority sizes="(max-width: 640px) 70vw, 60vw" className="object-cover object-right" />
       <div className="absolute inset-0 bg-gradient-to-r from-canvas via-canvas/40 to-transparent" />
       <div className="absolute inset-0 bg-gradient-to-t from-canvas/70 via-transparent to-transparent" />

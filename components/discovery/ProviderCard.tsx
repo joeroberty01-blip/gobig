@@ -133,9 +133,9 @@ export function ProviderCard({
   if (variant === "list") {
     return (
       <article className="group relative flex gap-3 rounded-2xl border border-line bg-surface p-2.5 shadow-soft transition duration-200 hover:shadow-lift has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-500">
-        <Photo p={p} sizes="128px" className="h-28 w-28 shrink-0 rounded-xl sm:w-32" />
+        <Photo p={p} sizes="128px" className="h-24 w-24 shrink-0 rounded-xl sm:h-28 sm:w-32" />
         <div className="flex min-w-0 flex-1 flex-col py-0.5">
-          <h3 className="flex min-w-0 items-center gap-1 text-[15px] font-bold tracking-tight">
+          <h3 className="flex min-w-0 items-center gap-1 text-[13px] font-bold tracking-tight sm:text-[15px]">
             <span className="truncate">{title}</span>
             {verified && <BadgeCheck aria-label={t.ui.home.verified} className="size-4 shrink-0 fill-link text-white" />}
           </h3>

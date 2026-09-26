@@ -99,7 +99,7 @@ export async function AppShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/85 backdrop-blur-xl">
-          <div className={`mx-auto flex h-16 items-center gap-2 px-4 sm:gap-3 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : "max-w-6xl"}`}>
+          <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : "max-w-6xl"}`}>
             {sidebar && <MobileDrawer items={nav.side!} homeHref={homeHref} userName={user?.name ?? null} />}
             {/* Customer phones: the reference header is the location pill and EN | SW; the logo shows from tablet width. */}
             <Link href={homeHref} className={`shrink-0 items-center gap-2 ${location ? "hidden sm:flex" : "flex"} ${sidebar ? "md:hidden" : ""}`}>

@@ -92,11 +92,11 @@ export function BottomNav({ items, hideFrom = "md" }: { items: NavItem[]; hideFr
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`group flex h-16 flex-col items-center justify-center gap-1 text-[11px] transition-colors ${
+                className={`group flex h-14 flex-col items-center justify-center gap-0.5 text-[10px] transition-colors sm:h-16 sm:gap-1 sm:text-[11px] ${
                   active ? "font-bold text-link" : "font-medium text-ink-subtle hover:text-ink"
                 }`}
               >
-                <Icon aria-hidden className="size-5.5" strokeWidth={active ? 2.4 : 1.8} />
+                <Icon aria-hidden className="size-5" strokeWidth={active ? 2.4 : 1.8} />
                 {item.label}
               </Link>
             </li>
