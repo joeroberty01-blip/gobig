@@ -67,7 +67,7 @@ export async function AppShell({
   return (
     <div className={`flex min-h-dvh ${sidebar ? "md:pl-64" : ""}`}>
       {sidebar && (
-        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/5 bg-night-900 px-3 py-5 text-white md:flex">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/10 nav-gradient px-3 py-5 text-white md:flex">
           <Link href={homeHref} className="mb-6 flex items-center gap-2.5 px-3">
             <Logo className="size-8" />
             <span className="flex flex-col leading-tight">

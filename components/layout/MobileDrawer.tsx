@@ -48,7 +48,7 @@ export function MobileDrawer({ items, homeHref, userName }: { items: NavItem[]; 
         createPortal(
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t.ui.nav.menu}>
           <button type="button" aria-label={t.ui.nav.close} onClick={() => setOpen(false)} className="absolute inset-0 bg-night-900/50 backdrop-blur-sm" />
-          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-night-900 px-3 py-5 text-white shadow-lift animate-rise">
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col nav-gradient px-3 py-5 text-white shadow-lift animate-rise">
             <div className="mb-6 flex items-center justify-between px-3">
               <Link href={homeHref} className="flex items-center gap-2.5">
                 <Logo className="size-8" />
