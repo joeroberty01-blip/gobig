@@ -5,8 +5,8 @@ import type { TrustBadge } from "@/lib/provider/trust";
 
 const STYLE: Record<TrustBadge["kind"], string> = {
   VERIFIED: "bg-brand-50 text-brand-900 ring-brand-100",
-  TOP_RATED: "bg-accent-400/15 text-amber-800 ring-accent-400/40",
-  AVAILABLE: "bg-success-soft text-success ring-green-200",
+  TOP_RATED: "bg-warning-soft text-warning ring-accent-400/40",
+  AVAILABLE: "bg-success-soft text-success ring-success/25",
   FAST_RESPONSE: "bg-canvas text-ink ring-line",
 };
 const ICON = { VERIFIED: BadgeCheck, TOP_RATED: Trophy, AVAILABLE: Clock, FAST_RESPONSE: Zap };

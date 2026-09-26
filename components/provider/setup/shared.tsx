@@ -59,9 +59,10 @@ export function StepActions({
   step,
   editMode,
   pending,
+  disabled = false,
   onSkip,
   label,
-}: StepProps & { pending: boolean; onSkip?: () => void; label?: string }) {
+}: StepProps & { pending: boolean; /** Not ready to submit yet (nothing chosen) — not the same as saving. */ disabled?: boolean; onSkip?: () => void; label?: string }) {
   const { t } = useI18n();
   const canSkip = !editMode && OPTIONAL_STEPS.includes(step) && onSkip;
   return (
@@ -72,7 +73,7 @@ export function StepActions({
             {t.profile.setup.skip}
           </Button>
         )}
-        <Button type="submit" disabled={pending} className="sm:min-w-40">
+        <Button type="submit" disabled={pending || disabled} className="sm:min-w-40">
           {pending ? t.profile.setup.saving : (label ?? (editMode ? t.profile.setup.save : t.profile.setup.continue))}
         </Button>
       </div>

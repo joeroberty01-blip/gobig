@@ -46,6 +46,11 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         <p className="text-sm">
           {fill(u.counts, { requests: user._count.serviceRequests, reviews: user._count.reviews, reports: user._count.reportsFiled, saved: user._count.favorites })}
         </p>
+        {actor.role === "SUPER_ADMIN" && actor.id !== user.id && user.totpEnabledAt && (
+          <div className="mt-2">
+            <ReasonAction action={{ kind: "resetTwoFactor", id: user.id }} label={t.security.reset} hint={t.security.resetHint} danger />
+          </div>
+        )}
         {canChange && (
           <div className="mt-2">
             {user.status === "ACTIVE" ? (

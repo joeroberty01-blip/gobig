@@ -1,16 +1,19 @@
 import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
+import { memo, REFERENCE_TTL_MS } from "@/lib/cache";
 import { getSavedArea, getSavedPoint } from "@/lib/discovery/area";
 import type { Point } from "@/lib/geo";
 import { parseSearchParams, type SearchParams } from "@/lib/discovery/query";
 
 export const getAreaPickerOptions = cache(() =>
-  prisma.location.findMany({
-    where: { type: "DISTRICT", isActive: true },
-    orderBy: { sortOrder: "asc" },
-    select: { slug: true, name: true, children: { where: { isActive: true }, orderBy: { name: "asc" }, select: { slug: true, name: true } } },
-  }),
+  memo("ref:areaPicker", REFERENCE_TTL_MS, () =>
+    prisma.location.findMany({
+      where: { type: "DISTRICT", isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, name: true, children: { where: { isActive: true }, orderBy: { name: "asc" }, select: { slug: true, name: true } } },
+    }),
+  ),
 );
 
 /**

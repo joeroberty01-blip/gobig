@@ -17,7 +17,7 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
   const [pending, start] = useTransition();
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const tone = onDark ? "text-brand-100" : "text-ink-muted";
+  const tone = onDark ? "text-white/70" : "text-ink-muted";
 
   const locate = () => {
     setError(null);
@@ -28,7 +28,7 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
         setLocating(false);
         start(async () => {
           const r = await setPointAction(pos.coords.latitude, pos.coords.longitude);
-          if (!r.ok) setError(t.location.outsideServiceArea);
+          if (!r.ok) setError(r.error === "rateLimited" ? t.errors.rateLimited : t.location.outsideServiceArea);
           router.refresh();
         });
       },

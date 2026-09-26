@@ -3,8 +3,9 @@ import Link from "next/link";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { can } from "@/lib/permissions";
 import { requirePageAccess } from "@/lib/session";
-import { adminCampaigns, adminSubscriptions, getSettings, listPlans } from "@/lib/services/billing";
+import { adminCampaigns, adminSubscriptions, getSettings, instructionsLastChanged, listPlans } from "@/lib/services/billing";
 import { formatTzs } from "@/lib/provider/format";
+import { fill } from "@/lib/i18n/dictionaries";
 import { darToday } from "@/lib/validators/requests";
 import { CampaignControls, PaymentForm, PlanEditor, ReasonButton, SettingsForm } from "@/components/monetization/AdminBillingForms";
 import { Card, PageHeader } from "@/components/ui";
@@ -19,7 +20,7 @@ export default async function AdminMonetizationPage() {
   const { t, locale } = await getServerDictionary();
   const a = t.billing.admin;
   const canConfigure = can(user, "billing:configure");
-  const [plans, settings, subs, campaigns] = await Promise.all([listPlans(), getSettings(), adminSubscriptions(), adminCampaigns()]);
+  const [plans, settings, subs, campaigns, changed] = await Promise.all([listPlans(), getSettings(), adminSubscriptions(), adminCampaigns(), instructionsLastChanged()]);
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
   const date = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeZone: "Africa/Dar_es_Salaam" });
   const day = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeZone: "UTC" });
@@ -149,7 +150,11 @@ export default async function AdminMonetizationPage() {
         <h2 id="settings" className="mb-2 font-semibold">
           {a.settings}
         </h2>
-        <Card>
+        <Card className="flex flex-col gap-3">
+          {/* SEC-040: a changed payment number is the first thing to check if providers report a scam. */}
+          <p className="text-xs text-ink-muted">
+            {changed ? fill(a.instructionsChanged, { date: date.format(changed.at), name: changed.by ?? "—" }) : a.instructionsNeverChanged}
+          </p>
           <SettingsForm initial={settings} canEdit={canConfigure} />
         </Card>
       </section>

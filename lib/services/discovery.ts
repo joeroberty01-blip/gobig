@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { memo, REFERENCE_TTL_MS } from "@/lib/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { mediaUrl } from "@/lib/storage";
 import { availability, isAvailableNow, type Availability } from "@/lib/provider/availability";
@@ -130,32 +131,40 @@ async function matchProviderNameText(q: string): Promise<Map<string, number>> {
 
 export type AreaInfo = { slug: string; name: string; districtName: string | null; ctx: AreaContext };
 
+type IndexedLocation = { id: string; slug: string; name: string; type: string; parentId: string | null; isActive: boolean; lat: number | null; lng: number | null };
+
+/** Every location, cached (Phase 13): area lookups on every search cost no database round trip. */
+export function locationIndex(): Promise<Map<string, IndexedLocation>> {
+  return memo("ref:locations", REFERENCE_TTL_MS, async () => {
+    const rows = await prisma.location.findMany({ select: { id: true, slug: true, name: true, type: true, parentId: true, isActive: true, latitude: true, longitude: true } });
+    return new Map(rows.map((r) => [r.slug, { id: r.id, slug: r.slug, name: r.name, type: r.type, parentId: r.parentId, isActive: r.isActive, lat: num(r.latitude), lng: num(r.longitude) }]));
+  });
+}
+
 export async function resolveArea(slug: string | null): Promise<AreaInfo | null> {
   if (!slug) return null;
-  const loc = await prisma.location.findFirst({
-    where: { slug, isActive: true, type: { in: ["DISTRICT", "WARD", "NEIGHBOURHOOD"] } },
-    select: { id: true, slug: true, name: true, type: true, parent: { select: { id: true, name: true, type: true } } },
-  });
-  if (!loc) return null;
+  const index = await locationIndex();
+  const loc = index.get(slug);
+  if (!loc || !loc.isActive || !["DISTRICT", "WARD", "NEIGHBOURHOOD"].includes(loc.type)) return null;
+  const all = [...index.values()];
+  const parent = loc.parentId ? all.find((l) => l.id === loc.parentId) : undefined;
   const isDistrict = loc.type === "DISTRICT";
-  const districtId = isDistrict ? loc.id : (loc.parent?.id ?? loc.id);
-  const children = await prisma.location.findMany({ where: { parentId: districtId }, select: { id: true } });
-  const districtAreaIds = new Set(children.map((c) => c.id));
+  const districtId = isDistrict ? loc.id : (parent?.id ?? loc.id);
+  const districtAreaIds = new Set(all.filter((l) => l.parentId === districtId).map((l) => l.id));
   const serveIds = isDistrict ? new Set([loc.id, ...districtAreaIds]) : new Set([loc.id, districtId]);
   return {
     slug: loc.slug,
     name: loc.name,
-    districtName: isDistrict ? null : (loc.parent?.name ?? null),
+    districtName: isDistrict ? null : (parent?.name ?? null),
     ctx: { areaId: loc.id, districtId, districtAreaIds, serveIds },
   };
 }
 
 /** All selectable areas (districts and the areas inside them), for query parsing and pickers. */
 export async function listAreas() {
-  return prisma.location.findMany({
-    where: { isActive: true, type: { in: ["DISTRICT", "WARD", "NEIGHBOURHOOD"] } },
-    select: { slug: true, name: true, type: true },
-  });
+  return [...(await locationIndex()).values()]
+    .filter((l) => l.isActive && ["DISTRICT", "WARD", "NEIGHBOURHOOD"].includes(l.type))
+    .map((l) => ({ slug: l.slug, name: l.name, type: l.type }));
 }
 
 export type ProviderCard = {
@@ -390,11 +399,20 @@ function box(p: Point, km: number) {
 }
 
 async function locatedAreas() {
-  const rows = await prisma.location.findMany({
-    where: { isActive: true, type: { in: ["WARD", "NEIGHBOURHOOD"] }, latitude: { not: null } },
-    select: { slug: true, latitude: true, longitude: true },
+  return [...(await locationIndex()).values()]
+    .filter((l) => l.isActive && (l.type === "WARD" || l.type === "NEIGHBOURHOOD") && l.lat != null)
+    .map((l) => ({ slug: l.slug, lat: l.lat, lng: l.lng }));
+}
+
+/** Active categories (with child ids) and services by slug, cached (Phase 13). */
+function catalogIndex() {
+  return memo("ref:catalog", REFERENCE_TTL_MS, async () => {
+    const [categories, services] = await Promise.all([
+      prisma.category.findMany({ where: { isActive: true }, select: { id: true, slug: true, nameEn: true, nameSw: true, children: { select: { id: true } } } }),
+      prisma.service.findMany({ where: { isActive: true }, select: { id: true, slug: true, nameEn: true, nameSw: true } }),
+    ]);
+    return { categories: new Map(categories.map((c) => [c.slug, c])), services: new Map(services.map((s) => [s.slug, s])) };
   });
-  return rows.map((r) => ({ slug: r.slug, lat: num(r.latitude), lng: num(r.longitude) }));
 }
 
 /**
@@ -421,25 +439,21 @@ export async function searchProviders(
   const usePoint = !explicitArea && point ? point : null;
   const nearest = usePoint ? nearestArea(usePoint, await locatedAreas()) : null;
   const area = await resolveArea(explicitArea ?? nearest?.slug ?? null);
-  const areaCentre = area ? await prisma.location.findUnique({ where: { slug: area.slug }, select: { latitude: true, longitude: true } }) : null;
+  const areaCentre = area ? ((await locationIndex()).get(area.slug) ?? null) : null;
   const origin: Origin | null = usePoint
     ? { kind: "you", point: usePoint }
-    : areaCentre?.latitude != null && areaCentre.longitude != null
-      ? { kind: "area", point: { lat: Number(areaCentre.latitude), lng: Number(areaCentre.longitude) } }
+    : areaCentre?.lat != null && areaCentre.lng != null
+      ? { kind: "area", point: { lat: areaCentre.lat, lng: areaCentre.lng } }
       : null;
 
-  const [serviceScores, nameScores] = q ? await Promise.all([matchServices(q), matchProviderNames(q)]) : [null, null];
-
-  const category = params.category
-    ? await prisma.category.findFirst({
-        where: { slug: params.category, isActive: true },
-        select: { id: true, nameEn: true, nameSw: true, children: { select: { id: true } } },
-      })
-    : null;
+  // Independent lookups run together (Phase 13): text matching and the (cached) catalogue.
+  const [[serviceScores, nameScores], cat] = await Promise.all([
+    q ? Promise.all([matchServices(q), matchProviderNames(q)]) : Promise.resolve([null, null] as const),
+    catalogIndex(),
+  ]);
+  const category = params.category ? (cat.categories.get(params.category) ?? null) : null;
   const categoryIds = category ? [category.id, ...category.children.map((c) => c.id)] : null;
-  const service = params.service
-    ? await prisma.service.findFirst({ where: { slug: params.service, isActive: true }, select: { id: true, nameEn: true, nameSw: true } })
-    : null;
+  const service = params.service ? (cat.services.get(params.service) ?? null) : null;
 
   const empty = (): SearchResult => ({
     results: [],
@@ -506,6 +520,7 @@ export async function searchProviders(
   }
   if (params.openNow) cards = cards.filter((c) => isAvailableNow(c.availability));
   if (params.priced) cards = cards.filter((c) => c.price && c.price.priceType !== "ON_QUOTE");
+  if (params.verified) cards = cards.filter((c) => c.badges.some((b) => b.kind === "VERIFIED"));
 
   // Phase 8: every signal comes from provider data; nothing paid is an input (ADR-040).
   const ranked = cards
@@ -527,9 +542,12 @@ export async function searchProviders(
         recentActivity: recentActivityScore(c.lastActive, now),
       };
       const scored = rankScore(values, weights);
-      return { card: c, id: c.id, publishedAt: c.publishedAt, score: scored.score, scored };
+      return { card: c, id: c.id, publishedAt: c.publishedAt, score: scored.score, scored, rating: values.rating };
     })
     .sort(compareScored);
+  // Phase 14 "Top rated": the customer's explicit choice to order by the (review-count aware)
+  // rating signal alone; ties keep the normal ranking. Paid placement is still never an input.
+  if (params.sort === "top") ranked.sort((a, b) => b.rating - a.rating);
 
   const total = ranked.length;
   const pageSize = params.view === "map" ? MAP_LIMIT : PAGE_SIZE;
@@ -551,6 +569,10 @@ export async function searchProviders(
 
 /** Services offered by the most live providers — real counts only; zero-provider services are left out. */
 export async function popularServices(limit = 8) {
+  return memo(`ref:popular:${limit}`, REFERENCE_TTL_MS, () => loadPopularServices(limit));
+}
+
+async function loadPopularServices(limit: number) {
   const rows = await prisma.$queryRaw<{ slug: string; nameEn: string; nameSw: string; providers: number }[]>(Prisma.sql`
     SELECT s.slug, s."nameEn", s."nameSw", count(DISTINCT ps."providerId")::int AS providers
     FROM "ProviderService" ps
@@ -565,11 +587,13 @@ export async function popularServices(limit = 8) {
 }
 
 export async function topCategories() {
-  return prisma.category.findMany({
-    where: { parentId: null, isActive: true },
-    orderBy: { sortOrder: "asc" },
-    select: { slug: true, nameEn: true, nameSw: true, icon: true },
-  });
+  return memo("ref:topCategories", REFERENCE_TTL_MS, () =>
+    prisma.category.findMany({
+      where: { parentId: null, isActive: true },
+      orderBy: { sortOrder: "asc" },
+      select: { slug: true, nameEn: true, nameSw: true, icon: true },
+    }),
+  );
 }
 
 /**

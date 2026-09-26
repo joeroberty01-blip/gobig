@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { can, type Action } from "@/lib/permissions";
 import { roleHome } from "@/lib/roles";
 import { VISITOR_COOKIE } from "@/lib/visitor";
+import { buildCsp, newNonce } from "@/lib/csp";
+import { createMemoryLimiter, DISCOVERY_PAGE_LIMIT } from "@/lib/memoryLimit";
 
 // First layer of the permission model (docs/PHASE-0-ARCHITECTURE.md §4). Pages and actions
 // check again through lib/session.ts and lib/permissions.ts; this gate only keeps people out of
@@ -38,10 +40,9 @@ function randomVisitorId(): string {
  * different people. The new id is also added to this request's own cookies, so the page being
  * rendered right now can count the visitor's first view (Phase 10).
  */
-function nextWithVisitorId(req: { cookies: { get(name: string): { value: string } | undefined }; headers: Headers }): NextResponse {
-  if (req.cookies.get(VISITOR_COOKIE)) return NextResponse.next();
+function nextWithVisitorId(req: { cookies: { get(name: string): { value: string } | undefined }; headers: Headers }, headers: Headers): NextResponse {
+  if (req.cookies.get(VISITOR_COOKIE)) return NextResponse.next({ request: { headers } });
   const id = randomVisitorId();
-  const headers = new Headers(req.headers);
   const existing = headers.get("cookie");
   headers.set("cookie", existing ? `${existing}; ${VISITOR_COOKIE}=${id}` : `${VISITOR_COOKIE}=${id}`);
   const res = NextResponse.next({ request: { headers } });
@@ -55,20 +56,55 @@ function nextWithVisitorId(req: { cookies: { get(name: string): { value: string 
   return res;
 }
 
+const discoveryLimiter = createMemoryLimiter(DISCOVERY_PAGE_LIMIT);
+
+/**
+ * SEC-010: caps requests for public discovery pages per IP. Next hides its router headers from the
+ * proxy, so link prefetches can't be told apart and count too — the limit is sized for that.
+ */
+function discoveryLimited(req: Request): NextResponse | null {
+  if (req.method !== "GET") return null;
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip");
+  if (!ip) return null;
+  const r = discoveryLimiter.hit(ip);
+  if (r.ok) return null;
+  return new NextResponse("Too many requests. Please wait a few minutes and try again.", {
+    status: 429,
+    headers: { "Retry-After": String(r.retryAfterSec), "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
+/** Adds the Content-Security-Policy to every page response (Phase 13, SEC-007). */
+function withCsp(res: NextResponse, csp: string): NextResponse {
+  res.headers.set("Content-Security-Policy", csp);
+  return res;
+}
+
 export default auth(async (req) => {
   const { pathname, search } = req.nextUrl;
+  // A fresh nonce per request; Next reads it from the request's CSP header and applies it to its
+  // own inline scripts.
+  const nonce = newNonce();
+  const https = (req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(":", "")) === "https";
+  const csp = buildCsp(nonce, undefined, https);
+  const headers = new Headers(req.headers);
+  headers.set("x-nonce", nonce);
+  headers.set("Content-Security-Policy", csp);
+  const next = () => withCsp(NextResponse.next({ request: { headers } }), csp);
+
   const area = AREAS.find((a) => matches(pathname, a.prefix));
   const guestOnly = GUEST_ONLY.some((p) => matches(pathname, p));
   if (!area && !guestOnly) {
     const discovery = pathname === "/" || PUBLIC_DISCOVERY.some((p) => matches(pathname, p));
-    return discovery ? nextWithVisitorId(req) : NextResponse.next();
+    if (!discovery) return next();
+    return discoveryLimited(req) ?? withCsp(nextWithVisitorId(req, headers), csp);
   }
 
   const session = req.auth;
   const user = session?.user?.id
     ? await prisma.user.findUnique({
         where: { id: session.user.id },
-        select: { id: true, role: true, status: true, passwordChangedAt: true, deletedAt: true },
+        select: { id: true, role: true, status: true, passwordChangedAt: true, deletedAt: true, totpEnabledAt: true },
       })
     : null;
   const signedIn =
@@ -77,7 +113,7 @@ export default auth(async (req) => {
   if (guestOnly) {
     return signedIn && user.status === "ACTIVE"
       ? NextResponse.redirect(new URL(roleHome(user.role), req.nextUrl))
-      : NextResponse.next();
+      : next();
   }
 
   if (!signedIn) {
@@ -89,12 +125,18 @@ export default auth(async (req) => {
   // A suspended account keeps its session but reaches only public pages (no redirect loop
   // back into its own gated home).
   if (user.status !== "ACTIVE") return NextResponse.redirect(new URL("/", req.nextUrl));
+  // Phase 13: admins must set up two-factor, and sign in with it, before using the admin area.
+  const mfaPending = (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && !(user.totpEnabledAt && session?.user.mfa === true);
+  if (mfaPending && matches(pathname, "/admin") && !matches(pathname, "/admin/security") && !matches(pathname, "/admin/account")) {
+    return NextResponse.redirect(new URL("/admin/security", req.nextUrl));
+  }
   if (!can(user, area!.action)) {
     return NextResponse.redirect(new URL(roleHome(user.role), req.nextUrl));
   }
-  return NextResponse.next();
+  return next();
 });
 
+// Every page (for the CSP), but not static files, the image optimizer or API routes.
 export const config = {
-  matcher: ["/admin/:path*", "/provider/:path*", "/account/:path*", "/requests/:path*", "/notifications", "/saved", "/login", "/signup", "/", "/p/:path*", "/search", "/ask", "/c/:path*", "/categories"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|robots.txt|sitemap.xml|api/).*)"],
 };

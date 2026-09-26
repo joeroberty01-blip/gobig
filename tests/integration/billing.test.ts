@@ -255,3 +255,17 @@ describe("priority verification review", () => {
     await prisma.plan.update({ where: { id: pro.id }, data: { priorityVerificationReview: false } });
   });
 });
+
+describe("payment instructions history (SEC-040)", () => {
+  it("shows who last changed the instructions, ignoring saves that left them alone", async () => {
+    const admin = await prisma.user.findUniqueOrThrow({ where: { id: adminId }, select: { name: true } });
+    const before = new Date(Date.now() - 1000);
+    await billing.saveSettings(adminId, { ...settingsBefore, paymentInstructionsEn: `Pay to till ${run}` });
+    const changed = await billing.instructionsLastChanged();
+    expect(changed?.by).toBe(admin.name);
+    expect(changed!.at.getTime()).toBeGreaterThanOrEqual(before.getTime());
+    // A later save that doesn't touch the instructions doesn't move the date.
+    await billing.saveSettings(adminId, { ...settingsBefore, paymentInstructionsEn: `Pay to till ${run}`, featuredSlots: settingsBefore.featuredSlots });
+    expect((await billing.instructionsLastChanged())?.at.getTime()).toBe(changed!.at.getTime());
+  });
+});

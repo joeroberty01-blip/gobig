@@ -9,6 +9,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AdminAccountPage() {
-  const user = await requirePageAccess("admin-area:access", "/admin/account");
+  const user = await requirePageAccess("security:manage-own", "/admin/account");
   return <AccountPanel user={user} />;
 }

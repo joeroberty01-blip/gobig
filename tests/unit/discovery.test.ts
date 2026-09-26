@@ -39,10 +39,14 @@ describe("search params", () => {
       service: null,
       openNow: true,
       priced: false,
+      verified: false,
+      sort: "best",
       page: 3,
       view: "list",
     });
     expect(parseSearchParams({ view: "map" }).view).toBe("map");
+    expect(parseSearchParams({ verified: "1", sort: "top" })).toMatchObject({ verified: true, sort: "top" });
+    expect(parseSearchParams({ sort: "cheapest" }).sort).toBe("best");
     expect(parseSearchParams({ view: "<script>" }).view).toBe("list");
     expect(parseSearchParams({ page: "-4" }).page).toBe(1);
     expect(parseSearchParams({ q: "x".repeat(500) }).q).toHaveLength(100);

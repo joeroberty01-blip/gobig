@@ -6,7 +6,7 @@ import { providerNav } from "@/components/layout/navItems";
 export default async function ProviderLayout({ children }: { children: React.ReactNode }) {
   const [{ t }, user] = await Promise.all([getServerDictionary(), requirePageAccess("provider-area:access", "/provider")]);
   return (
-    <AppShell user={user} items={providerNav(t)} homeHref="/provider" areaLabel={t.roles.PROVIDER}>
+    <AppShell user={user} nav={providerNav(t)} homeHref="/provider" areaLabel={t.roles.PROVIDER}>
       {children}
     </AppShell>
   );

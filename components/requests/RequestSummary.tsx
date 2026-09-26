@@ -13,7 +13,7 @@ export function requestTitle(r: { service: Named; category: Named }, locale: Loc
 const TONES: Record<Status, string> = {
   OPEN: "bg-brand-50 text-brand-900",
   EXPIRED: "bg-canvas text-ink-muted",
-  ACCEPTED: "bg-accent-400/30 text-brand-900",
+  ACCEPTED: "bg-warning-soft text-warning",
   COMPLETED: "bg-success-soft text-success",
   CANCELLED: "bg-danger-soft text-danger",
 };

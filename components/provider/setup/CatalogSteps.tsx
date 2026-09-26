@@ -67,7 +67,7 @@ export function CategoryStep(props: StepProps & { options: CategoryOption[]; ini
           );
         })}
       </ul>
-      <StepActions {...props} pending={pending || !selected} />
+      <StepActions {...props} pending={pending} disabled={!selected} />
     </form>
   );
 }
@@ -137,7 +137,7 @@ export function ServicesStep(props: StepProps & { groups: ServiceGroup[]; primar
           {others.map(renderGroup)}
         </details>
       )}
-      <StepActions {...props} pending={pending || selected.size === 0} />
+      <StepActions {...props} pending={pending} disabled={selected.size === 0} />
     </form>
   );
 }

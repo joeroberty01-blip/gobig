@@ -14,6 +14,7 @@ import {
   setUserStatusAction,
   type AdminActionResult,
 } from "@/lib/actions/adminPlatform";
+import { resetTwoFactorAction } from "@/lib/actions/security";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fill, type Dictionary } from "@/lib/i18n/dictionaries";
 import { Alert, Button, Field, Input } from "@/components/ui";
@@ -49,7 +50,8 @@ function Err({ error }: { error: ErrorKey | null }) {
 type ReasonKind =
   | { kind: "suspendUser" | "reactivateUser"; id: string }
   | { kind: "suspendProvider" | "reinstateProvider"; id: string }
-  | { kind: "cancelRequest"; id: string };
+  | { kind: "cancelRequest"; id: string }
+  | { kind: "resetTwoFactor"; id: string };
 
 export function ReasonAction({ action, label, hint, danger = false }: { action: ReasonKind; label: string; hint?: string; danger?: boolean }) {
   const { t } = useI18n();
@@ -71,6 +73,8 @@ export function ReasonAction({ action, label, hint, danger = false }: { action: 
             return setProviderListingAction({ id: action.id, action: "reinstate", reason });
           case "cancelRequest":
             return adminCancelRequestAction({ id: action.id, reason });
+          case "resetTwoFactor":
+            return resetTwoFactorAction({ id: action.id, reason });
         }
       },
       () => (setOpen(false), setReason("")),

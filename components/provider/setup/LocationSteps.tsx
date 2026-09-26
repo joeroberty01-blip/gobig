@@ -161,7 +161,7 @@ export function LocationStep(
           ))}
         </select>
       </Field>
-      <StepActions {...props} pending={pending || !locationId} />
+      <StepActions {...props} pending={pending} disabled={!locationId} />
     </form>
   );
 }

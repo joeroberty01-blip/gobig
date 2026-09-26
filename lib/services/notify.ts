@@ -46,7 +46,8 @@ export function appUrl(path: string): string {
 
 /** Sends the reset link. Failures are logged, never shown, so the response stays generic. */
 export async function deliverPasswordReset({ user, token }: ResetRequest): Promise<void> {
-  const link = appUrl(`/reset-password?token=${encodeURIComponent(token)}`);
+  // SEC-008: in the fragment, so the token is never sent to the server or written to access logs.
+  const link = appUrl(`/reset-password#token=${encodeURIComponent(token)}`);
   const t = getDictionary(user.locale).resetMessage;
   const body = t.body.replace("{name}", user.name).replace("{link}", link);
 

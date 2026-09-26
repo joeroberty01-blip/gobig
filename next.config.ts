@@ -7,8 +7,9 @@ const storageHosts = [process.env.S3_ENDPOINT, process.env.S3_ENDPOINT_TEST]
   .map((u) => new URL(u).hostname);
 const bucket = process.env.S3_MEDIA_BUCKET || "provider-media";
 
-// Baseline security headers (SECURITY_BACKLOG SEC-006). The CSP only sets directives that can't
-// break Next's inline scripts; a full script-src policy with nonces is tracked as SEC-007.
+// Baseline security headers (SECURITY_BACKLOG SEC-006). Pages get their full Content-Security-
+// Policy (with a per-request script nonce) from proxy.ts (SEC-007); this minimal one covers
+// responses the proxy doesn't see (API routes, static files).
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },

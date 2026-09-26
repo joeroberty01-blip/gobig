@@ -6,6 +6,7 @@ import { isSameOrigin } from "@/lib/security";
 import { hit, LIMITS } from "@/lib/services/rateLimit";
 import { getOwnedProviderId } from "@/lib/services/providerProfile";
 import { MAX_UPLOAD_BYTES, saveProviderImage, type MediaKind } from "@/lib/services/media";
+import { readLimitedFormData } from "@/lib/upload";
 
 // Image upload for the signed-in provider's own business. Multipart form: `kind` + `file`.
 // A route handler (not a server action) so large bodies get a clear size check up front.
@@ -20,15 +21,9 @@ export async function POST(req: Request) {
   const providerId = await getOwnedProviderId(user!.id);
   if (!providerId) return NextResponse.json({ error: "noBusinessYet" }, { status: 409 });
 
-  const declared = Number(req.headers.get("content-length") ?? 0);
-  if (declared > MAX_UPLOAD_BYTES + 64 * 1024) return NextResponse.json({ error: "imageTooLarge" }, { status: 413 });
-
-  let form: FormData;
-  try {
-    form = await req.formData();
-  } catch {
-    return NextResponse.json({ error: "imageInvalid" }, { status: 400 });
-  }
+  const parsed = await readLimitedFormData(req, MAX_UPLOAD_BYTES);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error === "tooLarge" ? "imageTooLarge" : "imageInvalid" }, { status: parsed.error === "tooLarge" ? 413 : 400 });
+  const form = parsed.form;
   const kind = form.get("kind");
   const file = form.get("file");
   if (typeof kind !== "string" || !KINDS.includes(kind as MediaKind) || !(file instanceof File)) {

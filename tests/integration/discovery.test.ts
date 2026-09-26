@@ -182,3 +182,36 @@ describe("popular services", () => {
     expect(ac?.providers).toBe(liveAcRepair);
   });
 });
+
+describe("Phase 14 filters", () => {
+  it("verified only: providers with a GO BIG verification level", async () => {
+    const level = await prisma.verificationLevel.findFirst({ where: { isActive: true }, orderBy: { rank: "asc" } });
+    if (!level) return; // No levels on this branch: nothing can be verified, covered by the empty case below.
+    await prisma.provider.update({ where: { id: ids.acMik }, data: { verificationLevelId: level.id, verifiedAt: new Date() } });
+    try {
+      const found = mine(await search({ q: "AC repair", verified: true }));
+      expect(found).toContain("acMik");
+      expect(found).not.toContain("acMasaki");
+    } finally {
+      await prisma.provider.update({ where: { id: ids.acMik }, data: { verificationLevelId: null, verifiedAt: null } });
+    }
+  });
+
+  it("verified only never shows unverified providers", async () => {
+    expect(mine(await search({ q: "AC repair", verified: true }))).not.toContain("acMasaki");
+  });
+
+  it("top rated puts the stronger rating first (review count counts), without dropping anyone", async () => {
+    await prisma.provider.update({ where: { id: ids.acMik }, data: { ratingAvg: 4.0, ratingCount: 3 } });
+    await prisma.provider.update({ where: { id: ids.acMasaki }, data: { ratingAvg: 4.9, ratingCount: 20 } });
+    try {
+      const best = mine(await search({ q: "AC repair" }));
+      const top = mine(await search({ q: "AC repair", sort: "top" }));
+      expect([...top].sort()).toEqual([...best].sort());
+      expect(top.indexOf("acMasaki")).toBeLessThan(top.indexOf("acMik"));
+    } finally {
+      await prisma.provider.updateMany({ where: { id: { in: [ids.acMik!, ids.acMasaki!] } }, data: { ratingAvg: null, ratingCount: 0 } });
+    }
+  });
+});
+

@@ -1,8 +1,10 @@
 import { prisma } from "@/lib/db";
+import { invalidate, memo } from "@/lib/cache";
 import type { Point } from "@/lib/geo";
 import { parseSearchParams } from "@/lib/discovery/query";
 import { listAreas, searchProviders, type SearchResult } from "@/lib/services/discovery";
-import { claudeIntent } from "@/lib/ai/claude";
+import { aiConfigured, claudeIntent } from "@/lib/ai/claude";
+import { hit as rateHit, LIMITS } from "@/lib/services/rateLimit";
 import { getPlatformSettings } from "@/lib/services/platformSettings";
 import { MAX_QUERY_CHARS, normalize, ruleIntent, sanitizeIntent, type Catalog, type SearchIntent } from "@/lib/ai/intent";
 
@@ -14,11 +16,14 @@ const CATALOG_TTL_MS = 5 * 60_000;
 const INTENT_TTL_MS = 10 * 60_000;
 const INTENT_CACHE_MAX = 500;
 
-let catalogCache: { at: number; catalog: Catalog } | null = null;
 const intentCache = new Map<string, { at: number; intent: SearchIntent }>();
 
-export async function loadCatalog(): Promise<Catalog> {
-  if (catalogCache && Date.now() - catalogCache.at < CATALOG_TTL_MS) return catalogCache.catalog;
+export function loadCatalog(): Promise<Catalog> {
+  // Shared reference cache (Phase 13): admin catalogue edits invalidate it.
+  return memo("ref:aiCatalog", CATALOG_TTL_MS, loadCatalogFromDb);
+}
+
+async function loadCatalogFromDb(): Promise<Catalog> {
   const [services, categories, areas] = await Promise.all([
     prisma.service.findMany({
       where: { isActive: true, category: { isActive: true } },
@@ -33,7 +38,6 @@ export async function loadCatalog(): Promise<Catalog> {
     categories,
     areas: areas.map((a) => ({ slug: a.slug, name: a.name })).sort((a, b) => a.slug.localeCompare(b.slug)),
   };
-  catalogCache = { at: Date.now(), catalog };
   return catalog;
 }
 
@@ -46,7 +50,12 @@ export async function understand(query: string, opts: { useAi?: boolean } = {}):
 
   const catalog = await loadCatalog();
   // Admins can switch the model off in Admin → Settings; the rule-based parser then answers.
-  const aiOn = opts.useAi !== false && (await getPlatformSettings()).aiSearchEnabled;
+  // The global daily cap (SEC-036) is counted only when a model call would really happen.
+  const aiOn =
+    opts.useAi !== false &&
+    aiConfigured() &&
+    (await getPlatformSettings()).aiSearchEnabled &&
+    (await rateHit(LIMITS.aiGlobalDaily, "all")).ok;
   const ai = aiOn ? await claudeIntent(text, catalog) : null;
   const intent = sanitizeIntent(ai ?? ruleIntent(text, catalog), catalog);
 
@@ -69,6 +78,6 @@ export async function aiSearch(query: string, point: Point | null, now: Date = n
 }
 
 export function _clearAiCaches() {
-  catalogCache = null;
+  invalidate("ref:aiCatalog");
   intentCache.clear();
 }

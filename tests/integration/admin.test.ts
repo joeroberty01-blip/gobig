@@ -128,6 +128,22 @@ describe("provider listings", () => {
     expect(await inSearch()).toBe(true);
     expect(await people.setProviderListing(actor(adminId, "ADMIN"), providerId, "reinstate", "again")).toEqual({ ok: false, error: "notAllowed" });
   });
+
+  it("SEC-011: suspending the owner's account hides the listing; reactivating brings it back", async () => {
+    expect(await people.setUserStatus(actor(adminId, "ADMIN"), ownerId, "SUSPENDED", "scam reports")).toEqual({ ok: true });
+    expect(await inSearch()).toBe(false);
+    expect((await prisma.auditLog.findFirstOrThrow({ where: { entityId: providerId, action: "provider.suspended" }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] })).metadata).toMatchObject({ cause: "account" });
+    expect(await people.setUserStatus(actor(adminId, "ADMIN"), ownerId, "ACTIVE", "appeal accepted")).toEqual({ ok: true });
+    expect(await inSearch()).toBe(true);
+  });
+
+  it("SEC-011: a listing suspended on its own stays suspended when the account comes back", async () => {
+    await people.setProviderListing(actor(adminId, "ADMIN"), providerId, "suspend", "fake photos");
+    await people.setUserStatus(actor(adminId, "ADMIN"), ownerId, "SUSPENDED", "also the account");
+    await people.setUserStatus(actor(adminId, "ADMIN"), ownerId, "ACTIVE", "account cleared");
+    expect((await prisma.provider.findUniqueOrThrow({ where: { id: providerId } })).status).toBe("SUSPENDED");
+    expect(await people.setProviderListing(actor(adminId, "ADMIN"), providerId, "reinstate", "photos fixed")).toMatchObject({ ok: true, status: "ACTIVE" });
+  });
 });
 
 describe("catalogue & locations", () => {

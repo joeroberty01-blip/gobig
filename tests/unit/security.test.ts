@@ -32,14 +32,14 @@ describe("mass assignment: client can't set privileged fields", () => {
       role: "CUSTOMER",
       name: "Asha",
       phone: "0712345678",
-      password: "password123",
-      confirmPassword: "password123",
+      password: "Kariakoo-fundi-7",
+      confirmPassword: "Kariakoo-fundi-7",
       status: "ACTIVE",
       verified: true,
       passwordHash: "x",
     });
     expect(r.success && Object.keys(r.data).sort()).toEqual(["email", "name", "password", "phone", "role"]);
-    expect(signupSchema.safeParse({ role: "SUPER_ADMIN", name: "x", phone: "0712345678", password: "password123", confirmPassword: "password123" }).success).toBe(false);
+    expect(signupSchema.safeParse({ role: "SUPER_ADMIN", name: "x", phone: "0712345678", password: "Kariakoo-fundi-7", confirmPassword: "Kariakoo-fundi-7" }).success).toBe(false);
   });
   it("profile sections ignore provider-controlled status/ownership fields", () => {
     const c = contactSchema.parse({ phone: "0712345678", email: "", status: "ACTIVE", providerId: "someone-else" } as never);

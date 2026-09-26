@@ -37,7 +37,7 @@ export function AreaPicker({
     });
 
   return (
-    <label className={`flex items-center gap-2 rounded-xl border border-line bg-surface px-3 ${compact ? "min-h-10" : "min-h-12"} ${pending ? "opacity-60" : ""}`}>
+    <label className={`flex items-center gap-2 rounded-xl border border-line bg-surface px-3 text-ink shadow-soft ${compact ? "min-h-10" : "min-h-12"} ${pending ? "opacity-60" : ""}`}>
       <MapPin aria-hidden className="size-4 shrink-0 text-brand-700" />
       <span className="sr-only">{t.discovery.yourArea}</span>
       <select

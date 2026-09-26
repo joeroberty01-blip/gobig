@@ -18,7 +18,7 @@ const email = (n: string) => `${n}-${run}@test.gobig.local`;
 const phone = (i: number) => `07${(Number.parseInt(run, 36) % 1e7).toString().padStart(7, "0")}${i}`;
 
 function signup(overrides: Record<string, string>) {
-  const r = signupSchema.safeParse({ role: "CUSTOMER", name: "Test User", password: "password123", confirmPassword: "password123", ...overrides });
+  const r = signupSchema.safeParse({ role: "CUSTOMER", name: "Test User", password: "Kariakoo-fundi-7", confirmPassword: "Kariakoo-fundi-7", ...overrides });
   if (!r.success) throw new Error(JSON.stringify(r.error.issues));
   return r.data;
 }
@@ -43,7 +43,7 @@ describe("registration", () => {
     const row = await prisma.user.findFirstOrThrow({ where: { name: `T-${run} provider` } });
     expect(row.phone).toMatch(/^2557\d{8}$/);
     expect(row.locale).toBe("en");
-    expect(row.passwordHash).not.toContain("password123");
+    expect(row.passwordHash).not.toContain("Kariakoo-fundi-7");
   });
 
   it("rejects a duplicate email or phone, reporting which", async () => {
@@ -58,24 +58,24 @@ describe("registration", () => {
 
 describe("login", () => {
   it("accepts email in any case and phone in any common format", async () => {
-    expect((await verifyCredentials(email("cust").toUpperCase(), "password123")).ok).toBe(true);
+    expect((await verifyCredentials(email("cust").toUpperCase(), "Kariakoo-fundi-7")).ok).toBe(true);
     const local = phone(1);
-    expect((await verifyCredentials(`+255 ${local.slice(1)}`, "password123")).ok).toBe(true);
+    expect((await verifyCredentials(`+255 ${local.slice(1)}`, "Kariakoo-fundi-7")).ok).toBe(true);
   });
 
   it("gives the same answer for a wrong password and an unknown account", async () => {
     expect(await verifyCredentials(email("cust"), "wrong-password")).toEqual({ ok: false, error: "invalid" });
-    expect(await verifyCredentials(email("nobody"), "password123")).toEqual({ ok: false, error: "invalid" });
+    expect(await verifyCredentials(email("nobody"), "Kariakoo-fundi-7")).toEqual({ ok: false, error: "invalid" });
   });
 
   it("refuses suspended and deleted accounts", async () => {
     await registerUser(signup({ email: email("susp") }));
     await prisma.user.update({ where: { email: email("susp") }, data: { status: "SUSPENDED" } });
-    expect(await verifyCredentials(email("susp"), "password123")).toEqual({ ok: false, error: "suspended" });
+    expect(await verifyCredentials(email("susp"), "Kariakoo-fundi-7")).toEqual({ ok: false, error: "suspended" });
 
     await registerUser(signup({ email: email("gone") }));
     await prisma.user.update({ where: { email: email("gone") }, data: { deletedAt: new Date() } });
-    expect(await verifyCredentials(email("gone"), "password123")).toEqual({ ok: false, error: "invalid" });
+    expect(await verifyCredentials(email("gone"), "Kariakoo-fundi-7")).toEqual({ ok: false, error: "invalid" });
   });
 
   it("records the last login time", async () => {
@@ -114,7 +114,7 @@ describe("password reset", () => {
     expect(await resetPassword(req!.token, "second-attempt")).toBe(false);
     expect(await isResetTokenValid(req!.token)).toBe(false);
 
-    expect((await verifyCredentials(email("reset"), "password123")).ok).toBe(false);
+    expect((await verifyCredentials(email("reset"), "Kariakoo-fundi-7")).ok).toBe(false);
     expect((await verifyCredentials(email("reset"), "brand-new-pass")).ok).toBe(true);
     const after = await prisma.user.findUniqueOrThrow({ where: { email: email("reset") } });
     expect(after.passwordChangedAt.getTime()).toBeGreaterThan(before.passwordChangedAt.getTime());

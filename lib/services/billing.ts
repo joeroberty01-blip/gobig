@@ -54,6 +54,27 @@ export async function saveSettings(actorId: string, next: MonetizationSettings):
   });
 }
 
+/**
+ * When the payment instructions shown to providers last changed, and by whom (SEC-040). Read from
+ * the append-only audit log, so it can't be edited away along with the text.
+ */
+export async function instructionsLastChanged(): Promise<{ at: Date; by: string | null } | null> {
+  const rows = await prisma.auditLog.findMany({
+    where: { action: "monetization.settings_saved", entityId: SETTINGS_ID },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: 100,
+    select: { createdAt: true, metadata: true, actorId: true },
+  });
+  for (const r of rows) {
+    const m = r.metadata as { before?: Partial<MonetizationSettings>; after?: Partial<MonetizationSettings> } | null;
+    if (m?.before?.paymentInstructionsEn !== m?.after?.paymentInstructionsEn || m?.before?.paymentInstructionsSw !== m?.after?.paymentInstructionsSw) {
+      const actor = r.actorId ? await prisma.user.findUnique({ where: { id: r.actorId }, select: { name: true } }) : null;
+      return { at: r.createdAt, by: actor?.name ?? null };
+    }
+  }
+  return null;
+}
+
 // ─── Plans ──────────────────────────────────────────────────────────────────────────────────
 
 export async function listPlans(opts: { activeOnly?: boolean } = {}) {

@@ -1,15 +1,17 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-// The Postgres pooler drops idle connections on its own schedule. Without these settings the pg
-// pool keeps handing out sockets the server has already closed, which surfaces as an intermittent
-// `P1017 ConnectionClosed` on a page that worked moments earlier. Prisma's own guidance for this
-// server is max 10 connections and "idle timeout to the smallest positive value supported", so
-// idle clients are retired long before the server can close them out from under us.
+// Neon's pooler (PgBouncer, transaction mode) has no idle-client timeout; server connections go
+// away only when the compute suspends (after 5 min idle) or restarts. Phase 13 measured the old
+// 1 s idle timeout re-opening TLS connections on nearly every page (~850 ms extra from Tanzania).
+// Now: idle connections live 10 s — warm across one page's queries and quick navigation, far
+// inside the suspend window — and every connection is replaced after 60 s so a stale socket
+// can't linger. keepAlive detects silently dropped sockets.
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
   max: 10,
-  idleTimeoutMillis: 1_000,
+  idleTimeoutMillis: 10_000,
+  maxLifetimeSeconds: 60,
   connectionTimeoutMillis: 10_000,
   keepAlive: true,
 });

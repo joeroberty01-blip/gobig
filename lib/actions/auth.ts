@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { getLocale, LOCALE_COOKIE } from "@/lib/i18n/server";
 import { isLocale } from "@/lib/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/session";
-import { createPasswordResetToken, registerUser, resetPassword } from "@/lib/services/auth";
+import { createPasswordResetToken, isResetTokenValid, registerUser, resetPassword } from "@/lib/services/auth";
 import { deliverPasswordReset } from "@/lib/services/notify";
 import { hit, LIMITS } from "@/lib/services/rateLimit";
 import { clientIp } from "@/lib/request";
@@ -56,9 +56,17 @@ export async function requestPasswordResetAction(input: ForgotPasswordInput): Pr
   return { ok: true };
 }
 
+/** Checks a reset link's token (read from the URL fragment in the browser). */
+export async function checkResetTokenAction(token: string): Promise<{ valid: boolean; rateLimited?: true }> {
+  if (typeof token !== "string" || token.length < 20 || token.length > 200) return { valid: false };
+  if (!(await hit(LIMITS.resetUsePerIp, await clientIp())).ok) return { valid: false, rateLimited: true };
+  return { valid: await isResetTokenValid(token) };
+}
+
 export async function resetPasswordAction(input: ResetPasswordInput): Promise<ActionResult> {
   const parsed = resetPasswordSchema.safeParse(input);
   if (!parsed.success) return firstIssue(parsed.error.issues);
+  if (!(await hit(LIMITS.resetUsePerIp, await clientIp())).ok) return { ok: false, error: "rateLimited" };
 
   const ok = await resetPassword(parsed.data.token, parsed.data.password);
   return ok ? { ok: true } : { ok: false, error: "tokenInvalid" };

@@ -17,6 +17,9 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string | null }) {
   const { t } = useI18n();
   const router = useRouter();
   const [formError, setFormError] = useState<ErrorKey | null>(null);
+  // Phase 13: admins (and anyone with two-factor on) are asked for a code after the password.
+  const [needOtp, setNeedOtp] = useState(false);
+  const [otp, setOtp] = useState("");
   const {
     register,
     handleSubmit,
@@ -27,9 +30,13 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string | null }) {
 
   const onSubmit = handleSubmit(async (data) => {
     setFormError(null);
-    const result = await signIn("credentials", { ...data, redirect: false });
+    const result = await signIn("credentials", { ...data, ...(needOtp ? { otp } : {}), redirect: false });
     if (result?.error) {
-      const known = ["suspended", "invalidCredentials", "rateLimited"] as const;
+      if (result.code === "otpRequired") {
+        setNeedOtp(true);
+        return;
+      }
+      const known = ["suspended", "invalidCredentials", "rateLimited", "otpInvalid"] as const;
       setFormError(known.find((k) => k === result.code) ?? "generic");
       return;
     }
@@ -53,6 +60,20 @@ export function LoginForm({ callbackUrl }: { callbackUrl: string | null }) {
       <Field id="password" label={t.auth.password} error={err(errors.password?.message)}>
         <Input id="password" type="password" autoComplete="current-password" invalid={!!errors.password} {...register("password")} />
       </Field>
+      {needOtp && (
+        <Field id="otp" label={t.auth.otpLabel} hint={t.auth.otpHint}>
+          <Input
+            id="otp"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            inputMode="text"
+            autoComplete="one-time-code"
+            autoFocus
+            maxLength={20}
+            placeholder="123456"
+          />
+        </Field>
+      )}
       <div className="-mt-1 text-right">
         <Link href="/forgot-password" className="text-sm font-medium text-brand-700 hover:underline">
           {t.auth.forgotPassword}

@@ -1,11 +1,21 @@
 "use client";
 
-import { CalendarCheck, Car, Globe, Mail, MessageCircle, MessageSquare, Navigation, Phone, ReceiptText, type LucideIcon } from "lucide-react";
+import { CalendarCheck, Car, Globe, Mail, MessageSquare, Navigation, Phone, ReceiptText, type LucideIcon } from "lucide-react";
 import type { ConnectAction } from "@/lib/provider/connect";
 
-export const ACTION_ICON: Record<ConnectAction, LucideIcon> = {
+/** WhatsApp-style glyph: a chat bubble with a handset (drawn here, no brand asset needed). */
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3.5 20.5 4.8 16.6A9 9 0 1 1 8 19.6Z" />
+      <path d="M9.2 8.6c.2-.5.5-.6.8-.6h.5c.2 0 .4.1.5.4l.7 1.6c.1.2 0 .5-.1.6l-.5.6c-.1.2-.1.4 0 .6.6 1 1.4 1.8 2.4 2.4.2.1.4.1.6 0l.6-.5c.2-.1.4-.2.6-.1l1.6.7c.3.1.4.3.4.5v.5c0 .3-.1.6-.6.8-.8.4-1.8.4-2.7 0a9.8 9.8 0 0 1-4.8-4.8c-.4-.9-.4-1.9 0-2.7Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+export const ACTION_ICON: Record<ConnectAction, LucideIcon | typeof WhatsAppIcon> = {
   CALL: Phone,
-  WHATSAPP: MessageCircle,
+  WHATSAPP: WhatsAppIcon,
   MESSAGE: MessageSquare,
   REQUEST_QUOTE: ReceiptText,
   BOOK_SERVICE: CalendarCheck,
@@ -39,6 +49,7 @@ export function ConnectButton({
   label,
   source,
   primary = false,
+  iconOnly = false,
   className = "",
 }: {
   slug: string;
@@ -47,21 +58,31 @@ export function ConnectButton({
   label: string;
   source: "PROFILE" | "CARD" | "MAP";
   primary?: boolean;
+  /** Round icon button (search result rows); the label becomes its accessible name. */
+  iconOnly?: boolean;
   className?: string;
 }) {
   const Icon = ACTION_ICON[action];
   const external = EXTERNAL.includes(action);
+  // WhatsApp always wears its own green, so customers recognise it at a glance.
+  const tone =
+    action === "WHATSAPP"
+      ? "bg-whatsapp text-white hover:opacity-90"
+      : primary
+        ? "bg-night-900 text-white hover:bg-night-700"
+        : "border border-line bg-surface text-ink hover:bg-canvas";
   return (
     <a
       href={href}
       onClick={() => trackConnect(slug, action, source)}
       {...(external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
-      className={`flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold ${
-        primary ? "bg-brand-700 text-white" : "border border-line bg-surface text-ink"
-      } ${className}`}
+      {...(iconOnly ? { "aria-label": label, title: label } : {})}
+      className={`flex items-center justify-center gap-2 text-sm font-semibold transition active:scale-[0.97] ${
+        iconOnly ? "size-11 rounded-full" : "min-h-12 rounded-xl px-3 whitespace-nowrap"
+      } ${tone} ${className}`}
     >
-      <Icon aria-hidden className="size-4" />
-      {label}
+      <Icon aria-hidden className={iconOnly ? "size-5" : "size-4"} />
+      {!iconOnly && label}
     </a>
   );
 }

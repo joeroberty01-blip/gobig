@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight, Plus } from "lucide-react";
+import { ChevronRight, ClipboardList, Plus } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { requirePageAccess } from "@/lib/session";
 import { listCustomerRequests } from "@/lib/services/requests";
 import { areaText, requestTitle, StatusBadge, whenText } from "@/components/requests/RequestSummary";
-import { ButtonLink, Card, PageHeader } from "@/components/ui";
+import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -31,12 +31,12 @@ export default async function MyRequestsPage() {
         }
       />
       {rows.length === 0 ? (
-        <Card className="text-center text-sm text-ink-muted">{l.empty}</Card>
+        <EmptyState icon={<ClipboardList aria-hidden />} title={l.empty} />
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((r) => (
             <li key={r.id}>
-              <Link href={`/requests/${r.id}`} className="block rounded-2xl border border-line bg-surface p-4 hover:border-brand-500">
+              <Link href={`/requests/${r.id}`} className="block rounded-2xl border border-line bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

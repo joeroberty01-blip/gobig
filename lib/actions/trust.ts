@@ -10,6 +10,7 @@ import { hit, LIMITS } from "@/lib/services/rateLimit";
 import * as reviews from "@/lib/services/reviews";
 import * as verification from "@/lib/services/verification";
 import * as v from "@/lib/validators/trust";
+import { invalidate } from "@/lib/cache";
 import type { DocumentType } from "@/lib/services/verification";
 
 // Phase 5 server actions: authenticate → can() → validate → rate limit (where abusable) →
@@ -172,6 +173,7 @@ export async function saveLevelAction(input: z.input<typeof v.levelSchema>): Pro
   if (!parsed.success) return invalid(parsed.error);
   const r = await verification.saveLevel(user!.id, { ...parsed.data, requiredDocuments: parsed.data.requiredDocuments as DocumentType[] });
   if (!r.ok) return fail(r.error);
+  invalidate("ref:");
   revalidatePath("/admin/verification", "layout");
   revalidatePath("/provider/verification");
   return { ok: true };

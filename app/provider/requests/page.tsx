@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Inbox } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { requirePageAccess } from "@/lib/session";
 import { getOwnedProviderId } from "@/lib/services/providerProfile";
 import { providerInbox } from "@/lib/services/requests";
 import { areaText, budgetText, requestTitle, StatusBadge, whenText } from "@/components/requests/RequestSummary";
-import { ButtonLink, Card, PageHeader } from "@/components/ui";
+import { ButtonLink, Card, EmptyState, PageHeader } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -25,7 +25,7 @@ export default async function ProviderRequestsPage() {
         <PageHeader title={p.inboxTitle} />
         <Card className="flex flex-col items-start gap-3 text-sm text-ink-muted">
           {p.noBusiness}
-          <ButtonLink href="/provider/setup">{t.provider.setupTitle}</ButtonLink>
+          <ButtonLink href="/provider/setup/name">{t.provider.setupTitle}</ButtonLink>
         </Card>
       </div>
     );
@@ -36,12 +36,12 @@ export default async function ProviderRequestsPage() {
     <div className="mx-auto max-w-2xl">
       <PageHeader title={p.inboxTitle} />
       {rows.length === 0 ? (
-        <Card className="text-center text-sm text-ink-muted">{p.inboxEmpty}</Card>
+        <EmptyState icon={<Inbox aria-hidden />} title={p.inboxEmpty} />
       ) : (
         <ul className="flex flex-col gap-3">
           {rows.map((m) => (
             <li key={m.id}>
-              <Link href={`/provider/requests/${m.request.id}`} className="block rounded-2xl border border-line bg-surface p-4 hover:border-brand-500">
+              <Link href={`/provider/requests/${m.request.id}`} className="block rounded-2xl border border-line bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">

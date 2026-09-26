@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
-/* Design tokens. Phase 14 refines the visual language; structure and names stay. */
+/*
+ * Design tokens (Phase 14 visual language: premium, calm, local). Utilities read these variables,
+ * so the dark theme below only redefines values — no component needs dark: variants.
+ * Brand green = trust and action; "night" navy = hero and feature surfaces.
+ */
 @theme {
   --color-brand-50: #ecfdf6;
   --color-brand-100: #d1fae8;
@@ -11,31 +15,195 @@
   --color-accent-400: #fbbf24;
   --color-accent-500: #f59e0b;
 
+  /* Deep navy for the hero, the AI card and the provider sidebar. Same in both themes. */
+  --color-night-700: #1c2a44;
+  --color-night-800: #111c31;
+  --color-night-900: #0a1322;
+
+  --color-whatsapp: #1fa855;
+
   --color-ink: #0f172a;
   --color-ink-muted: #475569;
   --color-ink-subtle: #64748b;
   --color-line: #e2e8f0;
   --color-surface: #ffffff;
-  --color-canvas: #f8fafc;
+  --color-canvas: #f6f8fb;
   --color-danger: #dc2626;
   --color-danger-soft: #fef2f2;
   --color-success: #15803d;
   --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(15 23 42 / 0.05), 0 12px 32px -8px rgb(15 23 42 / 0.16);
+
+  --animate-rise: rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* Dark theme: the user's choice (data-theme) or, with no choice, the device setting. */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-brand-50: #0f2a23;
+    --color-brand-100: #15392f;
+    --color-brand-500: #2cc596;
+    --color-brand-600: #22aa80;
+    --color-brand-700: #19946f;
+    --color-brand-900: #b7f0dc;
+    --color-ink: #e8edf4;
+    --color-ink-muted: #a7b3c4;
+    --color-ink-subtle: #8492a6;
+    --color-line: #243149;
+    --color-surface: #111a2c;
+    --color-canvas: #0a1120;
+    --color-danger: #f87171;
+    --color-danger-soft: #3b1418;
+    --color-success: #4ade80;
+    --color-success-soft: #0e2e1c;
+    --color-warning: #fbbf24;
+    --color-warning-soft: #33250a;
+    --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
+    --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -8px rgb(0 0 0 / 0.55);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --color-brand-50: #0f2a23;
+      --color-brand-100: #15392f;
+      --color-brand-500: #2cc596;
+      --color-brand-600: #22aa80;
+      --color-brand-700: #19946f;
+      --color-brand-900: #b7f0dc;
+      --color-ink: #e8edf4;
+      --color-ink-muted: #a7b3c4;
+      --color-ink-subtle: #8492a6;
+      --color-line: #243149;
+      --color-surface: #111a2c;
+      --color-canvas: #0a1120;
+      --color-danger: #f87171;
+      --color-danger-soft: #3b1418;
+      --color-success: #4ade80;
+      --color-success-soft: #0e2e1c;
+      --color-warning: #fbbf24;
+      --color-warning-soft: #33250a;
+      --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px -4px rgb(0 0 0 / 0.4);
+      --shadow-lift: 0 2px 4px rgb(0 0 0 / 0.3), 0 12px 32px -8px rgb(0 0 0 / 0.55);
+    }
+  }
 }
 
 html {
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
 }
 
 /* Room for the fixed bottom navigation plus the phone's home-indicator area. */
 .pb-bottom-nav {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+}
+
+/* Hero and feature surfaces: navy with a soft green glow — no stock photo needed. */
+.bg-hero {
+  background:
+    radial-gradient(60rem 30rem at 110% -10%, rgb(16 163 122 / 0.35), transparent 60%),
+    radial-gradient(40rem 24rem at -10% 120%, rgb(251 191 36 / 0.12), transparent 60%),
+    linear-gradient(160deg, var(--color-night-800), var(--color-night-900));
+}
+
+/* Loading placeholders. */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-line) 0%, color-mix(in oklab, var(--color-line) 55%, var(--color-surface)) 50%, var(--color-line) 100%);
+  background-size: 200% 100%;
+  animation: var(--animate-shimmer);
+  border-radius: 0.75rem;
+}
+
+/* Horizontal carousels: no scrollbar, snap to cards. */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Map (Phase 14): Leaflet's popups and controls in the app's own look, both themes. */
+html .leaflet-container {
+  font-family: var(--font-sans);
+  background: var(--color-canvas);
+}
+.leaflet-container .leaflet-popup-content-wrapper {
+  border-radius: 1rem;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-lift);
+}
+.leaflet-container .leaflet-popup-content {
+  margin: 12px 16px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+.leaflet-container .leaflet-popup-tip {
+  background: var(--color-surface);
+}
+.leaflet-container .leaflet-bar {
+  overflow: hidden;
+  border: 1px solid var(--color-line) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+.leaflet-container .leaflet-bar a {
+  background: var(--color-surface) !important;
+  color: var(--color-ink) !important;
+  border-color: var(--color-line) !important;
+}
+:root[data-theme="dark"] .leaflet-tile-pane {
+  filter: brightness(0.78) contrast(1.05) saturate(0.8);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .leaflet-tile-pane {
+    filter: brightness(0.78) contrast(1.05) saturate(0.8);
+  }
 }

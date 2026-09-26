@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,7 @@ import {
   type ForgotPasswordInput,
   type ResetPasswordInput,
 } from "@/lib/validators/auth";
-import { requestPasswordResetAction, resetPasswordAction } from "@/lib/actions/auth";
+import { checkResetTokenAction, requestPasswordResetAction, resetPasswordAction } from "@/lib/actions/auth";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { Alert, Button, ButtonLink, Field, Input } from "@/components/ui";
@@ -59,6 +59,36 @@ export function ForgotPasswordForm() {
         {t.auth.backToLogin}
       </Link>
     </form>
+  );
+}
+
+/**
+ * Reads the token from the link's fragment (#token=…; older links used ?token=), removes it from
+ * the address bar and history straight away, then checks it with the server (SEC-008).
+ */
+export function ResetFromLink() {
+  const { t } = useI18n();
+  const [state, setState] = useState<{ status: "checking" } | { status: "valid"; token: string } | { status: "invalid"; rateLimited?: boolean }>({ status: "checking" });
+
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.hash.slice(1)).get("token") ?? new URLSearchParams(window.location.search).get("token") ?? "";
+    window.history.replaceState(null, "", window.location.pathname);
+    let cancelled = false;
+    checkResetTokenAction(token)
+      .then((r) => !cancelled && setState(r.valid ? { status: "valid", token } : { status: "invalid", rateLimited: r.rateLimited }))
+      .catch(() => !cancelled && setState({ status: "invalid" }));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (state.status === "checking") return <p className="text-sm text-ink-muted" aria-live="polite">{t.auth.resetChecking}</p>;
+  if (state.status === "valid") return <ResetPasswordForm token={state.token} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <Alert>{state.rateLimited ? t.errors.rateLimited : t.auth.resetLinkInvalid}</Alert>
+      <ButtonLink href="/forgot-password">{t.auth.requestNewLink}</ButtonLink>
+    </div>
   );
 }
 

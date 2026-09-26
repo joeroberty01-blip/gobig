@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import * as profile from "@/lib/services/providerProfile";
-import { providerAnalytics, recordMetrics } from "@/lib/services/metrics";
+import { dashboardToday, providerAnalytics, recordMetrics } from "@/lib/services/metrics";
 import { recordConnect } from "@/lib/services/connectEvents";
 import { favoriteProviderIds, toggleFavorite } from "@/lib/services/favorites";
 import { providerCardsByIds } from "@/lib/services/discovery";
@@ -138,3 +138,16 @@ describe("saved providers", () => {
     expect(await favoriteProviderIds(customerId)).toEqual([]);
   });
 });
+
+describe("Phase 14 dashboard: today vs yesterday", () => {
+  it("counts today's and yesterday's people separately, from the same records", async () => {
+    await recordMetrics({ kind: "PROFILE_VIEW", providerIds: [providerId], source: "SEARCH", visitorId: "visitorCCCCCCCCCCCCCCCC", viewer: null, now: yesterday });
+    const d = await dashboardToday(providerId, now);
+    expect(d.views).toEqual({ today: 1, yesterday: 1 });
+    expect(d.calls).toEqual({ today: 1, yesterday: 0 });
+    expect(d.whatsapp).toEqual({ today: 0, yesterday: 0 });
+    expect(d.requests).toEqual({ today: 0, yesterday: 0 });
+    expect(d.reviews).toEqual({ today: 0, yesterday: 0 });
+  });
+});
+

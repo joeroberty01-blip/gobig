@@ -473,3 +473,38 @@ Phone tab bar: Overview · Users · Verification · Reports · Account.
   AI search on/off. Cached 30 s; every save audited.
 **Roles.** ADMIN runs day-to-day moderation; SUPER_ADMIN additionally owns policy (prices,
 settings, announcements, other admins).
+
+## ADR-048 — Two-factor sign-in for admins (2026-09-26)
+
+**Context.** An admin password alone could be phished; a super admin controls prices, payment instructions and announcements (SEC-042, SEC-040, SEC-043).
+**Decision.** TOTP (RFC 6238, 6 digits, 30 s, ±1 step) for ADMIN and SUPER_ADMIN, built on `node:crypto` (no new auth dependency). The secret is stored AES-256-GCM encrypted with `TOTP_ENCRYPTION_KEY`; the last used step is stored so a code can't be replayed; 8 single-use recovery codes are stored as hashes. The session records `mfa`; until it's true, `can()` itself denies every admin permission except setting up two-factor and the account page — enforced there, not only in `proxy.ts`, because server actions can be posted from any URL. Enrolling ends the session so the next sign-in carries `mfa`. Only another super admin can reset a lost device (audited).
+**Consequences.** The first super admin must set up an authenticator app at first sign-in. Losing `TOTP_ENCRYPTION_KEY` disables every enrolment (admins then need a reset).
+
+## ADR-049 — Nonce-based Content Security Policy (2026-09-26)
+
+**Context.** Only baseline headers existed (SEC-007).
+**Decision.** `proxy.ts` makes a fresh nonce per request and sets the CSP on both the request (Next applies the nonce to its own scripts) and the response. Scripts: `'self'`, the nonce and `'strict-dynamic'`; styles allow inline (React `style` props, Leaflet); images: this site, `data:`/`blob:`, the storage host and the map tile host. `upgrade-insecure-requests` only when the request came in over HTTPS. The proxy therefore runs on every page (API routes and static files excluded), which also makes every page dynamically rendered — already true for this app.
+**Consequences.** A new third-party script, image host or connection needs adding to `lib/csp.ts`.
+
+## ADR-050 — Limits that don't cost a database round trip (2026-09-26)
+
+**Context.** The Postgres limiter (ADR-031) adds one round trip — acceptable on logins and uploads, not on every search or profile view. Many Tanzanian mobile users share a carrier-NAT address, and Next hides its prefetch headers from the proxy, so a result list's link prefetches count too.
+**Decision.** In-memory fixed windows (`lib/memoryLimit.ts`, bounded map) for discovery pages (1,200 requests per 5 minutes per IP) and the location actions (60/min). The Postgres limiter stays for everything security-relevant (logins, resets, uploads, AI per visitor/IP, the global daily AI cap).
+**Consequences.** Counts are per server instance (SEC-044): at launch add the host's firewall rate rules; the in-app cap is the second layer.
+
+## ADR-051 — Performance: cache reference data, keep connections warm (2026-09-26)
+
+**Context.** From this machine one database round trip is ~140 ms; pages took 2–3 s mostly in sequential queries and in re-opening connections (the pool dropped idle connections after 1 s).
+**Decision.** `lib/cache.ts` (`memo`/`invalidate`, 5-minute TTL, shared in-flight loads, failures not cached) for areas, catalogue, popular services, top categories, verification levels and the AI catalogue; admin saves call `invalidate("ref:")`. Independent queries run in parallel. The pool keeps idle connections 10 s (`maxLifetimeSeconds` 60). Upload bodies are read with a byte cap (SEC-015); admin-only translations aren't sent to visitors (SEC-041).
+**Consequences.** An admin edit to the catalogue shows immediately on the instance that made it and within 5 minutes on others. Production must run next to the database (Frankfurt) — the biggest single speed-up (SEC-045).
+
+## ADR-052 — Premium UI: one token system, two themes, real data only (2026-09-26)
+
+**Context.** Phase 14 polishes the whole experience to the owner's visual direction (premium, minimal, local, fast, trustworthy) and reference mockups. The mockups use invented businesses, prices, review counts, "years in business / jobs done" chips and an earnings chart.
+**Decision.**
+- *Tokens, not variants.* Colours live as CSS variables in `app/globals.css`; the dark theme only redefines them (`data-theme` from a readable `gobig_theme` cookie, else the device setting), so components need no `dark:` classes. A deep navy ("night") carries hero and feature surfaces; brand green stays the colour of trust and action; WhatsApp buttons wear WhatsApp green so customers recognise them.
+- *Layout from the mockups, content from the database.* Cards show the provider's cover or logo (else their initial on the brand gradient — never a stock photo), the real rating ("No reviews yet" otherwise), their own price wording, availability from their hours, distance only as precise as their public point. Things GO BIG does not record (years in business, jobs completed, earnings) are not shown. The provider dashboard's "today" tiles come from the same people-per-day records as Analytics (`dashboardToday`).
+- *Navigation.* Customers: Home · Explore · Requests · Saved · Profile. Providers: Dashboard · Requests · Profile · Analytics · More on phones and tablets; a dark sidebar with every section on desktop (admins too). Header links only from desktop width, so tablets never overflow.
+- *Search chips.* "Verified" filters to providers with a GO BIG verification level; "Top rated" orders by the review-count-aware rating signal alone. Both are customer choices; paid placement is still never an input (ADR-040).
+- *States.* Every area has `loading.tsx` skeletons shaped like the page, an `error.tsx` with retry, and a branded 404. Micro-interactions are limited to a press-in on tap, a lift on hover and a short rise-in for lists, all disabled under `prefers-reduced-motion`.
+**Consequences.** New colours must be added as tokens (both themes). The hero uses a drawn skyline silhouette; if the business wants photography, a licensed image can replace it without layout changes.

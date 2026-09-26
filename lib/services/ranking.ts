@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { memo, REFERENCE_TTL_MS } from "@/lib/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { audit } from "@/lib/services/audit";
 import { DEFAULT_WEIGHTS, MIN_RESPONSE_SAMPLES, sanitizeWeights, SIGNALS, type Weights } from "@/lib/ranking/engine";
@@ -114,8 +115,10 @@ export function publicMedianResponse(s: ProviderStats | undefined): number | nul
 
 /** Highest verification rank that exists (for normalising the verification signal). */
 export async function maxVerificationRank(): Promise<number> {
-  const r = await prisma.verificationLevel.aggregate({ where: { isActive: true }, _max: { rank: true } });
-  return r._max.rank ?? 1;
+  return memo("ref:maxVerificationRank", REFERENCE_TTL_MS, async () => {
+    const r = await prisma.verificationLevel.aggregate({ where: { isActive: true }, _max: { rank: true } });
+    return r._max.rank ?? 1;
+  });
 }
 
 export { SIGNALS };

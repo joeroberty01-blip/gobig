@@ -229,3 +229,44 @@ export async function providerAnalytics(providerId: string, days: Period = 30, n
 }
 
 export const _test = { range };
+
+export type DayPair = { today: number; yesterday: number };
+
+/**
+ * Phase 14 dashboard: today vs yesterday (Dar days) for the four numbers a provider checks first.
+ * Same sources and rules as providerAnalytics — people per day for views and taps, real requests
+ * and published reviews — just a two-day window.
+ */
+export async function dashboardToday(providerId: string, now: Date = new Date()) {
+  const today = darDay(now);
+  const yesterday = new Date(today.getTime() - DAY);
+  const DAR_OFFSET = 3 * 3_600_000;
+  const todayStart = new Date(today.getTime() - DAR_OFFSET);
+  const yesterdayStart = new Date(yesterday.getTime() - DAR_OFFSET);
+  const days = { gte: yesterday, lte: today };
+
+  const [views, taps, requests, reviews] = await Promise.all([
+    prisma.providerMetric.groupBy({ by: ["day"], where: { providerId, kind: "PROFILE_VIEW", day: days }, _count: { _all: true } }),
+    prisma.connectEvent.groupBy({ by: ["day", "action"], where: { providerId, day: days, action: { in: ["WHATSAPP", "CALL"] } }, _count: { _all: true } }),
+    prisma.requestMatch.findMany({ where: { providerId, notifiedAt: { gte: yesterdayStart } }, select: { notifiedAt: true } }),
+    prisma.review.findMany({ where: { providerId, status: "PUBLISHED", createdAt: { gte: yesterdayStart } }, select: { createdAt: true } }),
+  ]);
+
+  const byDay = (rows: { day: Date; _count: { _all: number } }[]): DayPair => ({
+    today: rows.filter((r) => r.day.getTime() === today.getTime()).reduce((a, r) => a + r._count._all, 0),
+    yesterday: rows.filter((r) => r.day.getTime() === yesterday.getTime()).reduce((a, r) => a + r._count._all, 0),
+  });
+  const byTime = (dates: Date[]): DayPair => ({
+    today: dates.filter((d) => d >= todayStart).length,
+    yesterday: dates.filter((d) => d >= yesterdayStart && d < todayStart).length,
+  });
+
+  return {
+    views: byDay(views),
+    whatsapp: byDay(taps.filter((t) => t.action === "WHATSAPP")),
+    calls: byDay(taps.filter((t) => t.action === "CALL")),
+    requests: byTime(requests.map((r) => r.notifiedAt)),
+    reviews: byTime(reviews.map((r) => r.createdAt)),
+  };
+}
+

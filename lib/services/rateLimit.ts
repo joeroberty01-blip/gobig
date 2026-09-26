@@ -7,11 +7,19 @@ import { prisma } from "@/lib/db";
 export type Limit = { name: string; max: number; windowSec: number };
 
 /** Limits chosen per purpose (see SECURITY_BACKLOG SEC-010). */
+function aiDailyCap(): number {
+  const raw = process.env.AI_DAILY_CALL_CAP?.trim();
+  const n = raw ? Number(raw) : 2000; // blank means the default, not 0
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 2000;
+}
+
 export const LIMITS = {
   loginPerIdentifier: { name: "login:id", max: 10, windowSec: 15 * 60 },
   loginPerIp: { name: "login:ip", max: 50, windowSec: 15 * 60 },
   signupPerIp: { name: "signup:ip", max: 10, windowSec: 60 * 60 },
   resetPerIp: { name: "reset:ip", max: 10, windowSec: 60 * 60 },
+  // Phase 13 (SEC-008): opening/using reset links. Tokens are unguessable; this just caps probing.
+  resetUsePerIp: { name: "resetuse:ip", max: 30, windowSec: 60 * 60 },
   reviewPerUser: { name: "review:user", max: 10, windowSec: 24 * 60 * 60 },
   reportPerUser: { name: "report:user", max: 30, windowSec: 24 * 60 * 60 },
   responsePerUser: { name: "response:user", max: 60, windowSec: 24 * 60 * 60 },
@@ -28,6 +36,9 @@ export const LIMITS = {
   // instead, so search keeps working and nothing is charged.
   aiSearchPerVisitor: { name: "ai:visitor", max: 30, windowSec: 60 * 60 },
   aiSearchPerIp: { name: "ai:ip", max: 120, windowSec: 60 * 60 },
+  // Phase 13 (SEC-036): a platform-wide ceiling on model calls per day, whatever the number of
+  // visitors or addresses. Set AI_DAILY_CALL_CAP to change it; 0 turns model calls off.
+  aiGlobalDaily: { name: "ai:global", max: aiDailyCap(), windowSec: 24 * 60 * 60 },
   // Phase 10: saving/unsaving providers.
   favoritePerUser: { name: "fav:user", max: 120, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;

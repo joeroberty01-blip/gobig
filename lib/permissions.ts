@@ -42,9 +42,11 @@ export type Action =
   | "announcements:send"
   | "audit:view"
   | "analytics:platform"
-  | "settings:manage";
+  | "settings:manage"
+  // Phase 13
+  | "security:manage-own";
 
-export type Actor = { id: string; role: Role; status: "ACTIVE" | "SUSPENDED" };
+export type Actor = { id: string; role: Role; status: "ACTIVE" | "SUSPENDED"; mfaPending?: boolean };
 
 const RULES: Record<Action, readonly Role[]> = {
   "account:view": ["CUSTOMER", "PROVIDER", "ADMIN", "SUPER_ADMIN"],
@@ -86,9 +88,16 @@ const RULES: Record<Action, readonly Role[]> = {
   "audit:view": ["ADMIN", "SUPER_ADMIN"],
   "analytics:platform": ["ADMIN", "SUPER_ADMIN"],
   "settings:manage": ["SUPER_ADMIN"],
+  // Setting up / managing one's own two-factor.
+  "security:manage-own": ["ADMIN", "SUPER_ADMIN"],
 };
+
+/** What an admin whose session hasn't passed two-factor may still do (Phase 13, SEC-042). */
+const MFA_PENDING_ALLOWED: ReadonlySet<Action> = new Set(["account:view", "security:manage-own"]);
 
 export function can(actor: Actor | null | undefined, action: Action): boolean {
   if (!actor || actor.status !== "ACTIVE") return false;
+  // Checked here — not only in proxy.ts — because a server action can be posted to any URL.
+  if (actor.mfaPending && !MFA_PENDING_ALLOWED.has(action)) return false;
   return RULES[action].includes(actor.role);
 }

@@ -6,7 +6,7 @@ import { favoriteProviderIds } from "@/lib/services/favorites";
 import { providerCardsByIds } from "@/lib/services/discovery";
 import { ProviderCard } from "@/components/discovery/ProviderCard";
 import { CardGrid } from "@/components/discovery/Section";
-import { Card, PageHeader } from "@/components/ui";
+import { ButtonLink, EmptyState, PageHeader } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -23,10 +23,15 @@ export default async function SavedPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader title={t.saved.title} />
       {cards.length === 0 ? (
-        <Card className="flex flex-col items-center gap-3 py-10 text-center text-sm text-ink-muted">
-          <Heart aria-hidden className="size-8 text-ink-subtle" />
-          {t.saved.empty}
-        </Card>
+        <EmptyState
+          icon={<Heart aria-hidden />}
+          title={t.saved.empty}
+          action={
+            <ButtonLink href="/search" variant="night">
+              {t.ui.nav.explore}
+            </ButtonLink>
+          }
+        />
       ) : (
         <CardGrid>
           {cards.map((p) => (

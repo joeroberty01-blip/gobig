@@ -2,14 +2,18 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { BadgeCheck, Check, Clock, Sparkles, Star, Tag, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { searchHref, type SearchParams } from "@/lib/discovery/query";
 import { AreaPicker, type AreaOption } from "./AreaPicker";
 
 type Category = { slug: string; nameEn: string; nameSw: string };
 
-/** Search filters as a horizontally scrollable chip row — thumb-friendly on phones. */
+/**
+ * Search filters (Phase 14): ordering first (best match / top rated), then toggles, as one
+ * horizontally scrollable chip row — thumb-friendly on phones. Every chip is a plain link, so it
+ * works before JavaScript loads and the URL stays shareable.
+ */
 export function FilterBar({
   params,
   areaSlug,
@@ -25,29 +29,39 @@ export function FilterBar({
   const router = useRouter();
   const base = { ...params, area: params.area ?? areaSlug };
   const chip = (on: boolean) =>
-    `flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap ${
-      on ? "border-brand-500 bg-brand-50 text-brand-900" : "border-line bg-surface text-ink"
+    `flex min-h-10 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium whitespace-nowrap transition active:scale-[0.97] ${
+      on ? "border-night-900 bg-night-900 text-white" : "border-line bg-surface text-ink hover:border-ink-subtle/50"
     }`;
-  const hasFilters = !!(params.category || params.service || params.openNow || params.priced);
+  const hasFilters = !!(params.category || params.service || params.openNow || params.priced || params.verified || params.sort === "top");
+  const toggle = (on: boolean, next: Partial<SearchParams>, Icon: typeof Clock, label: string) => (
+    <Link href={searchHref(base, { ...next, page: 1 })} className={chip(on)} aria-pressed={on}>
+      {on ? <Check aria-hidden className="size-4" /> : <Icon aria-hidden className="size-4 text-ink-subtle" />}
+      {label}
+    </Link>
+  );
 
   return (
     <div className="flex flex-col gap-3">
       <AreaPicker districts={districts} value={areaSlug} search={params} compact />
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
-        <Link href={searchHref(base, { openNow: !params.openNow, page: 1 })} className={chip(params.openNow)} aria-pressed={params.openNow}>
-          {params.openNow && <Check aria-hidden className="size-4" />}
-          {t.discovery.openNow}
+      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
+        <Link href={searchHref(base, { sort: "best", page: 1 })} className={chip(params.sort !== "top")} aria-pressed={params.sort !== "top"}>
+          <Sparkles aria-hidden className={`size-4 ${params.sort !== "top" ? "" : "text-ink-subtle"}`} />
+          {t.ui.search.bestMatch}
         </Link>
-        <Link href={searchHref(base, { priced: !params.priced, page: 1 })} className={chip(params.priced)} aria-pressed={params.priced}>
-          {params.priced && <Check aria-hidden className="size-4" />}
-          {t.discovery.showsPrices}
+        <Link href={searchHref(base, { sort: "top", page: 1 })} className={chip(params.sort === "top")} aria-pressed={params.sort === "top"} title={t.ui.search.topRatedHint}>
+          <Star aria-hidden className={`size-4 ${params.sort === "top" ? "fill-accent-400 text-accent-400" : "text-ink-subtle"}`} />
+          {t.ui.home.topRated}
         </Link>
+        <span aria-hidden className="my-2 w-px shrink-0 bg-line" />
+        {toggle(params.openNow, { openNow: !params.openNow }, Clock, t.ui.home.availableNow)}
+        {toggle(params.verified, { verified: !params.verified }, BadgeCheck, t.ui.home.verified)}
+        {toggle(params.priced, { priced: !params.priced }, Tag, t.discovery.showsPrices)}
         <label className={chip(!!params.category)}>
           <span className="sr-only">{t.discovery.filterCategory}</span>
           <select
             value={params.category ?? ""}
             onChange={(e) => router.push(searchHref(base, { category: e.target.value || null, service: null, page: 1 }))}
-            className="max-w-44 bg-transparent focus:outline-none"
+            className="max-w-44 bg-transparent focus:outline-none [&>option]:bg-surface [&>option]:text-ink"
           >
             <option value="">{t.discovery.anyCategory}</option>
             {categories.map((c) => (

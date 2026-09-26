@@ -68,4 +68,35 @@ through 60-second signed URLs issued to reviewers.
 ## Password reset delivery
 
 Email via SMTP when set; SMS via SMSGate for phone-only accounts when set. With neither,
-development prints the link in the server console and production logs an error.
+development prints the link in the server console and production logs an error. The token
+is in the link's `#fragment`, so it never reaches server or proxy logs.
+
+## Admin two-factor sign-in
+
+Admins and super admins must set up an authenticator app (Google Authenticator, Microsoft
+Authenticator, Authy…) before any admin page works: after signing in they land on
+**Admin → Two-factor sign-in**, scan the QR code, confirm a code, save the 8 recovery codes, and
+sign in again. Requires `TOTP_ENCRYPTION_KEY` (32 random bytes, base64 — `openssl rand -base64 32`);
+keep it safe, since losing it disables every admin's two-factor. A lost phone: another super admin opens
+the user in **Admin → Users** and resets it.
+
+## Deployment
+
+- **Region:** run the app in the same region as the database (Neon `eu-central-1` → Vercel
+  `fra1` / Frankfurt). Each page makes several database round trips; from another continent each
+  costs ~140 ms.
+- **Before launch:** rotate the database password and storage credential (SECURITY_BACKLOG
+  SEC-004), set a monthly spend limit in the Anthropic Console and `AI_DAILY_CALL_CAP` (SEC-036),
+  add the host's firewall rate-limit rules for `/search`, `/p/*` and `/ask` (SEC-044), and use a
+  production map tile provider (SEC-021).
+- **CI:** `.github/workflows/ci.yml` runs typecheck, lint, unit tests, `npm audit` and a secret
+  scan on every push once the repository has a GitHub remote.
+
+## Design system (Phase 14)
+
+Colours, shadows and motion are tokens in `app/globals.css`; the dark theme redefines the same
+variables (user choice in Account → Appearance, else the device setting). Shared building blocks:
+`components/ui` (Button, Card, EmptyState, Skeleton…), `components/discovery/ProviderCard`
+(`tile` for grids and carousels, `row` for results), `components/states` (loading skeletons, error
+and 404 views). Add new colours as tokens for both themes rather than hard-coding them.
+

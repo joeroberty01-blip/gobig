@@ -8,6 +8,8 @@ import * as ai from "./ai";
 import * as insights from "./insights";
 import * as billing from "./billing";
 import * as adminPlatform from "./adminPlatform";
+import * as security from "./security";
+import * as ui from "./ui";
 
 // Every user-facing string lives here in both languages. Swahili is the default (Phase 0, Q2).
 
@@ -111,8 +113,11 @@ const en = {
     resetting: "Saving…",
     resetDone: "Your password has been changed. Log in with your new password.",
     resetLinkInvalid: "This reset link has expired or was already used. Request a new one.",
+    resetChecking: "Checking your link…",
     requestNewLink: "Request a new link",
     loginToContinue: "Log in to continue.",
+    otpLabel: "Authentication code",
+    otpHint: "The 6-digit code from your authenticator app, or one of your recovery codes.",
   },
   errors: {
     nameRequired: "Enter your name (2–80 characters).",
@@ -120,6 +125,7 @@ const en = {
     phoneInvalid: "Enter a valid phone number, e.g. 0712 345 678.",
     contactRequired: "Enter a phone number or an email.",
     passwordTooShort: "Password must be at least 8 characters.",
+    passwordTooCommon: "That password is too common and easy to guess. Choose something less obvious.",
     passwordTooLong: "Password is too long.",
     passwordsDontMatch: "Passwords don't match.",
     identifierInvalid: "Enter a valid email or phone number.",
@@ -195,6 +201,9 @@ const en = {
     campaignNotAllowed: "Featured campaigns are available on Pro plans and above.",
     campaignStateInvalid: "This campaign can't be changed that way right now.",
     referenceInvalid: "Enter the payment reference (letters and numbers, 3–60 characters).",
+    otpInvalid: "That code didn't work. Use the current code from your app, or a recovery code.",
+    alreadyEnabled: "Two-factor is already on.",
+    notStarted: "Start the set-up again.",
     notFound: "Not found.",
     cannotSelf: "You can't change your own account here.",
     superAdminOnly: "Only a super admin can change another admin.",
@@ -287,6 +296,8 @@ const en = {
   saved: insights.saved.en,
   billing: billing.en,
   adminPlatform: adminPlatform.en,
+  security: security.en,
+  ui: ui.en,
 };
 
 export type Dictionary = typeof en;
@@ -387,8 +398,11 @@ const sw: Dictionary = {
     resetting: "Inahifadhi…",
     resetDone: "Nenosiri lako limebadilishwa. Ingia kwa nenosiri jipya.",
     resetLinkInvalid: "Kiungo hiki kimeisha muda au kimeshatumika. Omba kipya.",
+    resetChecking: "Tunakagua kiungo chako…",
     requestNewLink: "Omba kiungo kipya",
     loginToContinue: "Ingia ili kuendelea.",
+    otpLabel: "Msimbo wa uthibitisho",
+    otpHint: "Msimbo wa tarakimu 6 kutoka kwenye programu yako ya uthibitisho, au mmoja wa misimbo yako ya dharura.",
   },
   errors: {
     nameRequired: "Weka jina lako (herufi 2–80).",
@@ -396,6 +410,7 @@ const sw: Dictionary = {
     phoneInvalid: "Weka namba ya simu sahihi, mf. 0712 345 678.",
     contactRequired: "Weka namba ya simu au barua pepe.",
     passwordTooShort: "Nenosiri liwe na angalau herufi 8.",
+    passwordTooCommon: "Nenosiri hilo ni la kawaida mno na ni rahisi kukisiwa. Chagua jingine.",
     passwordTooLong: "Nenosiri ni refu mno.",
     passwordsDontMatch: "Manenosiri hayafanani.",
     identifierInvalid: "Weka barua pepe au namba ya simu sahihi.",
@@ -471,6 +486,9 @@ const sw: Dictionary = {
     campaignNotAllowed: "Kampeni za kuangaziwa zinapatikana kwenye mipango ya Pro na zaidi.",
     campaignStateInvalid: "Kampeni hii haiwezi kubadilishwa hivyo kwa sasa.",
     referenceInvalid: "Weka kumbukumbu ya malipo (herufi na namba, 3–60).",
+    otpInvalid: "Msimbo huo haukufanya kazi. Tumia msimbo wa sasa kutoka kwenye programu yako, au msimbo wa dharura.",
+    alreadyEnabled: "Uthibitisho wa hatua mbili tayari umewashwa.",
+    notStarted: "Anza upya kuweka.",
     notFound: "Haikupatikana.",
     cannotSelf: "Huwezi kubadilisha akaunti yako mwenyewe hapa.",
     superAdminOnly: "Ni msimamizi mkuu tu anayeweza kubadilisha msimamizi mwingine.",
@@ -564,6 +582,8 @@ const sw: Dictionary = {
   saved: insights.saved.sw,
   billing: billing.sw,
   adminPlatform: adminPlatform.sw,
+  security: security.sw,
+  ui: ui.sw,
 };
 
 export function getDictionary(locale: Locale): Dictionary {

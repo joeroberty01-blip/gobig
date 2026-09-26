@@ -6,6 +6,7 @@ import { isSameOrigin } from "@/lib/security";
 import { getOwnedProviderId } from "@/lib/services/providerProfile";
 import { hit, LIMITS } from "@/lib/services/rateLimit";
 import { addDocument, DOCUMENT_TYPES, MAX_DOC_BYTES, type DocumentType } from "@/lib/services/verification";
+import { readLimitedFormData } from "@/lib/upload";
 
 // Verification document upload (multipart: requestId, type, file). Stored in the PRIVATE bucket.
 // The provider id comes from the session; the service checks the request belongs to it and is editable.
@@ -17,17 +18,11 @@ export async function POST(req: Request) {
   const providerId = await getOwnedProviderId(user!.id);
   if (!providerId) return NextResponse.json({ error: "noBusinessYet" }, { status: 409 });
 
-  if (Number(req.headers.get("content-length") ?? 0) > MAX_DOC_BYTES + 64 * 1024) {
-    return NextResponse.json({ error: "documentTooLarge" }, { status: 413 });
-  }
   if (!(await hit(LIMITS.verificationDocPerProvider, providerId)).ok) return NextResponse.json({ error: "rateLimited" }, { status: 429 });
 
-  let form: FormData;
-  try {
-    form = await req.formData();
-  } catch {
-    return NextResponse.json({ error: "documentInvalid" }, { status: 400 });
-  }
+  const parsed = await readLimitedFormData(req, MAX_DOC_BYTES);
+  if (!parsed.ok) return NextResponse.json({ error: parsed.error === "tooLarge" ? "documentTooLarge" : "documentInvalid" }, { status: parsed.error === "tooLarge" ? 413 : 400 });
+  const form = parsed.form;
   const requestId = form.get("requestId");
   const type = form.get("type");
   const file = form.get("file");

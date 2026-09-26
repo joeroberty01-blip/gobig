@@ -1,0 +1,42 @@
+# Phase 13 (SEC-012). Runs on every push and pull request once the repo has a GitHub remote.
+# Integration tests aren't run here: they need the Neon test branch (DATABASE_URL_TEST) as a secret.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for the secret scan
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx vitest run --project unit
+      # Fails on critical advisories in runtime dependencies. The known "high" ones come from the
+      # Prisma CLI (dev only, never loaded at runtime) and are tracked as SEC-013; they're listed
+      # here so a new one is visible in the log.
+      - run: npm audit --omit=dev --audit-level=critical
+      - run: npm audit --omit=dev --audit-level=high || true
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

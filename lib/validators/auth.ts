@@ -2,6 +2,7 @@ import { z } from "zod";
 import { normalizePhone } from "@/lib/phone";
 import { parseIdentifier } from "@/lib/identifier";
 import { SELF_SERVICE_ROLES } from "@/lib/roles";
+import { isCommonPassword } from "@/lib/validators/commonPasswords";
 
 // Error strings are keys into dictionary.errors, so the form shows them in the user's language.
 export type ErrorKey =
@@ -11,6 +12,7 @@ export type ErrorKey =
   | "contactRequired"
   | "passwordTooShort"
   | "passwordTooLong"
+  | "passwordTooCommon"
   | "passwordsDontMatch"
   | "identifierInvalid"
   | "passwordRequired"
@@ -28,7 +30,8 @@ const optionalText = z
 export const passwordSchema = z
   .string()
   .min(8, e("passwordTooShort"))
-  .max(128, e("passwordTooLong"));
+  .max(128, e("passwordTooLong"))
+  .refine((p) => !isCommonPassword(p), e("passwordTooCommon"));
 
 export const signupSchema = z
   .object({

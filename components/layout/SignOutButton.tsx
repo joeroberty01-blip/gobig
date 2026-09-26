@@ -14,3 +14,12 @@ export function SignOutButton({ className = "" }: { className?: string }) {
     </Button>
   );
 }
+
+/** Unstyled sign-out control for menus and the sidebar. */
+export function SignOutLink({ className = "", children }: { className?: string; children: React.ReactNode }) {
+  return (
+    <button type="button" className={className} onClick={() => signOut({ redirectTo: "/" })}>
+      {children}
+    </button>
+  );
+}

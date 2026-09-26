@@ -6,7 +6,9 @@ import { computeCompletion } from "@/lib/provider/completion";
 
 // Admin: people (Phase 12). Suspending an account takes effect on the next request (sessions are
 // checked against the database). Suspending a provider only removes the listing; the owner's
-// account still works. Every change needs a reason and is audit-logged.
+// account still works. Suspending an account also suspends the listings it owns (SEC-011), and
+// reactivating it restores only those — a listing an admin suspended separately stays suspended.
+// Every change needs a reason and is audit-logged.
 
 export type AdminError = "notFound" | "notAllowed" | "cannotSelf" | "superAdminOnly";
 export type AResult<T = object> = ({ ok: true } & T) | { ok: false; error: AdminError };
@@ -57,6 +59,7 @@ export async function userDetail(userId: string) {
       locale: true,
       createdAt: true,
       lastLoginAt: true,
+      totpEnabledAt: true,
       memberships: { select: { role: true, provider: { select: { id: true, slug: true, status: true, profile: { select: { displayName: true } } } } } },
       _count: { select: { serviceRequests: true, reviews: true, reportsFiled: true, favorites: true } },
     },
@@ -84,8 +87,44 @@ export async function setUserStatus(actor: Actor, userId: string, status: "ACTIV
     if (u.status === status) return { ok: true as const };
     await tx.user.update({ where: { id: userId }, data: { status } });
     await audit(tx, { actorId: actor.id, action: status === "SUSPENDED" ? "user.suspended" : "user.reactivated", entityType: "User", entityId: userId, metadata: { reason } });
+    const owned = await tx.provider.findMany({ where: { deletedAt: null, members: { some: { userId, role: "OWNER" } } }, select: { id: true, status: true } });
+    for (const p of owned) {
+      if (status === "SUSPENDED") {
+        if (p.status !== "SUSPENDED") await changeListing(tx, actor, p.id, p.status, "suspend", reason, "account");
+      } else if (p.status === "SUSPENDED" && (await lastListingCause(tx, p.id)) === "account") {
+        await changeListing(tx, actor, p.id, p.status, "reinstate", reason, "account");
+      }
+    }
     return { ok: true as const };
   });
+}
+
+type Tx = Prisma.TransactionClient;
+type ListingCause = "listing" | "account";
+
+/** Why a listing is currently suspended: the most recent suspend/reinstate entry decides. */
+async function lastListingCause(tx: Tx, providerId: string): Promise<ListingCause | null> {
+  const last = await tx.auditLog.findFirst({
+    where: { entityType: "Provider", entityId: providerId, action: { in: ["provider.suspended", "provider.reinstated"] } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    select: { action: true, metadata: true },
+  });
+  if (last?.action !== "provider.suspended") return null;
+  return (last.metadata as { cause?: string } | null)?.cause === "account" ? "account" : "listing";
+}
+
+async function changeListing(tx: Tx, actor: Actor, providerId: string, from: string, action: "suspend" | "reinstate", reason: string, cause: ListingCause) {
+  const status: "SUSPENDED" | "ACTIVE" | "DRAFT" =
+    action === "suspend" ? "SUSPENDED" : computeCompletion(await completionSnapshot(tx, providerId)).canPublish ? "ACTIVE" : "DRAFT";
+  await tx.provider.update({ where: { id: providerId }, data: { status, ...(status === "ACTIVE" ? { publishedAt: new Date() } : {}) } });
+  await audit(tx, {
+    actorId: actor.id,
+    action: action === "suspend" ? "provider.suspended" : "provider.reinstated",
+    entityType: "Provider",
+    entityId: providerId,
+    metadata: { reason, from, to: status, cause },
+  });
+  return status;
 }
 
 export async function searchProvidersAdmin(input: { q: string; status: string | null; page: number }) {
@@ -128,22 +167,9 @@ export async function setProviderListing(actor: Actor, providerId: string, actio
   return prisma.$transaction(async (tx) => {
     const p = await tx.provider.findFirst({ where: { id: providerId, deletedAt: null }, select: { status: true } });
     if (!p) return { ok: false as const, error: "notFound" as const };
-    let status: "SUSPENDED" | "ACTIVE" | "DRAFT";
-    if (action === "suspend") {
-      if (p.status === "SUSPENDED") return { ok: true as const, status: p.status };
-      status = "SUSPENDED";
-    } else {
-      if (p.status !== "SUSPENDED") return { ok: false as const, error: "notAllowed" as const };
-      status = computeCompletion(await completionSnapshot(tx, providerId)).canPublish ? "ACTIVE" : "DRAFT";
-    }
-    await tx.provider.update({ where: { id: providerId }, data: { status, ...(status === "ACTIVE" ? { publishedAt: new Date() } : {}) } });
-    await audit(tx, {
-      actorId: actor.id,
-      action: action === "suspend" ? "provider.suspended" : "provider.reinstated",
-      entityType: "Provider",
-      entityId: providerId,
-      metadata: { reason, from: p.status, to: status },
-    });
+    if (action === "suspend" && p.status === "SUSPENDED") return { ok: true as const, status: p.status };
+    if (action === "reinstate" && p.status !== "SUSPENDED") return { ok: false as const, error: "notAllowed" as const };
+    const status = await changeListing(tx, actor, providerId, p.status, action, reason, "listing");
     return { ok: true as const, status };
   });
 }

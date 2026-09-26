@@ -7,6 +7,8 @@ declare module "next-auth" {
   interface User {
     role: Role;
     status: UserStatus;
+    /** True when this sign-in passed two-factor (Phase 13). */
+    mfa?: boolean;
   }
 
   interface Session {
@@ -16,6 +18,7 @@ declare module "next-auth" {
       status: UserStatus;
       /** ms timestamp of login; compared with User.passwordChangedAt to expire old sessions. */
       authAt: number;
+      mfa?: boolean;
     } & DefaultSession["user"];
   }
 }
@@ -26,5 +29,6 @@ declare module "@auth/core/jwt" {
     role: Role;
     status: UserStatus;
     authAt: number;
+    mfa?: boolean;
   }
 }

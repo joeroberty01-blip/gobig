@@ -47,7 +47,12 @@ export type AuditAction =
   | "report.resolved"
   | "report.dismissed"
   | "announcement.sent"
-  | "report.viewed_conversation";
+  | "report.viewed_conversation"
+  // Phase 13
+  | "security.totp_enabled"
+  | "security.totp_reset"
+  | "security.recovery_code_used"
+  | "security.recovery_codes_regenerated";
 
 export async function audit(
   db: Prisma.TransactionClient | typeof prisma,

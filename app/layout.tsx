@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
+import { publicDictionary } from "@/lib/i18n/clientDictionary";
+import { cookies } from "next/headers";
 import { getServerDictionary } from "@/lib/i18n/server";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -14,16 +17,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0a6e53",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#111a2c" },
+  ],
   viewportFit: "cover",
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { t, locale } = await getServerDictionary();
+  const [{ t, locale }, jar] = await Promise.all([getServerDictionary(), cookies()]);
+  const theme = parseTheme(jar.get(THEME_COOKIE)?.value);
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={inter.variable} data-theme={theme === "system" ? undefined : theme} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
-        <I18nProvider t={t} locale={locale}>
+        <I18nProvider t={publicDictionary(t)} locale={locale}>
           {children}
         </I18nProvider>
       </body>

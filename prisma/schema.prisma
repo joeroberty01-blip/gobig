@@ -118,6 +118,11 @@ model User {
   /// Sessions issued before this moment are rejected by proxy.ts (set on password reset).
   passwordChangedAt DateTime   @default(now())
   lastLoginAt       DateTime?
+  /// Phase 13 two-factor login (TOTP). The secret is AES-256-GCM encrypted (TOTP_ENCRYPTION_KEY);
+  /// it only counts once totpEnabledAt is set. totpLastStep blocks replaying a code.
+  totpSecretEnc     String?
+  totpEnabledAt     DateTime?
+  totpLastStep      Int?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
   deletedAt         DateTime?
@@ -134,6 +139,7 @@ model User {
   notifications       Notification[]        @relation("NotificationUser")
   favorites           Favorite[]
   reportsFiled        Report[]              @relation("ReportFiler")
+  recoveryCodes       TotpRecoveryCode[]
 
   @@index([role, status])
 }
@@ -1060,4 +1066,18 @@ model PlatformSettings {
   aiSearchEnabled   Boolean  @default(true)
   updatedById       String?
   updatedAt         DateTime @updatedAt
+}
+
+// ─── Phase 13: two-factor login ─────────────────────────────────────────────────────────────
+
+/// One-time recovery codes for a lost authenticator. Only a SHA-256 hash is stored.
+model TotpRecoveryCode {
+  id       String    @id @default(cuid())
+  userId   String
+  codeHash String
+  usedAt   DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
 }

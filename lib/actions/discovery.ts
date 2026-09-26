@@ -1,9 +1,16 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/db";
 import { AREA_COOKIE, POINT_COOKIE } from "@/lib/discovery/area";
 import { encodePoint, inServiceRegion } from "@/lib/geo";
+import { createMemoryLimiter } from "@/lib/memoryLimit";
+import { clientIp } from "@/lib/request";
+import { resolveArea } from "@/lib/services/discovery";
+
+// SEC-022: these only set the caller's own cookies and read the cached area list (no database
+// query), so a cheap per-instance cap is enough to stop them being hammered.
+const locationLimiter = createMemoryLimiter({ max: 60, windowMs: 60_000 });
+const limited = async () => !locationLimiter.hit(await clientIp()).ok;
 
 const cookieOptions = (maxAge: number) => ({
   path: "/",
@@ -15,17 +22,14 @@ const cookieOptions = (maxAge: number) => ({
 
 /** Remembers (or clears, with null) the customer's area. Choosing an area replaces a shared position. */
 export async function setAreaAction(slug: string | null): Promise<void> {
+  if (await limited()) return;
   const jar = await cookies();
   jar.delete(POINT_COOKIE);
   if (!slug) {
     jar.delete(AREA_COOKIE);
     return;
   }
-  const exists = await prisma.location.findFirst({
-    where: { slug, isActive: true, type: { in: ["DISTRICT", "WARD", "NEIGHBOURHOOD"] } },
-    select: { id: true },
-  });
-  if (!exists) return;
+  if (typeof slug !== "string" || slug.length > 80 || !(await resolveArea(slug))) return;
   jar.set(AREA_COOKIE, slug, cookieOptions(60 * 60 * 24 * 365));
 }
 
@@ -33,7 +37,8 @@ export async function setAreaAction(slug: string | null): Promise<void> {
  * Stores the customer's device position, rounded to ~110 m, for one day. Only in their browser;
  * nothing is written to the database or logged. Positions outside Dar es Salaam are refused.
  */
-export async function setPointAction(lat: number, lng: number): Promise<{ ok: true } | { ok: false; error: "outsideServiceArea" }> {
+export async function setPointAction(lat: number, lng: number): Promise<{ ok: true } | { ok: false; error: "outsideServiceArea" | "rateLimited" }> {
+  if (await limited()) return { ok: false, error: "rateLimited" };
   const p = { lat: Number(lat), lng: Number(lng) };
   if (!inServiceRegion(p)) return { ok: false, error: "outsideServiceArea" };
   const jar = await cookies();

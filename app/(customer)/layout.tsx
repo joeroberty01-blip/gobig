@@ -7,7 +7,7 @@ import { customerNav } from "@/components/layout/navItems";
 export default async function CustomerLayout({ children }: { children: React.ReactNode }) {
   const [{ t }, user] = await Promise.all([getServerDictionary(), getCurrentUser()]);
   return (
-    <AppShell user={user} items={customerNav(t)} homeHref="/">
+    <AppShell user={user} nav={customerNav(t)} homeHref="/">
       {children}
     </AppShell>
   );

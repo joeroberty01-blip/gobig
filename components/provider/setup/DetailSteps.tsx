@@ -272,7 +272,7 @@ export function ActionsStep(
           <Input id="rideUrl" inputMode="url" value={rideUrl} maxLength={500} onChange={(e) => setRideUrl(e.target.value)} placeholder={t.profile.actions.urlPlaceholder} invalid={!!urlError("rideUrl")} />
         </Field>
       </div>
-      <StepActions {...props} pending={pending || chosen.length === 0} />
+      <StepActions {...props} pending={pending} disabled={chosen.length === 0} />
     </form>
   );
 }

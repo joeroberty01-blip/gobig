@@ -42,8 +42,16 @@ function popup(m: MapMarker): HTMLElement {
   if (m.sublabel) {
     const sub = document.createElement("div");
     sub.textContent = m.sublabel;
-    sub.style.cssText = "color:#475569;font-size:12px;margin-top:2px";
+    sub.style.cssText = "color:var(--color-ink-muted);font-size:12px;margin-top:2px";
     el.appendChild(sub);
+  }
+  if (m.href) {
+    // A visible cue that the popup opens the profile.
+    const go = document.createElement("div");
+    go.textContent = "→";
+    go.setAttribute("aria-hidden", "true");
+    go.style.cssText = "color:var(--color-brand-700);font-weight:700;margin-top:6px";
+    el.appendChild(go);
   }
   return el;
 }

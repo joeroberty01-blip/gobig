@@ -11,6 +11,7 @@ import * as catalog from "@/lib/services/admin/catalog";
 import * as oversight from "@/lib/services/admin/oversight";
 import { savePlatformSettings } from "@/lib/services/platformSettings";
 import * as v from "@/lib/validators/admin";
+import { invalidate } from "@/lib/cache";
 
 // Phase 12 server actions: authenticate → can() → validate → service (audited).
 
@@ -60,6 +61,7 @@ export async function saveCategoryAction(input: z.input<typeof v.categorySchema>
   const { id, ...data } = parsed.data;
   const r = await catalog.saveCategory(user.id, id, data);
   if (!r.ok) return fail(r.error);
+  invalidate("ref:");
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -72,6 +74,7 @@ export async function saveServiceAction(input: z.input<typeof v.serviceSchema>):
   const { id, ...data } = parsed.data;
   const r = await catalog.saveService(user.id, id, data);
   if (!r.ok) return fail(r.error);
+  invalidate("ref:");
   revalidatePath("/", "layout");
   return { ok: true };
 }
@@ -84,6 +87,7 @@ export async function saveLocationAction(input: z.input<typeof v.locationSchema>
   const { id, ...data } = parsed.data;
   const r = await catalog.saveLocation(user.id, id, data);
   if (!r.ok) return fail(r.error);
+  invalidate("ref:");
   revalidatePath("/", "layout");
   return { ok: true };
 }

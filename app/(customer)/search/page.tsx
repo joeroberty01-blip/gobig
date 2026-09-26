@@ -10,10 +10,9 @@ import { providerCardsByIds, searchProviders, topCategories, type ProviderCard a
 import { FilterBar } from "@/components/discovery/FilterBar";
 import { LocateMe } from "@/components/discovery/LocateMe";
 import { ProviderCard } from "@/components/discovery/ProviderCard";
-import { CardGrid } from "@/components/discovery/Section";
 import { SearchBox } from "@/components/discovery/SearchBox";
 import { MapView, type MapMarker } from "@/components/map/MapView";
-import { Alert, ButtonLink, Card as Box } from "@/components/ui";
+import { Alert, ButtonLink, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
 import { sponsoredFor } from "@/lib/services/billing";
 import { SponsoredResults } from "@/components/monetization/Sponsored";
@@ -96,7 +95,7 @@ export default async function SearchPage({ searchParams }: Props) {
     <Link
       href={searchHref(current, { view, page: 1 })}
       aria-current={params.view === view ? "page" : undefined}
-      className={`flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold ${params.view === view ? "bg-surface text-ink shadow-sm" : "text-ink-muted"}`}
+      className={`flex min-h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-semibold transition ${params.view === view ? "bg-night-900 text-white shadow-soft" : "text-ink-muted hover:text-ink"}`}
     >
       <Icon aria-hidden className="size-4" />
       {label}
@@ -115,6 +114,8 @@ export default async function SearchPage({ searchParams }: Props) {
             service: params.service,
             open: params.openNow ? "1" : null,
             priced: params.priced ? "1" : null,
+            verified: params.verified ? "1" : null,
+            sort: params.sort === "top" ? "top" : null,
             view: isMap ? "map" : null,
           }}
           autoFocus={!params.q && !params.category && !params.service}
@@ -135,31 +136,36 @@ export default async function SearchPage({ searchParams }: Props) {
       )}
 
       <div className="mt-5 mb-3 flex items-center justify-between gap-3">
-        <h1 className="text-base font-semibold text-ink-muted" aria-live="polite">
+        <h1 className="min-w-0 text-base font-bold tracking-tight sm:text-lg" aria-live="polite">
           {heading}
         </h1>
-        <nav className="flex shrink-0 rounded-xl bg-canvas p-1 ring-1 ring-line" aria-label={`${t.location.list} / ${t.location.map}`}>
+        <nav className="flex shrink-0 rounded-xl bg-surface p-1 ring-1 ring-line" aria-label={`${t.location.list} / ${t.location.map}`}>
           {toggle("list", List, t.location.list)}
           {toggle("map", MapIcon, t.location.map)}
         </nav>
       </div>
 
       {result.total === 0 ? (
-        <Box className="flex flex-col items-center gap-3 py-10 text-center">
-          <SearchX aria-hidden className="size-10 text-ink-subtle" />
-          <h2 className="font-semibold">{t.discovery.noResultsTitle}</h2>
-          <p className="max-w-sm text-sm text-ink-muted">{t.discovery.noResultsBody}</p>
-          <div className="mt-2 flex flex-wrap justify-center gap-2">
-            {(result.area || point) && (
-              <ButtonLink href={searchHref({ ...params, area: "all", page: 1 })} variant="secondary">
-                {t.discovery.searchEverywhere}
+        <EmptyState
+          icon={<SearchX aria-hidden />}
+          title={t.discovery.noResultsTitle}
+          body={t.discovery.noResultsBody}
+          action={
+            <>
+              {(result.area || point) && (
+                <ButtonLink href={searchHref({ ...params, area: "all", page: 1 })} variant="secondary">
+                  {t.discovery.searchEverywhere}
+                </ButtonLink>
+              )}
+              <ButtonLink href="/categories" variant="secondary">
+                {t.discovery.browseCategories}
               </ButtonLink>
-            )}
-            <ButtonLink href="/categories" variant="secondary">
-              {t.discovery.browseCategories}
-            </ButtonLink>
-          </div>
-        </Box>
+              <ButtonLink href={`/ask${params.q ? `?q=${encodeURIComponent(params.q)}` : ""}`} variant="night">
+                {t.ui.home.askButton}
+              </ButtonLink>
+            </>
+          }
+        />
       ) : isMap ? (
         <div className="flex flex-col gap-2">
           <MapView
@@ -174,12 +180,14 @@ export default async function SearchPage({ searchParams }: Props) {
         </div>
       ) : (
         <>
-        <SponsoredResults cards={sponsored} t={t} locale={locale} />
-        <CardGrid>
-          {result.results.map((p) => (
-            <ProviderCard key={p.id} p={p} t={t} locale={locale} originArea={originArea} />
+        <SponsoredResults cards={sponsored} t={t} locale={locale} variant="row" />
+        <ul className="grid gap-3 lg:grid-cols-2">
+          {result.results.map((p, i) => (
+            <li key={p.id} className="min-w-0 animate-rise" style={{ animationDelay: `${Math.min(i, 8) * 30}ms` }}>
+              <ProviderCard p={p} t={t} locale={locale} originArea={originArea} variant="row" />
+            </li>
           ))}
-        </CardGrid>
+        </ul>
         </>
       )}
 

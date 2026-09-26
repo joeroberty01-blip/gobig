@@ -5,6 +5,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { can, type Action } from "@/lib/permissions";
 import { roleHome, type Role } from "@/lib/roles";
+import { mfaSatisfied } from "@/lib/services/twoFactor";
 
 export type CurrentUser = {
   id: string;
@@ -15,6 +16,9 @@ export type CurrentUser = {
   status: "ACTIVE" | "SUSPENDED";
   locale: "sw" | "en";
   createdAt: Date;
+  /** Admin whose session hasn't passed two-factor: holds no admin powers until it has (Phase 13). */
+  mfaPending: boolean;
+  totpEnabled: boolean;
 };
 
 /**
@@ -39,6 +43,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
       createdAt: true,
       passwordChangedAt: true,
       deletedAt: true,
+      totpEnabledAt: true,
     },
   });
   if (!user || user.deletedAt) return null;
@@ -53,6 +58,8 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     status: user.status,
     locale: user.locale,
     createdAt: user.createdAt,
+    mfaPending: !mfaSatisfied(user.role, user.totpEnabledAt, session.user.mfa),
+    totpEnabled: !!user.totpEnabledAt,
   };
 });
 
@@ -61,6 +68,8 @@ export async function requirePageAccess(action: Action, nextPath: string): Promi
   const user = await getCurrentUser();
   if (!user) redirect(`/login?callbackUrl=${encodeURIComponent(nextPath)}`);
   if (user.status !== "ACTIVE") redirect("/");
+  // Admins without a passed second factor are sent to set it up (or sign in again with it).
+  if (user.mfaPending && !can(user, action)) redirect("/admin/security");
   if (!can(user, action)) redirect(roleHome(user.role));
   return user;
 }

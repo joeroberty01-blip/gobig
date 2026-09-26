@@ -8,6 +8,10 @@ export type SearchParams = {
   service: string | null; // Service slug
   openNow: boolean;
   priced: boolean;
+  /** Phase 14: only providers verified by GO BIG. */
+  verified: boolean;
+  /** Phase 14: "top" = highest rated first (the rating signal alone); default is the full ranking. */
+  sort: "best" | "top";
   page: number;
   view: "list" | "map";
 };
@@ -34,6 +38,8 @@ export function parseSearchParams(raw: Record<string, string | string[] | undefi
     service: slug("service"),
     openNow: first(raw.open) === "1",
     priced: first(raw.priced) === "1",
+    verified: first(raw.verified) === "1",
+    sort: first(raw.sort) === "top" ? "top" : "best",
     page: Number.isFinite(page) && page > 0 && page < 1000 ? page : 1,
     view: first(raw.view) === "map" ? "map" : "list",
   };
@@ -49,6 +55,8 @@ export function searchHref(base: Partial<SearchParams>, overrides: Partial<Searc
   if (p.service) qs.set("service", p.service);
   if (p.openNow) qs.set("open", "1");
   if (p.priced) qs.set("priced", "1");
+  if (p.verified) qs.set("verified", "1");
+  if (p.sort === "top") qs.set("sort", "top");
   if (p.page && p.page > 1) qs.set("page", String(p.page));
   if (p.view === "map") qs.set("view", "map");
   const s = qs.toString();
