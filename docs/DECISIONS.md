@@ -543,3 +543,35 @@ the Play Store (TWA) with Render as a short-term backend.
 
 **Consequences.** Moving hosts means setting env vars, not changing code. At very large volume the
 queue interface can be backed by a dedicated broker without touching callers.
+
+## ADR-055 — Rides & deliveries on one trip engine (2026-09-26)
+
+**Context.** Owner's request: "Request a Ride" and "Request Delivery" as core features, with ratings;
+payment settled off-app (cash / mobile money / bank); a Bolt integration may come later.
+
+**Decision.**
+- One `Trip` model for both kinds: REQUESTED → ACCEPTED → ARRIVED → IN_PROGRESS → COMPLETED, or
+  EXPIRED (10 min without a driver) / CANCELLED. Every step is a guarded `updateMany` on the expected
+  state, so steps can't be skipped or replayed and two drivers can never both win a trip.
+- **Dispatch** (`dispatch()` in `lib/services/trips.ts`) offers a trip to the 5 nearest eligible
+  drivers — online, seen in the last 2 min, verified, ACTIVE, not a sample business, not busy, right
+  vehicle and kind — widening 3 → 6 → 10 km every 45 s through the job queue. An external dispatcher
+  (e.g. Bolt) would replace this function's body, not its callers.
+- **Fares** come only from the driver's own `baseFare + perKmFare × km` (copied onto the trip at
+  acceptance); the final amount and method are recorded by the driver. No in-app payment.
+- **Codes:** a 4-digit PIN starts a ride; a 4-digit code from the recipient completes a delivery.
+  Stored encrypted, compared in constant time, 10 tries per trip per hour.
+- **Privacy:** exact pickup/drop-off, notes and recipient name/phone are encrypted
+  (`lib/crypto/fieldCipher.ts`, purpose-bound) and erased 30 days after the trip ends; the coarse
+  pickup (~1 km) and area labels are kept for dispatch and history. Drivers see exact points and
+  contacts only after accepting and only while the trip is active. The driver's live position is
+  stored only while online and cleared on going offline (or after 30 min without a ping). The
+  driver's "Directions" opens the phone's map app via a `geo:` link, not a website.
+- **Ratings:** the customer rates a completed trip once (1–5 + comment, within 7 days); the driver's
+  average is recomputed from trips inside the same transaction.
+- **Live updates** are short polling (5 s) of `/api/trips/[id]` and `/api/driver/offers`, rate
+  limited. Server-sent events over Redis pub/sub can replace polling at larger scale without
+  changing the screens' data shape.
+
+**Consequences.** Needs `DATA_ENCRYPTION_KEY` on the host (features show "not switched on" without
+it). Sample businesses never drive, so testing needs a real verified provider account.

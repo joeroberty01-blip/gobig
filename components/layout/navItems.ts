@@ -19,6 +19,7 @@ export const customerNav = (t: Dictionary): Nav => ({
     { href: "/", label: t.nav.home, icon: "home", exact: true },
     { href: "/search", label: t.ui.nav.explore, icon: "search" },
     { href: "/ask", label: t.ai.title, icon: "sparkles" },
+    { href: "/trips", label: t.trips.trips, icon: "car" },
     { href: "/requests", label: t.nav.requests, icon: "requests" },
     { href: "/saved", label: t.nav.saved, icon: "saved" },
     { href: "/account", label: t.ui.nav.profile, icon: "account" },
@@ -36,6 +37,7 @@ export const providerNav = (t: Dictionary): Nav => ({
   side: [
     { href: "/provider", label: t.nav.dashboard, icon: "dashboard", exact: true },
     { href: "/provider/requests", label: t.nav.requests, icon: "requests" },
+    { href: "/provider/driver", label: t.trips.driverTitle, icon: "car" },
     { href: "/provider/profile", label: t.ui.nav.profile, icon: "store" },
     { href: "/provider/insights", label: t.ui.nav.analytics, icon: "insights" },
     { href: "/provider/reviews", label: t.nav.reviews, icon: "reviews" },
@@ -65,6 +67,7 @@ export const adminNav = (t: Dictionary): Nav => {
       { href: "/admin/reports", label: L.reports, icon: "reports" },
       { href: "/admin/reviews", label: L.reviews, icon: "reviews" },
       { href: "/admin/requests", label: L.requests, icon: "requests" },
+      { href: "/admin/trips", label: t.trips.adminTitle, icon: "car" },
       { href: "/admin/categories", label: L.categories, icon: "categories" },
       { href: "/admin/locations", label: L.locations, icon: "locations" },
       { href: "/admin/monetization", label: L.monetization, icon: "plan" },

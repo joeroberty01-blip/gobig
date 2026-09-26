@@ -408,6 +408,14 @@ async function locatedAreas() {
     .map((l) => ({ slug: l.slug, lat: l.lat, lng: l.lng }));
 }
 
+/** Phase 17: the name of the area nearest a point ("Mikocheni") — a safe label instead of an address. */
+export async function nearestAreaName(p: Point): Promise<string | null> {
+  const areas = [...(await locationIndex()).values()]
+    .filter((l) => l.isActive && (l.type === "WARD" || l.type === "NEIGHBOURHOOD") && l.lat != null)
+    .map((l) => ({ name: l.name, lat: l.lat, lng: l.lng }));
+  return nearestArea(p, areas, 8)?.name ?? null;
+}
+
 /** Active categories (with child ids) and services by slug, cached (Phase 13). */
 function catalogIndex() {
   return memo("ref:catalog", REFERENCE_TTL_MS, async () => {

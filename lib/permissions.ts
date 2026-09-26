@@ -44,7 +44,11 @@ export type Action =
   | "analytics:platform"
   | "settings:manage"
   // Phase 13
-  | "security:manage-own";
+  | "security:manage-own"
+  // Phase 17
+  | "trips:request"
+  | "trips:drive"
+  | "trips:oversee";
 
 export type Actor = { id: string; role: Role; status: "ACTIVE" | "SUSPENDED"; mfaPending?: boolean };
 
@@ -83,6 +87,9 @@ const RULES: Record<Action, readonly Role[]> = {
   "requests:oversee": ["ADMIN", "SUPER_ADMIN"],
   "reports:manage": ["ADMIN", "SUPER_ADMIN"],
   "reports:file": ["CUSTOMER", "PROVIDER"],
+  "trips:request": ["CUSTOMER"],
+  "trips:drive": ["PROVIDER"],
+  "trips:oversee": ["ADMIN", "SUPER_ADMIN"],
   // Messages to every user, and platform-wide limits, are policy → super admin only.
   "announcements:send": ["SUPER_ADMIN"],
   "audit:view": ["ADMIN", "SUPER_ADMIN"],

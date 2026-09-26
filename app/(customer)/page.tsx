@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronRight, MapPin, ShieldCheck, Sparkles, Star, Store, Zap } from "lucide-react";
+import { Bike, ChevronRight, MapPin, Package, ShieldCheck, Sparkles, Star, Store, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { getCurrentUser } from "@/lib/session";
@@ -108,6 +108,27 @@ export default async function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Phase 17: rides and deliveries — the two new core actions. */}
+      <div className="mt-5 grid grid-cols-2 gap-2.5 sm:mt-8 sm:gap-4">
+        {[
+          { href: "/ride", title: t.trips.ride, sub: t.trips.rideTagline, Icon: Bike, tone: "bg-cta text-white", iconTone: "bg-white/20" },
+          { href: "/delivery", title: t.trips.delivery, sub: t.trips.deliveryTagline, Icon: Package, tone: "nav-gradient text-white", iconTone: "bg-white/15" },
+        ].map(({ href, title, sub, Icon, tone, iconTone }) => (
+          <Link key={href} href={href} className={`group relative flex min-h-24 flex-col justify-between gap-3 overflow-hidden rounded-2xl p-3.5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lift active:scale-[0.98] sm:min-h-32 sm:p-5 ${tone}`}>
+            <span className={`grid size-10 place-items-center rounded-xl sm:size-12 ${iconTone}`}>
+              <Icon aria-hidden className="size-5 sm:size-6" />
+            </span>
+            <span>
+              <span className="flex items-center gap-1 text-sm leading-tight font-extrabold sm:text-lg">
+                {title}
+                <ChevronRight aria-hidden className="size-4 shrink-0 transition group-hover:translate-x-0.5" />
+              </span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-white/80 sm:text-sm">{sub}</span>
+            </span>
+          </Link>
+        ))}
+      </div>
 
       <Section title={h.explore} href="/categories" linkLabel={h.viewAll}>
         <ul className="grid grid-cols-4 gap-x-1 gap-y-3 sm:grid-cols-8 sm:gap-x-2 sm:gap-y-4">

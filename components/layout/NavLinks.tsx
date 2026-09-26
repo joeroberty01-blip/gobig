@@ -2,30 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  BadgeCheck,
-  Bell,
-  ChartColumn,
-  ClipboardList,
-  CreditCard,
-  Ellipsis,
-  Flag,
-  FolderTree,
-  Heart,
-  House,
-  LayoutDashboard,
-  MapPin,
-  Megaphone,
-  MessageSquareText,
-  ScrollText,
-  Search,
-  Settings,
-  SlidersHorizontal,
-  Sparkles,
-  Store,
-  UserRound,
-  Users,
-} from "lucide-react";
+import { BadgeCheck, Bell, Car, ChartColumn, ClipboardList, CreditCard, Ellipsis, Flag, FolderTree, Heart, House, LayoutDashboard, MapPin, Megaphone, MessageSquareText, ScrollText, Search, Settings, SlidersHorizontal, Sparkles, Store, UserRound, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 // Icons are referenced by name because server components can't pass components to the client.
@@ -52,6 +29,7 @@ const ICONS = {
   audit: ScrollText,
   settings: Settings,
   sparkles: Sparkles,
+  car: Car,
 } as const;
 
 export type NavItem = { href: string; label: string; icon: keyof typeof ICONS; exact?: boolean; mobileOnly?: boolean; /** The raised round button in the middle of the tab bar. */ fab?: boolean };

@@ -42,6 +42,14 @@ export const LIMITS = {
   aiGlobalDaily: { name: "ai:global", max: aiDailyCap(), windowSec: 24 * 60 * 60 },
   // Phase 10: saving/unsaving providers.
   favoritePerUser: { name: "fav:user", max: 120, windowSec: 60 * 60 },
+  // Phase 17: rides & deliveries. Active trips are also capped at MAX_ACTIVE_TRIPS in the service.
+  tripPerUser: { name: "trip:user", max: 20, windowSec: 24 * 60 * 60 },
+  // Guessing a 4-digit PIN/handover code: 10 tries per trip per hour.
+  tripCodePerTrip: { name: "tripcode:trip", max: 10, windowSec: 60 * 60 },
+  // One position every ~5 s while online, with headroom.
+  driverLocationPerProvider: { name: "driverloc:provider", max: 1000, windowSec: 60 * 60 },
+  // Status polling from open trip screens (every ~5 s).
+  tripPollPerUser: { name: "trippoll:user", max: 1500, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 export type LimitResult = { ok: true; remaining: number } | { ok: false; retryAfterSec: number };

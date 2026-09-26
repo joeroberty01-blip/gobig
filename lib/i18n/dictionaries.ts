@@ -10,6 +10,7 @@ import * as billing from "./billing";
 import * as adminPlatform from "./adminPlatform";
 import * as security from "./security";
 import * as ui from "./ui";
+import * as trips from "./trips";
 
 // Every user-facing string lives here in both languages. Swahili is the default (Phase 0, Q2).
 
@@ -298,6 +299,7 @@ const en = {
   adminPlatform: adminPlatform.en,
   security: security.en,
   ui: ui.en,
+  trips: trips.en,
 };
 
 export type Dictionary = typeof en;
@@ -584,6 +586,7 @@ const sw: Dictionary = {
   adminPlatform: adminPlatform.sw,
   security: security.sw,
   ui: ui.sw,
+  trips: trips.sw,
 };
 
 export function getDictionary(locale: Locale): Dictionary {

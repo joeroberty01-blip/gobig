@@ -137,6 +137,7 @@ model User {
   serviceRequests     ServiceRequest[]      @relation("RequestCustomer")
   messagesSent        Message[]             @relation("MessageSender")
   notifications       Notification[]        @relation("NotificationUser")
+  trips               Trip[]                @relation("TripCustomer")
   favorites           Favorite[]
   reportsFiled        Report[]              @relation("ReportFiler")
   recoveryCodes       TotpRecoveryCode[]
@@ -198,6 +199,10 @@ model Provider {
   campaigns            FeaturedCampaign[]
   payments             Payment[]
   reports              Report[]
+  driver               DriverProfile?
+  tripsDriven          Trip[]                 @relation("TripDriver")
+  tripsDestined        Trip[]                 @relation("TripDestination")
+  tripOffers           TripOffer[]
 
   @@index([status])
 }
@@ -1114,4 +1119,161 @@ model Job {
 
   @@index([status, runAt])
   @@index([status, lockedAt])
+}
+
+// ─── Phase 17: rides & deliveries ───────────────────────────────────────────────────────────
+// Owner's decisions (2026-09-26): our own dispatch now (a Bolt integration may plug in later as
+// another dispatcher); drivers set their own rates; payment is cash / mobile money / bank settled
+// off-app — the app only records method and amount. Exact customer locations and recipient
+// contacts are encrypted (lib/crypto/fieldCipher.ts) and erased after TRIP_PURGE_DAYS.
+
+enum TripKind {
+  RIDE
+  DELIVERY
+}
+
+enum TripStatus {
+  REQUESTED
+  ACCEPTED
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum VehicleType {
+  BODA
+  BAJAJI
+  CAR
+  VAN
+}
+
+enum PackageSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum OfferStatus {
+  OFFERED
+  DECLINED
+  EXPIRED
+  ACCEPTED
+  MISSED
+}
+
+enum TripParty {
+  CUSTOMER
+  DRIVER
+  SYSTEM
+  ADMIN
+}
+
+/// A provider that drives. Only verified providers can go online; the live position is kept only
+/// while online (cleared on going offline) and is the driver's own, shared by choosing to be online.
+model DriverProfile {
+  id             String      @id @default(cuid())
+  providerId     String      @unique
+  offersRides    Boolean     @default(false)
+  offersDelivery Boolean     @default(false)
+  vehicleType    VehicleType
+  vehicleModel   String
+  vehicleColor   String
+  plateNumber    String
+  /// The driver's own rates (TZS). Never set by NEXA.
+  baseFare       Int
+  perKmFare      Int
+  online         Boolean     @default(false)
+  lastLat        Float?
+  lastLng        Float?
+  lastSeenAt     DateTime?
+  ratingAvg      Float?
+  ratingCount    Int         @default(0)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([online, lastLat, lastLng])
+}
+
+model Trip {
+  id                    String       @id @default(cuid())
+  kind                  TripKind
+  status                TripStatus   @default(REQUESTED)
+  customerId            String
+  vehicleType           VehicleType
+  /// Exact points, encrypted. Null after purge.
+  pickupSealed          String?
+  dropoffSealed         String?
+  /// ~1 km grid (2 decimals) for dispatch and admin views; never the exact point.
+  pickupLatCoarse       Float
+  pickupLngCoarse       Float
+  /// Safe label for the destination: a business name or the nearest area — never an address.
+  dropoffLabel          String
+  pickupLabel           String
+  destinationProviderId String?
+  /// Customer's note ("gate by the pharmacy"), encrypted.
+  noteSealed            String?
+  distanceKm            Float
+  // Delivery only.
+  packageSize           PackageSize?
+  packageDescription    String?
+  fragile               Boolean      @default(false)
+  recipientNameSealed   String?
+  recipientPhoneSealed  String?
+  /// Ride: PIN the rider tells the driver to start. Delivery: code the recipient gives on handover.
+  /// Encrypted so the customer can see it; compared server-side only.
+  codeSealed            String?
+  driverProviderId      String?
+  /// Driver's rates copied when accepted, so a later rate change doesn't alter this trip.
+  fareBase              Int?
+  farePerKm             Int?
+  fareEstimate          Int?
+  /// Recorded by the driver at completion (settled off-app).
+  fareFinal             Int?
+  paymentMethod         PaymentMethod?
+  rating                Int?
+  ratingComment         String?
+  ratedAt               DateTime?
+  acceptedAt            DateTime?
+  arrivedAt             DateTime?
+  startedAt             DateTime?
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  cancelledBy           TripParty?
+  cancelReason          String?
+  expiresAt             DateTime
+  purgedAt              DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  customer            User        @relation("TripCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  driver              Provider?   @relation("TripDriver", fields: [driverProviderId], references: [id], onDelete: SetNull)
+  destinationProvider Provider?   @relation("TripDestination", fields: [destinationProviderId], references: [id], onDelete: SetNull)
+  offers              TripOffer[]
+
+  @@index([customerId, createdAt])
+  @@index([driverProviderId, status])
+  @@index([status, expiresAt])
+  @@index([status, completedAt])
+}
+
+/// A trip offered to one nearby driver. The first to accept wins (the trip row is updated with a
+/// status guard, so two drivers can never both win).
+model TripOffer {
+  id          String      @id @default(cuid())
+  tripId      String
+  providerId  String
+  status      OfferStatus @default(OFFERED)
+  distanceKm  Float
+  offeredAt   DateTime    @default(now())
+  respondedAt DateTime?
+
+  trip     Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([tripId, providerId])
+  @@index([providerId, status, offeredAt])
 }

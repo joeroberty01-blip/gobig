@@ -15,9 +15,17 @@ export type NotificationType =
   | "REQUEST_CANCELLED" // provider: the customer cancelled
   | "REQUEST_COMPLETED" // provider: the customer marked the job done
   | "REQUEST_CANCELLED_BY_ADMIN" // customer: NEXA closed your request (Phase 12)
-  | "ANNOUNCEMENT"; // everyone: a message from NEXA (Phase 12)
+  | "ANNOUNCEMENT" // everyone: a message from NEXA (Phase 12)
+  // Phase 17: rides & deliveries
+  | "TRIP_OFFER" // driver: a nearby trip is offered to you
+  | "TRIP_ACCEPTED" // customer: a driver accepted
+  | "TRIP_ARRIVED" // customer: the driver is at the pickup
+  | "TRIP_STARTED" // customer: on the way / picked up
+  | "TRIP_COMPLETED" // customer: done — rate the driver
+  | "TRIP_CANCELLED" // the other side cancelled
+  | "TRIP_EXPIRED"; // customer: no driver accepted in time
 
-export type NotificationData = { requestId?: string; matchId?: string; providerName?: string; announcementId?: string };
+export type NotificationData = { requestId?: string; matchId?: string; providerName?: string; announcementId?: string; tripId?: string };
 
 type Db = Prisma.TransactionClient | typeof prisma;
 

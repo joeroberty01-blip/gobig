@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ArrowRight, BadgeCheck, Clock, MapPin, Pencil, Star, Tag, Zap } from "lucide-react";
+import { ArrowRight, BadgeCheck, Bike, Clock, MapPin, Pencil, Star, Tag, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { getCurrentUser } from "@/lib/session";
 import { getPublicProfile } from "@/lib/data/provider";
@@ -194,6 +194,13 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
         {customerView && (
           <ButtonLink href={requestHref} variant="cta" className="mt-4 min-h-12 w-full text-base">
             {u.requestService}
+          </ButtonLink>
+        )}
+        {/* Phase 17: a ride to this business (its public point, never more precise than it allows). */}
+        {customerView && (
+          <ButtonLink href={`/ride?to=${p.slug}`} variant="primary" className="mt-2 min-h-12 w-full text-base" title={t.trips.takeMeThereHint}>
+            <Bike aria-hidden className="size-5" />
+            {t.trips.takeMeThere}
           </ButtonLink>
         )}
         {p.isOwner && (

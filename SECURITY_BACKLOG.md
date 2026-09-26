@@ -79,6 +79,10 @@ Last full review: **2026-09-26** (Phase 13 security & performance audit). Previo
 | SEC-045 | LOW | Production database round trip from outside the EU is ~140 ms, and each page makes several sequential queries | Performance | Slow pages (2–3 s measured from Dar es Salaam before Phase 13) | Host the app in the same region as the database (Frankfurt, `fra1`); reference data now cached, queries parallelised, pool keeps connections warm | PARTLY FIXED — code side done; hosting region is a deployment decision | 2026-09-26 | | |
 | SEC-046 | MEDIUM | Request photos were shown to any admin by role, before two-factor | Requests | An admin session that hadn't passed 2FA could open customers' private request photos | Check admin access through `can()` like every other admin power | **FIXED** — `requestPhotoUrl` uses `can(viewer, "requests:oversee")`, so `mfaPending` admins get 404 | 2026-09-26 | 2026-09-26 | `tests/integration/requests.test.ts` |
 | SEC-047 | MEDIUM | Scale work adds new secrets and data paths | Platform | A leaked field key exposes trip locations/phones; tests pointed at a production replica or Redis would read/write real data | Field encryption with key ids + rotation (`DATA_ENCRYPTION_KEY[_PREVIOUS]`), purpose-bound (AAD); integration setup blanks `DATABASE_URL_READ`/`REDIS_URL` unless `_TEST` values are given; `/api/cron/tick` needs a ≥32-char `CRON_SECRET` compared in constant time and answers 404 otherwise; logs redact secrets, contacts and coordinates | **FIXED** (Phase 16) — owner must set `DATA_ENCRYPTION_KEY` and `CRON_SECRET` on the host | 2026-09-26 | 2026-09-26 | `tests/unit/phase16.test.ts`, `tests/integration/jobs.test.ts` |
+| SEC-048 | HIGH | Rides & deliveries handle exact home/work locations and third-party phone numbers | Trips | A leak or over-broad read would reveal where customers live and who they send parcels to | Encrypt exact points, notes and recipient details; show them only to the accepted driver while active; erase after 30 days; coarse (~1 km) data only for dispatch and admin | **FIXED** (Phase 17) — see ADR-055; `tests/integration/trips.test.ts` checks encryption at rest, driver visibility before/after accepting, other customers get nothing, purge | 2026-09-26 | 2026-09-26 | `tests/integration/trips.test.ts` |
+| SEC-049 | MEDIUM | Trip codes are 4 digits | Trips | Guessing a ride PIN or delivery code | 10 attempts per trip per hour (`tripCodePerTrip`), constant-time compare, codes never logged | **MITIGATED** — 10,000 combinations at 10/hour | 2026-09-26 | 2026-09-26 | `tests/integration/trips.test.ts` |
+| SEC-050 | MEDIUM | Driver position pings and trip polling are frequent | Trips / API | Flooding, or stalking by polling someone else's trip | Owner/assignment checked on every poll (404 otherwise); pings only from the session's own online driver, same-origin, ≤200-byte body, rate limited; polls rate limited per user | **FIXED** (Phase 17) | 2026-09-26 | 2026-09-26 | |
+| SEC-051 | LOW | Unit-test guard for the public dictionary didn't exclude admin files on Windows paths | Tooling | Guard behaved differently on Windows and Linux | Normalise separators before matching; also guard the admin-only subsections now stripped from public pages | **FIXED** | 2026-09-26 | 2026-09-26 | `tests/unit/clientDictionary.test.ts` |
 
 ## Phase 14 security review (UI polish, 2026-09-26)
 
@@ -100,3 +104,16 @@ result only while the worker still holds the job's lock; Redis failures fall bac
 discovery reads. API route sweep (IDOR): every route takes the owner from the session
 (`getOwnedProviderId`, `customerId` in the query) or checks `can()`; private objects are served by
 short-lived signed URLs after an ownership check and 404 for everyone else. Found and fixed SEC-046.
+
+
+### Phase 17 security review (2026-09-26)
+
+Rides & deliveries. Checked: every server action takes the customer/provider id from the session and
+the service re-checks ownership or assignment; `/api/trips/[id]` returns 404 to anyone but the trip's
+customer or its (offered/assigned) driver; offered drivers see labels and distances only; exact data
+decrypts only for the accepted driver during an active trip and for the customer; state changes are
+guarded single-statement updates (race test: two drivers accept at once → exactly one wins);
+sample businesses and unverified providers can't go online; fares and payment are records only (no
+payment data); admin trips page reads labels only; notifications store ids, and their text is built
+from area labels. Also stripped admin-only text (`trust.admin`, `billing.admin`, trips admin labels)
+from the dictionary sent to every visitor.

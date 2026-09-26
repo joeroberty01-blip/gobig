@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Megaphone } from "lucide-react";
+import { Bell, Car, Megaphone } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { fill, type Dictionary, type Locale } from "@/lib/i18n/dictionaries";
 import { listNotifications, type NotificationData, type NotificationType } from "@/lib/services/notifications";
@@ -18,6 +18,8 @@ const REQUEST_TYPES: NotificationType[] = [
   "REQUEST_COMPLETED",
   "REQUEST_CANCELLED_BY_ADMIN",
 ];
+const TRIP_TYPES: NotificationType[] = ["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"];
+type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"];
 
 /**
  * The signed-in user's notifications. Request notifications are written here in the reader's
@@ -29,13 +31,19 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
   const valid = rows.filter(
     (n) =>
       (REQUEST_TYPES.includes(n.type as NotificationType) && typeof data(n).requestId === "string") ||
-      (n.type === "ANNOUNCEMENT" && typeof data(n).announcementId === "string"),
+      (n.type === "ANNOUNCEMENT" && typeof data(n).announcementId === "string") ||
+      (TRIP_TYPES.includes(n.type as NotificationType) && typeof data(n).tripId === "string"),
   );
-  const [labels, announcements] = await Promise.all([
+  const [labels, announcements, trips] = await Promise.all([
     requestLabels(valid.map((n) => data(n).requestId).filter((x): x is string => !!x)),
     prisma.announcement.findMany({
       where: { id: { in: valid.map((n) => data(n).announcementId).filter((x): x is string => !!x) } },
       select: { id: true, titleEn: true, titleSw: true, bodyEn: true, bodySw: true },
+    }),
+    // Area labels only (never exact points); the notification itself was addressed to this user.
+    prisma.trip.findMany({
+      where: { id: { in: valid.map((n) => data(n).tripId).filter((x): x is string => !!x) } },
+      select: { id: true, pickupLabel: true, dropoffLabel: true },
     }),
   ]);
   const n = t.requests.notifications;
@@ -67,6 +75,24 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
                 </li>
               );
             }
+            if (TRIP_TYPES.includes(x.type as NotificationType)) {
+              const trip = trips.find((y) => y.id === d.tripId);
+              if (!trip) return null;
+              const href = basePath === "/requests" ? `/trips/${trip.id}` : `/provider/driver/trips/${trip.id}`;
+              return (
+                <li key={x.id}>
+                  <Link href={href} className={`flex items-start gap-3 p-4 hover:bg-canvas ${tone}`}>
+                    <Car aria-hidden className={`mt-0.5 size-4 shrink-0 ${x.readAt ? "text-ink-subtle" : "text-brand-700"}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>
+                        {fill(t.trips.notif[x.type as TripType], { from: trip.pickupLabel, to: trip.dropoffLabel })}
+                      </span>
+                      <span className="text-xs text-ink-subtle">{time.format(x.createdAt)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            }
             const label = labels.get(d.requestId!);
             const service = label ? (locale === "sw" ? label.nameSw : label.nameEn) : n.fallbackService;
             return (
@@ -75,7 +101,7 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
                   <Bell aria-hidden className={`mt-0.5 size-4 shrink-0 ${x.readAt ? "text-ink-subtle" : "text-brand-700"}`} />
                   <span className="min-w-0 flex-1">
                     <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>
-                      {fill(n[x.type as Exclude<NotificationType, "ANNOUNCEMENT">], { service })}
+                      {fill(n[x.type as Exclude<NotificationType, "ANNOUNCEMENT" | TripType>], { service })}
                     </span>
                     <span className="text-xs text-ink-subtle">{time.format(x.createdAt)}</span>
                   </span>

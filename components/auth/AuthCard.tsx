@@ -23,7 +23,7 @@ export async function AuthCard({
   const a = t.ui.auth;
   return (
     <div className="flex min-h-dvh">
-      <aside className="bg-hero relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden p-12 text-white lg:flex">
+      <aside className="nav-gradient relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden p-12 text-white lg:flex">
         <Link href="/" className="flex items-center gap-2.5">
           <Logo className="size-9" />
           <Wordmark className="text-xl" />

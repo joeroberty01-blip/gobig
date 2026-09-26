@@ -18,6 +18,10 @@ const AREAS: { prefix: string; action: Action }[] = [
   { prefix: "/requests", action: "requests:create" },
   { prefix: "/notifications", action: "notifications:view" },
   { prefix: "/saved", action: "favorites:use" },
+  // Phase 17
+  { prefix: "/ride", action: "trips:request" },
+  { prefix: "/delivery", action: "trips:request" },
+  { prefix: "/trips", action: "trips:request" },
 ];
 
 const GUEST_ONLY = ["/login", "/signup"];
