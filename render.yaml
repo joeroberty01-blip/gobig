@@ -9,7 +9,7 @@ services:
     branch: main
     buildCommand: npm ci --include=dev && npx prisma migrate deploy && npm run build
     startCommand: npm run start
-    healthCheckPath: /login
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_VERSION
         value: "22"

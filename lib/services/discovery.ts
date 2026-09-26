@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { prisma, prismaRead } from "@/lib/db";
 import { memo, REFERENCE_TTL_MS } from "@/lib/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { mediaUrl } from "@/lib/storage";
@@ -508,7 +508,7 @@ export async function searchProviders(
   }
   if (near.length) and.push({ OR: near });
 
-  const rows = await prisma.provider.findMany({ where: { AND: and }, select: cardSelect, take: CANDIDATE_LIMIT });
+  const rows = await prismaRead.provider.findMany({ where: { AND: and }, select: cardSelect, take: CANDIDATE_LIMIT });
   const [stats, weights, maxRank] = await Promise.all([
     providerStats(rows.map((r) => r.id), now),
     opts.weights ? Promise.resolve(opts.weights) : getWeights(),

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { delKey, incrWindow } from "@/lib/kv";
 
-// Fixed-window rate limiting in Postgres (SEC-010). One atomic upsert per check, so concurrent
+// Fixed-window rate limiting (SEC-010): Redis when REDIS_URL is set (Phase 16), else Postgres. One atomic upsert per check, so concurrent
 // requests can't slip past the limit. Keys are hashed: no emails, phones or IPs are stored.
 
 export type Limit = { name: string; max: number; windowSec: number };
@@ -52,6 +53,12 @@ function keyFor(limit: Limit, subject: string): string {
 /** Counts one attempt against `limit` for `subject` and says whether it's allowed. */
 export async function hit(limit: Limit, subject: string): Promise<LimitResult> {
   const key = keyFor(limit, subject);
+  // Phase 16: Redis when configured (shared by every instance, no database write per check);
+  // Postgres when it isn't or doesn't answer.
+  const fast = await incrWindow(key, limit.windowSec);
+  if (fast) {
+    return fast.count > limit.max ? { ok: false, retryAfterSec: Math.max(1, fast.ttlSec) } : { ok: true, remaining: limit.max - fast.count };
+  }
   const rows = await prisma.$queryRaw<{ count: number; windowStart: Date }[]>`
     INSERT INTO "RateLimit" ("key", "count", "windowStart") VALUES (${key}, 1, now())
     ON CONFLICT ("key") DO UPDATE SET
@@ -74,5 +81,6 @@ export async function hit(limit: Limit, subject: string): Promise<LimitResult> {
 
 /** Clears a subject's counter (e.g. after a successful login). */
 export async function reset(limit: Limit, subject: string): Promise<void> {
-  await prisma.rateLimit.deleteMany({ where: { key: keyFor(limit, subject) } });
+  const key = keyFor(limit, subject);
+  await Promise.all([delKey(key), prisma.rateLimit.deleteMany({ where: { key } })]);
 }

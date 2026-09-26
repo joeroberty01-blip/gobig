@@ -9,7 +9,8 @@ import { PrismaPg } from "@prisma/adapter-pg";
 // can't linger. keepAlive detects silently dropped sockets.
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL,
-  max: 10,
+  // Phase 16: per-instance pool size; keep (instances × DB_POOL_MAX) under the database's limit.
+  max: Math.max(1, Math.min(50, Number(process.env.DB_POOL_MAX) || 10)),
   idleTimeoutMillis: 10_000,
   maxLifetimeSeconds: 60,
   connectionTimeoutMillis: 10_000,
@@ -25,3 +26,20 @@ export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
+
+// Phase 16: public browsing can read from a replica (DATABASE_URL_READ). It may lag the primary by
+// a moment, so use it only for data where that's fine (discovery, public profiles) — never for
+// anything read back right after a write, permissions or money.
+const globalForRead = globalThis as unknown as { prismaRead: PrismaClient | undefined };
+export const prismaRead: PrismaClient = process.env.DATABASE_URL_READ?.trim()
+  ? (globalForRead.prismaRead ??= new PrismaClient({
+      adapter: new PrismaPg({
+        connectionString: process.env.DATABASE_URL_READ,
+        max: Math.max(1, Math.min(50, Number(process.env.DB_POOL_MAX) || 10)),
+        idleTimeoutMillis: 10_000,
+        maxLifetimeSeconds: 60,
+        connectionTimeoutMillis: 10_000,
+        keepAlive: true,
+      }),
+    }))
+  : prisma;

@@ -322,6 +322,9 @@ describe("photos (private bucket)", () => {
     expect(await requests.requestPhotoUrl({ id: ownerAId, role: "PROVIDER" }, photoId)).toMatch(/^https:\/\//);
     expect(await requests.requestPhotoUrl({ id: ownerCId, role: "PROVIDER" }, photoId)).toBeNull();
     expect(await requests.requestPhotoUrl({ id: customerId, role: "CUSTOMER" }, photoId)).toBeNull();
+    // SEC-046: admins only after two-factor.
+    expect(await requests.requestPhotoUrl({ id: "admin-x", role: "ADMIN", status: "ACTIVE" }, photoId)).toMatch(/^https:\/\//);
+    expect(await requests.requestPhotoUrl({ id: "admin-x", role: "ADMIN", status: "ACTIVE", mfaPending: true }, photoId)).toBeNull();
   });
 
   it("at most five photos", async () => {

@@ -523,3 +523,23 @@ photos were cut to 16:9, which removed the heads of people in portrait photos.
 - Sample businesses (`Provider.isDemo`) carry a "Sample" label, their Call/WhatsApp buttons explain
   instead of dialling, and `npm run db:demo:remove` deletes all of them. Only an owner-supplied photo
   becomes a sample's cover, so placeholders never jump the photo-first order. Remove before launch.
+
+## ADR-054 — Scale foundation without new required infrastructure (2026-09-26)
+
+**Context.** Target: 5M+ users; hosting today is one small Render instance; the app will ship through
+the Play Store (TWA) with Render as a short-term backend.
+
+**Decision.** Everything scales out but nothing new is *required* to run:
+- **Jobs:** a Postgres queue (`Job`, claimed with `FOR UPDATE SKIP LOCKED`, retries with backoff, DEAD
+  after max attempts, stale locks reclaimed). Drained by `npm run worker` (any number) or by
+  `POST /api/cron/tick` with `CRON_SECRET`.
+- **Redis (optional, `REDIS_URL`):** rate-limit counters shared by all instances; commands fail fast
+  and fall back to the Postgres limiter.
+- **Database:** pool size per instance from `DB_POOL_MAX`; `prismaRead` uses `DATABASE_URL_READ` for
+  public discovery only.
+- **Sensitive fields:** AES-256-GCM with key ids and rotation (`lib/crypto/fieldCipher.ts`).
+- **Operations:** `/api/health` for the host, `x-request-id` on every page response, JSON logs with
+  redaction (`lib/log.ts`).
+
+**Consequences.** Moving hosts means setting env vars, not changing code. At very large volume the
+queue interface can be backed by a dedicated broker without touching callers.

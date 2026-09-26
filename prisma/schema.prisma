@@ -1084,3 +1084,34 @@ model TotpRecoveryCode {
 
   @@unique([userId, codeHash])
 }
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  DONE
+  DEAD
+}
+
+/// Phase 16: durable background work (dispatch, notifications, clean-up). Workers claim due jobs
+/// with FOR UPDATE SKIP LOCKED, so any number of workers can run without taking the same job;
+/// a crashed worker's job is reclaimed after its lock goes stale. Failed jobs retry with backoff
+/// and go DEAD after maxAttempts (visible to admins, never silently dropped).
+model Job {
+  id          String    @id @default(cuid())
+  type        String
+  payload     Json      @default("{}")
+  status      JobStatus @default(PENDING)
+  runAt       DateTime  @default(now())
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  lockedAt    DateTime?
+  lockedBy    String?
+  lastError   String?
+  /// Optional: at most one PENDING/RUNNING job per key (e.g. "expire-trip:<id>").
+  dedupeKey   String?   @unique
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([status, runAt])
+  @@index([status, lockedAt])
+}

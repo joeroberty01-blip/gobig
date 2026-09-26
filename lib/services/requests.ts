@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { can, type Actor } from "@/lib/permissions";
 import sharp from "sharp";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@/generated/prisma/client";
@@ -170,13 +171,14 @@ export async function addRequestPhoto(customerId: string, requestId: string, inp
 }
 
 /** Signed 5-minute URL if the viewer is the customer, a member of a matched provider, or an admin. */
-export async function requestPhotoUrl(viewer: { id: string; role: string }, photoId: string): Promise<string | null> {
+export async function requestPhotoUrl(viewer: { id: string; role: string; status?: string; mfaPending?: boolean }, photoId: string): Promise<string | null> {
   const photo = await prisma.requestPhoto.findUnique({
     where: { id: photoId },
     select: { storageKey: true, request: { select: { customerId: true, matches: { select: { provider: { select: { members: { select: { userId: true } } } } } } } } },
   });
   if (!photo) return null;
-  const isAdmin = viewer.role === "ADMIN" || viewer.role === "SUPER_ADMIN";
+  // Phase 16 (SEC-046): through can(), so an admin who hasn't passed two-factor sees nothing.
+  const isAdmin = can(viewer as Actor, "requests:oversee");
   const allowed =
     isAdmin ||
     photo.request.customerId === viewer.id ||

@@ -75,8 +75,9 @@ function discoveryLimited(req: Request): NextResponse | null {
 }
 
 /** Adds the Content-Security-Policy to every page response (Phase 13, SEC-007). */
-function withCsp(res: NextResponse, csp: string): NextResponse {
+function withCsp(res: NextResponse, csp: string, requestId?: string): NextResponse {
   res.headers.set("Content-Security-Policy", csp);
+  if (requestId) res.headers.set("x-request-id", requestId);
   return res;
 }
 
@@ -90,14 +91,17 @@ export default auth(async (req) => {
   const headers = new Headers(req.headers);
   headers.set("x-nonce", nonce);
   headers.set("Content-Security-Policy", csp);
-  const next = () => withCsp(NextResponse.next({ request: { headers } }), csp);
+  // Phase 16: one id per request, for tying log lines together (kept if a trusted edge set one).
+  const requestId = /^[A-Za-z0-9-]{8,64}$/.test(req.headers.get("x-request-id") ?? "") ? req.headers.get("x-request-id")! : crypto.randomUUID();
+  headers.set("x-request-id", requestId);
+  const next = () => withCsp(NextResponse.next({ request: { headers } }), csp, requestId);
 
   const area = AREAS.find((a) => matches(pathname, a.prefix));
   const guestOnly = GUEST_ONLY.some((p) => matches(pathname, p));
   if (!area && !guestOnly) {
     const discovery = pathname === "/" || PUBLIC_DISCOVERY.some((p) => matches(pathname, p));
     if (!discovery) return next();
-    return discoveryLimited(req) ?? withCsp(nextWithVisitorId(req, headers), csp);
+    return discoveryLimited(req) ?? withCsp(nextWithVisitorId(req, headers), csp, requestId);
   }
 
   const session = req.auth;

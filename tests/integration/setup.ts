@@ -13,3 +13,7 @@ const storageTest = process.env.S3_ENDPOINT_TEST;
 if (!storageTest) throw new Error("S3_ENDPOINT_TEST is not set; refusing to run integration tests.");
 if (storageTest === process.env.S3_ENDPOINT) throw new Error("S3_ENDPOINT_TEST equals S3_ENDPOINT; refusing.");
 process.env.S3_ENDPOINT = storageTest;
+
+// Phase 16: never let tests read the app's replica or share the app's Redis.
+process.env.DATABASE_URL_READ = process.env.DATABASE_URL_READ_TEST ?? "";
+process.env.REDIS_URL = process.env.REDIS_URL_TEST ?? "";

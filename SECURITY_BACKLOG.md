@@ -77,6 +77,8 @@ Last full review: **2026-09-26** (Phase 13 security & performance audit). Previo
 | SEC-043 | LOW | Announcements are written by super admins and shown to all users | Admin | A compromised super admin could send phishing text in-app (plain text only — no links rendered) | Covered by SEC-042 (2FA); audited with recipient counts | **MITIGATED** — super admins need 2FA (SEC-042); announcements stay plain text and audited | 2026-09-25 | 2026-09-26 |  |
 | SEC-044 | LOW | The scraping and location-action limits are kept in memory, so each server instance counts separately | Discovery pages | On a host running many instances a scraper gets several times the budget | Add the host's firewall rate-limit rules for `/search`, `/p/*`, `/ask` at launch (e.g. Vercel Firewall), keep the in-app cap as a second layer | OPEN — before launch | 2026-09-26 | | |
 | SEC-045 | LOW | Production database round trip from outside the EU is ~140 ms, and each page makes several sequential queries | Performance | Slow pages (2–3 s measured from Dar es Salaam before Phase 13) | Host the app in the same region as the database (Frankfurt, `fra1`); reference data now cached, queries parallelised, pool keeps connections warm | PARTLY FIXED — code side done; hosting region is a deployment decision | 2026-09-26 | | |
+| SEC-046 | MEDIUM | Request photos were shown to any admin by role, before two-factor | Requests | An admin session that hadn't passed 2FA could open customers' private request photos | Check admin access through `can()` like every other admin power | **FIXED** — `requestPhotoUrl` uses `can(viewer, "requests:oversee")`, so `mfaPending` admins get 404 | 2026-09-26 | 2026-09-26 | `tests/integration/requests.test.ts` |
+| SEC-047 | MEDIUM | Scale work adds new secrets and data paths | Platform | A leaked field key exposes trip locations/phones; tests pointed at a production replica or Redis would read/write real data | Field encryption with key ids + rotation (`DATA_ENCRYPTION_KEY[_PREVIOUS]`), purpose-bound (AAD); integration setup blanks `DATABASE_URL_READ`/`REDIS_URL` unless `_TEST` values are given; `/api/cron/tick` needs a ≥32-char `CRON_SECRET` compared in constant time and answers 404 otherwise; logs redact secrets, contacts and coordinates | **FIXED** (Phase 16) — owner must set `DATA_ENCRYPTION_KEY` and `CRON_SECRET` on the host | 2026-09-26 | 2026-09-26 | `tests/unit/phase16.test.ts`, `tests/integration/jobs.test.ts` |
 
 ## Phase 14 security review (UI polish, 2026-09-26)
 
@@ -86,3 +88,15 @@ No new endpoints or data exposure. Checked: the theme cookie is non-sensitive an
 
 Authentication · Authorization · Ownership · Input validation · Database access · Data privacy ·
 API security · Data integrity · Error handling · Rate limiting.
+
+
+### Phase 16 security review (2026-09-26)
+
+Scale foundation: job queue, optional Redis, read replica, field encryption, health and tick endpoints,
+request ids, structured logs. Checked: `/api/health` reveals only up/down per dependency and a short
+commit id; `/api/cron/tick` is POST-only, 404 without the exact bearer secret; the queue writes a
+result only while the worker still holds the job's lock; Redis failures fall back to Postgres
+(fail-open to the *existing* limiter, never to "no limit"); the replica is used only for public
+discovery reads. API route sweep (IDOR): every route takes the owner from the session
+(`getOwnedProviderId`, `customerId` in the query) or checks `can()`; private objects are served by
+short-lived signed URLs after an ownership check and 404 for everyone else. Found and fixed SEC-046.
