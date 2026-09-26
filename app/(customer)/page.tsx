@@ -56,10 +56,10 @@ export default async function HomePage() {
   const greeting = hour < 12 ? h.morning : hour < 17 ? h.afternoon : h.evening;
 
   const list = (cards: typeof nearby.results) => (
-    <ul className="grid gap-3 lg:grid-cols-2">
+    <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
       {cards.slice(0, 6).map((p) => (
         <li key={p.id} className="min-w-0">
-          <ProviderCard p={p} t={t} locale={locale} variant="list" />
+          <ProviderCard p={p} t={t} locale={locale} />
         </li>
       ))}
     </ul>

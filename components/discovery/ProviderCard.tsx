@@ -42,12 +42,12 @@ const TONE = {
 const ACTION_ORDER: Card["actions"][number]["action"][] = ["WHATSAPP", "CALL", "REQUEST_QUOTE", "BOOK_SERVICE", "MESSAGE", "DIRECTIONS", "BOOK_RIDE", "WEBSITE", "EMAIL"];
 
 /** Cover photo, else logo, else the business initial on the brand gradient — never a stock photo. */
-function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className?: string }) {
+function Photo({ p, sizes, className = "", faces = false }: { p: Card; sizes: string; className?: string; faces?: boolean }) {
   const src = p.coverUrl ?? p.logoUrl;
   return (
     <div className={`relative overflow-hidden bg-hero ${className}`}>
       {src ? (
-        <Image src={src} alt="" fill sizes={sizes} className="object-cover transition duration-500 group-hover:scale-[1.03]" />
+        <Image src={src} alt="" fill sizes={sizes} className={`object-cover transition duration-500 group-hover:scale-[1.03] ${faces ? "object-[center_20%]" : ""}`} />
       ) : (
         <span className="grid size-full place-items-center text-4xl font-black text-white/90">{p.name.trim().slice(0, 1).toUpperCase()}</span>
       )}
@@ -220,22 +220,25 @@ export function ProviderCard({
   return (
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-lift has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-500">
       <div className="relative">
-        <Photo p={p} sizes="(max-width: 640px) 60vw, 320px" className="aspect-[3/2]" />
+        {/* Portrait: provider photos are mostly people at work, so keep faces in frame. */}
+        <Photo p={p} sizes="(max-width: 768px) 50vw, 300px" className="aspect-[4/5]" faces />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
         {verified && <VerifiedPill t={t} className="absolute top-2 left-2" />}
+        {p.demo && (
+          <span className="absolute bottom-2 left-2 rounded-full bg-cta px-2 py-0.5 text-[9.5px] font-bold tracking-wide text-white uppercase">{t.ui.demo.tag}</span>
+        )}
         {save && (
           <div className="absolute top-2 right-2 z-10">
             <FavoriteButton providerId={p.id} slug={p.slug} initial={save.initial} signedInCustomer={save.signedInCustomer} round small />
           </div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-3">
-        <h3 className="flex min-w-0 items-center gap-1.5 text-sm font-bold tracking-tight">
-          <span className="truncate">{title}</span>
-          {p.demo && <SampleTag t={t} />}
-        </h3>
-        <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px]">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-3">
+        <h3 className="truncate text-[13px] font-bold tracking-tight sm:text-sm">{title}</h3>
+        {service && <p className="truncate text-[11px] text-ink-muted">{name(service)}</p>}
+        <div className="mt-1.5 flex min-w-0 items-center justify-between gap-2 text-[11px]">
           {rating}
-          {distance && <span className="truncate text-ink-muted">{distance}</span>}
+          {distance && <span className="hidden truncate text-ink-muted sm:inline">{distance}</span>}
         </div>
         {priceText && (
           <p className="mt-2 text-xs text-ink-muted">
