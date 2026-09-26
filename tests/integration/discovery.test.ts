@@ -215,3 +215,15 @@ describe("Phase 14 filters", () => {
   });
 });
 
+describe("compare (Phase 15)", () => {
+  it("returns live providers only, in the order picked, at most three", async () => {
+    const { compareProviders } = await import("@/lib/services/compare");
+    const slug = async (k: string) => (await prisma.provider.findUniqueOrThrow({ where: { id: ids[k]! } })).slug;
+    const [plumber, acMik, salon, acMasaki, draft] = await Promise.all(["plumber", "acMik", "salon", "acMasaki", "draft"].map(slug));
+    const got = await compareProviders([plumber, draft, acMik, "no-such-provider", salon, acMasaki]);
+    expect(got.map((g) => g.card.id)).toEqual([ids.plumber, ids.acMik]); // first three asked for; draft and unknown dropped
+    expect(got[0]!.services[0]).toMatchObject({ nameEn: "Pipe & leak repair", priceType: "FROM", priceMin: 20000 });
+    expect(await compareProviders([])).toEqual([]);
+  });
+});
+

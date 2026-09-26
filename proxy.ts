@@ -27,7 +27,7 @@ function matches(pathname: string, prefix: string) {
 }
 
 /** Pages where contact buttons appear; visitors get their anonymous id before they can tap. */
-const PUBLIC_DISCOVERY = ["/p", "/search", "/c", "/categories", "/ask"];
+const PUBLIC_DISCOVERY = ["/p", "/search", "/c", "/categories", "/ask", "/compare"];
 
 function randomVisitorId(): string {
   const bytes = crypto.getRandomValues(new Uint8Array(18));

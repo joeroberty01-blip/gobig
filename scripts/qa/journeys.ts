@@ -70,8 +70,11 @@ async function newContext(browser: Browser, device: Device, locale: "en" | "sw" 
 
 /** No page may scroll sideways. */
 async function noOverflow(page: Page) {
+  // Compare with the device's real width: phone browsers widen the layout viewport to fit
+  // anything that sticks out, so innerWidth alone can hide an overflow.
+  const device = page.viewportSize()!.width;
   const [sw, w] = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
-  if (sw > w + 1) throw new Error(`page is ${sw}px wide in a ${w}px viewport`);
+  if (sw > device + 1 || w > device + 1) throw new Error(`page is ${Math.max(sw, w)}px wide on a ${device}px screen`);
 }
 
 async function go(page: Page, path: string) {
@@ -271,6 +274,25 @@ async function providerPage(browser: Browser, device: Device) {
   return { ctx, page: await ctx.newPage() };
 }
 
+const SECOND = `QA Maji Poa ${run}`;
+
+/** A second live plumber in Sinza, made directly (the UI path is covered by the provider journey). */
+async function makeSecondProvider() {
+  const profile = await import("@/lib/services/providerProfile");
+  const user = await prisma.user.create({ data: { name: "QA Second Owner", email: `qa-second-${run}${DOMAIN}`, passwordHash: "x", role: "PROVIDER" } });
+  const service = await prisma.service.findUniqueOrThrow({ where: { slug: "pipe-leak-repair" } });
+  const { providerId } = await profile.saveBusinessName(user.id, SECOND);
+  await profile.saveCategory(providerId, service.categoryId);
+  await profile.saveServices(providerId, [service.id]);
+  await profile.savePricing(providerId, [{ serviceId: service.id, priceType: "FIXED", priceMin: 30000, priceMax: null, priceUnit: null }]);
+  await profile.saveDescription(providerId, "Second QA plumber for the compare check; removed after the QA run.");
+  await profile.saveContact(providerId, `0714${String(Math.floor(Math.random() * 1e6)).padStart(6, "0")}`, null);
+  await profile.saveLocation(providerId, { locationId: (await prisma.location.findUniqueOrThrow({ where: { slug: "sinza" } })).id, addressText: null, visibility: "AREA_ONLY" });
+  await profile.saveActions(providerId, ["CALL"]);
+  const r = await profile.publishProvider(providerId);
+  if (!r.ok) throw new Error(`second provider: ${JSON.stringify(r)}`);
+}
+
 async function customerJourney(browser: Browser) {
   const J = "customer";
   const ctx = await newContext(browser, "phone");
@@ -329,6 +351,22 @@ async function customerJourney(browser: Browser) {
     await page.getByRole("heading", { level: 1, name: new RegExp(BUSINESS) }).waitFor();
     await noOverflow(page);
     await snap(page, "customer-profile-phone");
+  });
+
+  await step(page, J, "compare two providers", async () => {
+    await makeSecondProvider();
+    await go(page, "/search?q=fundi%20bomba");
+    for (const name of [BUSINESS, SECOND]) {
+      const row = page.locator("article").filter({ hasText: name }).first();
+      await row.getByRole("button", { name: /Add to compare/ }).click();
+    }
+    await page.getByRole("link", { name: "Compare 2" }).click();
+    await page.waitForURL(/\/compare\?p=/);
+    await page.getByRole("heading", { name: "Compare providers" }).waitFor();
+    for (const name of [BUSINESS, SECOND]) await page.getByRole("link", { name }).first().waitFor();
+    await noOverflow(page);
+    await snap(page, "customer-compare-phone");
+    await go(page, `/p/${providerSlug}`);
   });
 
   await step(page, J, "WhatsApp tap is recorded", async () => {
@@ -426,6 +464,8 @@ async function customerJourney(browser: Browser) {
     await prov.page.getByRole("button", { name: "Report" }).first().click();
     await prov.page.getByRole("button", { name: "Send report" }).click();
     await prov.page.getByText("our team will look at it").waitFor({ timeout: 15_000 });
+    const n = await prisma.reviewReport.count({ where: { review: { provider: { slug: providerSlug } }, status: "OPEN" } });
+    if (n !== 1) throw new Error(`${n} open review reports saved`);
   });
 
   await prov.ctx.close();
@@ -515,7 +555,7 @@ async function adminJourney(browser: Browser) {
 
   await step(page, J, "manage categories", async () => {
     await go(page, "/admin/categories");
-    await page.getByText("Home Repairs & Maintenance").first().waitFor();
+    await page.locator("main").getByText("Home Repairs & Maintenance", { exact: true }).filter({ visible: true }).first().waitFor({ timeout: 20_000 });
     await noOverflow(page);
   });
 
@@ -539,8 +579,8 @@ async function adminJourney(browser: Browser) {
   });
 
   await step(page, J, "manage requests", async () => {
-    await go(page, "/admin/requests");
-    await page.getByText("Pipe & leak repair").first().waitFor({ timeout: 15_000 });
+    await go(page, "/admin/requests?status=COMPLETED");
+    await page.locator("main").getByText("Pipe & leak repair").filter({ visible: true }).first().waitFor({ timeout: 15_000 });
   });
 
   await step(page, J, "featured listings (monetization)", async () => {

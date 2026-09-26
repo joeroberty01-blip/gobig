@@ -6,7 +6,7 @@ export default function Loading() {
     <div className="mx-auto max-w-5xl" aria-busy="true">
       <Skeleton className="h-13 rounded-2xl" />
       <Skeleton className="mt-3 h-10" />
-      <div className="mt-3 flex gap-2">
+      <div className="mt-3 flex gap-2 overflow-hidden">
         {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-10 w-28 rounded-full" />
         ))}

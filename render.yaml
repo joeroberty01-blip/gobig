@@ -1,0 +1,47 @@
+# Render test deployment (pre-Play Store). Frankfurt, next to the Neon database (eu-central-1).
+# Secrets are `sync: false`: Render asks for them in the dashboard; they are never stored here.
+services:
+  - type: web
+    name: gobig
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: npm ci --include=dev && npx prisma migrate deploy && npm run build
+    startCommand: npm run start
+    healthCheckPath: /login
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: AUTH_TRUST_HOST
+        value: "true"
+      - key: APP_URL
+        value: https://gobig.onrender.com
+      - key: S3_REGION
+        value: eu-central-1
+      - key: S3_MEDIA_BUCKET
+        value: provider-media
+      - key: S3_PRIVATE_BUCKET
+        value: verification-docs
+      # Keep model spend small while testing.
+      - key: AI_DAILY_CALL_CAP
+        value: "200"
+      # Set in the dashboard (secret or environment-specific):
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: AUTH_SECRET
+        sync: false
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+      - key: ANALYTICS_SALT
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

@@ -43,7 +43,7 @@ export function FilterBar({
   return (
     <div className="flex flex-col gap-3">
       <AreaPicker districts={districts} value={areaSlug} search={params} compact />
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
+      <div className="relative -mx-4 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar">
         <Link href={searchHref(base, { sort: "best", page: 1 })} className={chip(params.sort !== "top")} aria-pressed={params.sort !== "top"}>
           <Sparkles aria-hidden className={`size-4 ${params.sort !== "top" ? "" : "text-ink-subtle"}`} />
           {t.ui.search.bestMatch}

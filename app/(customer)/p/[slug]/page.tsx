@@ -26,6 +26,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { ReportButton } from "@/components/admin/platform/ReportButton";
 import { ShareButton } from "@/components/discovery/ShareButton";
 import { availabilityLabel } from "@/components/discovery/ProviderCard";
+import { CompareToggle } from "@/components/discovery/Compare";
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ reviews?: string }> };
 
@@ -123,6 +124,7 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
           {!p.preview && (!viewer || viewer.role === "CUSTOMER") && (
             <FavoriteButton providerId={p.id} slug={p.slug} initial={favorite} signedInCustomer={viewer?.role === "CUSTOMER" && viewer.status === "ACTIVE"} round />
           )}
+          {customerView && <CompareToggle slug={p.slug} name={p.displayName} round />}
           <ShareButton title={p.displayName} />
         </div>
       </div>

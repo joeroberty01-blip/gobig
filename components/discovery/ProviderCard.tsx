@@ -9,6 +9,7 @@ import { formatDistance } from "@/lib/geo";
 import type { ProviderCard as Card } from "@/lib/services/discovery";
 import { RatingSummary, TrustBadges } from "@/components/trust/TrustBadges";
 import { ConnectButton } from "@/components/connect/ConnectButton";
+import { CompareToggle } from "@/components/discovery/Compare";
 
 export function availabilityLabel(a: Availability, t: Dictionary): { text: string; tone: "open" | "closed" | "neutral" } | null {
   const c = t.discovery.card;
@@ -126,6 +127,9 @@ export function ProviderCard({
           </div>
           {service && <p className="truncate text-xs text-ink-muted">{name(service)}</p>}
           {place && <p className="mt-1 text-xs">{place}</p>}
+          <div className="relative z-10 mt-1.5">
+            <CompareToggle slug={p.slug} name={p.name} />
+          </div>
           <div className="mt-auto flex flex-wrap items-center gap-2 pt-1.5">
             {avail && <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${TONE[avail.tone]}`}>{avail.text}</span>}
             {price && <span className={`text-xs sm:hidden ${priceTone}`}>{price}</span>}
@@ -150,6 +154,9 @@ export function ProviderCard({
       <div className="relative">
         <Photo p={p} sizes="(max-width: 640px) 80vw, 320px" className="aspect-[16/10]" />
         {verified && <VerifiedPill t={t} className="absolute top-2.5 left-2.5" />}
+        <div className="absolute top-2 right-2 z-10">
+          <CompareToggle slug={p.slug} name={p.name} />
+        </div>
         {avail && <span className={`absolute right-2.5 bottom-2.5 rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm ${TONE[avail.tone]}`}>{avail.text}</span>}
       </div>
       <div className="flex flex-1 flex-col p-4">

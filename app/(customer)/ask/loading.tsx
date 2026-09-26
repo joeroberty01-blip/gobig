@@ -7,7 +7,7 @@ export default function Loading() {
       <div className="bg-hero flex flex-col gap-3 rounded-[2rem] p-7">
         <div className="h-3 w-20 rounded bg-white/15" />
         <div className="h-8 w-3/4 animate-pulse rounded-lg bg-white/15" />
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex gap-2 overflow-hidden">
           <div className="h-10 w-32 animate-pulse rounded-xl bg-white/10" />
           <div className="h-10 w-28 animate-pulse rounded-xl bg-white/10" />
           <div className="h-10 w-20 animate-pulse rounded-xl bg-white/10" />
