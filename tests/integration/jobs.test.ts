@@ -9,9 +9,18 @@ beforeEach(clean);
 afterAll(clean);
 
 describe("job queue", () => {
+  it("a worker limited to some types leaves the others alone", async () => {
+    const mine = await enqueue("test:typed-a", {});
+    const other = await enqueue("test:typed-b", {});
+    const got = await claim("typed", 50, undefined, ["test:typed-a"]);
+    expect(got.map((j) => j.id)).toContain(mine.id);
+    expect(got.map((j) => j.id)).not.toContain(other.id);
+  });
+
   it("never hands the same job to two workers", async () => {
     for (let i = 0; i < 10; i++) await enqueue(T, { i });
-    const [a, b, c] = await Promise.all([claim("w1", 10), claim("w2", 10), claim("w3", 10)]);
+    const only = [T];
+    const [a, b, c] = await Promise.all([claim("w1", 10, undefined, only), claim("w2", 10, undefined, only), claim("w3", 10, undefined, only)]);
     const ids = [...a, ...b, ...c].filter((j) => j.type === T).map((j) => j.id);
     expect(ids.length).toBe(10);
     expect(new Set(ids).size).toBe(10);
@@ -20,11 +29,11 @@ describe("job queue", () => {
   it("retries with backoff, then marks the job dead", async () => {
     const { id } = await enqueue("test:fails", {}, { maxAttempts: 2 });
     const fail = { "test:fails": async () => { throw new Error("boom"); } };
-    await runDueJobs(fail, { workerId: "w" });
+    await runDueJobs(fail, { workerId: "w", types: ["test:fails"] });
     let job = await prisma.job.findUniqueOrThrow({ where: { id } });
     expect(job.status).toBe("PENDING");
     expect(job.runAt.getTime()).toBeGreaterThan(Date.now());
-    await runDueJobs(fail, { workerId: "w", now: new Date(Date.now() + 60 * 60_000) });
+    await runDueJobs(fail, { workerId: "w", now: new Date(Date.now() + 60 * 60_000), types: ["test:fails"] });
     job = await prisma.job.findUniqueOrThrow({ where: { id } });
     expect(job.status).toBe("DEAD");
     expect(job.lastError).toBe("boom");
@@ -35,7 +44,7 @@ describe("job queue", () => {
     const first = await enqueue("test:once", {}, { dedupeKey: "test:k1" });
     const again = await enqueue("test:once", {}, { dedupeKey: "test:k1" });
     expect(again).toEqual({ id: first.id, created: false });
-    await runDueJobs({ "test:once": async () => void runs++ }, { workerId: "w" });
+    await runDueJobs({ "test:once": async () => void runs++ }, { workerId: "w", types: ["test:once"] });
     expect(runs).toBe(1);
     const next = await enqueue("test:once", {}, { dedupeKey: "test:k1" });
     expect(next.created).toBe(true);
@@ -43,9 +52,9 @@ describe("job queue", () => {
 
   it("reclaims a job whose worker crashed", async () => {
     const { id } = await enqueue(T, {});
-    await claim("crashed", 50);
+    await claim("crashed", 50, undefined, [T]);
     const later = new Date(Date.now() + 10 * 60_000);
-    const reclaimed = await claim("rescuer", 50, later);
+    const reclaimed = await claim("rescuer", 50, later, [T]);
     expect(reclaimed.map((j) => j.id)).toContain(id);
   });
 });

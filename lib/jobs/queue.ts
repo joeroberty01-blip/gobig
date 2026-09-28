@@ -51,16 +51,20 @@ export function backoffMs(attempts: number): number {
 
 type Claimed = { id: string; type: string; payload: JobPayload; attempts: number; maxAttempts: number };
 
-/** Atomically claims up to `limit` due jobs (including stale RUNNING ones) for this worker. */
-export async function claim(workerId: string, limit: number, now = new Date()): Promise<Claimed[]> {
+/**
+ * Atomically claims up to `limit` due jobs (including stale RUNNING ones) for this worker.
+ * `types` limits it to some job types (Phase 19): e.g. a dedicated dispatch worker at high volume.
+ */
+export async function claim(workerId: string, limit: number, now = new Date(), types: string[] = []): Promise<Claimed[]> {
   const stale = new Date(now.getTime() - LOCK_TIMEOUT_MS);
   return prisma.$queryRaw<Claimed[]>`
     UPDATE "Job" SET "status" = 'RUNNING', "lockedAt" = ${now}, "lockedBy" = ${workerId},
       "attempts" = "attempts" + 1, "updatedAt" = ${now}
     WHERE "id" IN (
       SELECT "id" FROM "Job"
-      WHERE ("status" = 'PENDING' AND "runAt" <= ${now})
-         OR ("status" = 'RUNNING' AND "lockedAt" < ${stale})
+      WHERE (("status" = 'PENDING' AND "runAt" <= ${now})
+         OR ("status" = 'RUNNING' AND "lockedAt" < ${stale}))
+        AND (cardinality(${types}::text[]) = 0 OR "type" = ANY(${types}::text[]))
       ORDER BY "runAt"
       LIMIT ${limit}
       FOR UPDATE SKIP LOCKED
@@ -74,10 +78,10 @@ export async function claim(workerId: string, limit: number, now = new Date()): 
  */
 export async function runDueJobs(
   handlers: Record<string, JobHandler>,
-  opts: { workerId?: string; limit?: number; now?: Date } = {},
+  opts: { workerId?: string; limit?: number; now?: Date; types?: string[] } = {},
 ): Promise<{ done: number; failed: number; dead: number }> {
   const workerId = opts.workerId ?? `w-${randomUUID().slice(0, 8)}`;
-  const jobs = await claim(workerId, opts.limit ?? 20, opts.now);
+  const jobs = await claim(workerId, opts.limit ?? 20, opts.now, opts.types);
   const stats = { done: 0, failed: 0, dead: 0 };
   for (const job of jobs) {
     const handler = handlers[job.type];

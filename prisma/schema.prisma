@@ -713,6 +713,8 @@ model RequestMatch {
   notifiedAt      DateTime    @default(now())
   /// First interest/quote/message from the provider — the raw data for "Fast response" (Phase 8).
   firstResponseAt DateTime?
+  /// Phase 17 automation: when the "unanswered request" reminder was sent (once per match).
+  remindedAt      DateTime?
   updatedAt       DateTime    @updatedAt
 
   request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
@@ -1072,6 +1074,16 @@ model PlatformSettings {
   maxRequestMatches Int      @default(15)
   requestTtlDays    Int      @default(14)
   aiSearchEnabled   Boolean  @default(true)
+  // Phase 17 (owner's request): feature switches, trip limits and automation rules. 0 = rule off.
+  ridesEnabled              Boolean @default(true)
+  deliveriesEnabled         Boolean @default(true)
+  tripRequestTtlMin         Int     @default(10)
+  tripMaxRadiusKm           Int     @default(10)
+  tripMaxKm                 Int     @default(80)
+  tripPurgeDays             Int     @default(30)
+  driverAutoOfflineMin      Int     @default(30)
+  autoHideReviewAtReports   Int     @default(0)
+  requestReminderHours      Int     @default(0)
   updatedById       String?
   updatedAt         DateTime @updatedAt
 }

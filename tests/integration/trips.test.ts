@@ -41,6 +41,9 @@ async function driverBusiness(name: string) {
 const verify = (providerId: string) => prisma.provider.update({ where: { id: providerId }, data: { verificationLevelId: levelId, verifiedAt: new Date() } });
 
 async function cleanup() {
+  // Trip jobs (redispatch/expire) this run queued; other suites' jobs are left alone.
+  const ids = (await prisma.trip.findMany({ where: { customer: { email: { endsWith: domain } } }, select: { id: true } })).map((t) => t.id);
+  if (ids.length) await prisma.job.deleteMany({ where: { type: { startsWith: "trip:" }, OR: ids.map((id) => ({ dedupeKey: { contains: id } })) } });
   await prisma.provider.deleteMany({ where: { members: { some: { user: { email: { endsWith: domain } } } } } });
   await prisma.user.deleteMany({ where: { email: { endsWith: domain } } });
 }

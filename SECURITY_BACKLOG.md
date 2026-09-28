@@ -117,3 +117,14 @@ sample businesses and unverified providers can't go online; fares and payment ar
 payment data); admin trips page reads labels only; notifications store ids, and their text is built
 from area labels. Also stripped admin-only text (`trust.admin`, `billing.admin`, trips admin labels)
 from the dictionary sent to every visitor.
+
+
+### Settings centre & automation review (2026-09-28)
+
+Checked: only `settings:manage` (super admin, after 2FA) can save; admins can view. Every numeric
+setting is range-checked server-side (zod), so a compromised session can't set e.g. 0-day retention
+or unbounded radii; saves are audited with before/after. Automation acts as the system (actorId
+null), is idempotent (reminders are claimed with a guarded update before notifying; review hiding
+uses a status guard), never deletes data, and is audit-logged. The status panel shows up/down and
+counts only — no hostnames, keys or error text. Feature switches are enforced in the service layer
+(`requestTrip`), not just hidden in the UI.

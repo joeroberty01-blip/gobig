@@ -1,0 +1,13 @@
+-- AlterTable
+ALTER TABLE "PlatformSettings" ADD COLUMN     "autoHideReviewAtReports" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "deliveriesEnabled" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "driverAutoOfflineMin" INTEGER NOT NULL DEFAULT 30,
+ADD COLUMN     "requestReminderHours" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "ridesEnabled" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "tripMaxKm" INTEGER NOT NULL DEFAULT 80,
+ADD COLUMN     "tripMaxRadiusKm" INTEGER NOT NULL DEFAULT 10,
+ADD COLUMN     "tripPurgeDays" INTEGER NOT NULL DEFAULT 30,
+ADD COLUMN     "tripRequestTtlMin" INTEGER NOT NULL DEFAULT 10;
+
+-- AlterTable
+ALTER TABLE "RequestMatch" ADD COLUMN     "remindedAt" TIMESTAMP(3);

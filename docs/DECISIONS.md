@@ -581,3 +581,18 @@ not from the top of Home: every card and profile has "Take me there" (`/ride?to=
 business's public point as destination) and "Deliver to me" (`/delivery?from=<slug>`, the business
 as pickup). A live trip has in-app chat between the customer and the driver (`TripMessage`, open
 only while active, deleted at purge) and a WhatsApp button as the alternative.
+
+## ADR-056 — Settings centre with feature switches and automation rules (2026-09-28)
+
+**Context.** Owner: the settings page should be more advanced, with automation.
+
+**Decision.** Admin → Settings becomes a settings centre: live system status (database, Redis,
+encryption key, job backlog and failed jobs, drivers online, last automation run), feature switches
+(rides, deliveries, AI search), request and trip limits (previously constants), and automation rules
+run every 5 minutes by the job queue (`lib/jobs/automation.ts`):
+- hide a review after N open reports from different people (0 = off; restorable by admins);
+- remind a matched business once about a request unanswered after N hours (0 = off);
+- take a driver offline after N minutes without a position.
+Every automatic action is audit-logged with the system as the actor and listed under "Automation
+activity"; nothing is deleted. Only a super admin can change settings; every save is audited with
+before/after values. Limits are bounded in validation (e.g. trip data kept 7–90 days).

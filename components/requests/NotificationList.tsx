@@ -17,6 +17,7 @@ const REQUEST_TYPES: NotificationType[] = [
   "REQUEST_CANCELLED",
   "REQUEST_COMPLETED",
   "REQUEST_CANCELLED_BY_ADMIN",
+  "REQUEST_REMINDER",
 ];
 const TRIP_TYPES: NotificationType[] = ["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"];
 type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"];

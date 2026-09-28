@@ -96,4 +96,15 @@ export const platformSettingsSchema = z.object({
   maxRequestMatches: z.number().int().min(1).max(50),
   requestTtlDays: z.number().int().min(1).max(60),
   aiSearchEnabled: z.boolean(),
+  // Phase 17
+  ridesEnabled: z.boolean(),
+  deliveriesEnabled: z.boolean(),
+  tripRequestTtlMin: z.number().int().min(3).max(60),
+  tripMaxRadiusKm: z.number().int().min(3).max(30),
+  tripMaxKm: z.number().int().min(5).max(200),
+  // Privacy: exact trip data is never kept longer than 90 days, nor erased before disputes can be raised.
+  tripPurgeDays: z.number().int().min(7).max(90),
+  driverAutoOfflineMin: z.number().int().min(5).max(240),
+  autoHideReviewAtReports: z.number().int().min(0).max(50),
+  requestReminderHours: z.number().int().min(0).max(72),
 });

@@ -534,6 +534,16 @@ async function adminJourney(browser: Browser) {
     await snap(page, "admin-overview-desktop");
   });
 
+  await step(page, J, "settings centre", async () => {
+    await go(page, "/admin/settings");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.locator("#automation").waitFor();
+    await noOverflow(page);
+    await snap(page, "admin-settings-desktop");
+    await page.locator("#automation").scrollIntoViewIfNeeded();
+    await snap(page, "admin-settings-automation");
+  });
+
   await step(page, J, "manage providers", async () => {
     await go(page, `/admin/providers?q=${encodeURIComponent(providerSlug)}`);
     await page.getByText(BUSINESS).first().waitFor({ timeout: 15_000 });

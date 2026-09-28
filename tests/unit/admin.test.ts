@@ -27,11 +27,18 @@ describe("admin inputs", () => {
     expect(locationSchema.safeParse({ id: null, parentId: "d1", name: "Mtaa", latitude: "abc", longitude: "39", isActive: true }).success).toBe(false);
   });
   it("platform limits stay in safe ranges", () => {
-    const ok = { supportEmail: "", supportPhone: "", supportWhatsapp: "", maxOpenRequests: 5, maxRequestMatches: 15, requestTtlDays: 14, aiSearchEnabled: true };
+    const ok = { supportEmail: "", supportPhone: "", supportWhatsapp: "", maxOpenRequests: 5, maxRequestMatches: 15, requestTtlDays: 14, aiSearchEnabled: true,
+      ridesEnabled: true, deliveriesEnabled: true, tripRequestTtlMin: 10, tripMaxRadiusKm: 10, tripMaxKm: 80, tripPurgeDays: 30,
+      driverAutoOfflineMin: 30, autoHideReviewAtReports: 0, requestReminderHours: 0 };
     expect(platformSettingsSchema.parse(ok)).toMatchObject({ supportEmail: null });
     expect(platformSettingsSchema.safeParse({ ...ok, maxRequestMatches: 500 }).success).toBe(false);
     expect(platformSettingsSchema.safeParse({ ...ok, requestTtlDays: 0 }).success).toBe(false);
     expect(platformSettingsSchema.safeParse({ ...ok, supportEmail: "not an email" }).success).toBe(false);
+    // Phase 17: trip data is never kept past 90 days nor erased within a week; automation stays bounded.
+    expect(platformSettingsSchema.safeParse({ ...ok, tripPurgeDays: 365 }).success).toBe(false);
+    expect(platformSettingsSchema.safeParse({ ...ok, tripPurgeDays: 1 }).success).toBe(false);
+    expect(platformSettingsSchema.safeParse({ ...ok, tripMaxRadiusKm: 500 }).success).toBe(false);
+    expect(platformSettingsSchema.safeParse({ ...ok, autoHideReviewAtReports: -1 }).success).toBe(false);
   });
   it("reports and announcements", () => {
     expect(fileReportSchema.safeParse({ targetType: "REVIEW", targetId: "x", reason: "SPAM" }).success).toBe(false);

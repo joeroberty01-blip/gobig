@@ -15,6 +15,7 @@ export type NotificationType =
   | "REQUEST_CANCELLED" // provider: the customer cancelled
   | "REQUEST_COMPLETED" // provider: the customer marked the job done
   | "REQUEST_CANCELLED_BY_ADMIN" // customer: NEXA closed your request (Phase 12)
+  | "REQUEST_REMINDER" // provider: a matching request is still waiting for your answer (automation)
   | "ANNOUNCEMENT" // everyone: a message from NEXA (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you

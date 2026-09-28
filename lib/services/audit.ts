@@ -52,7 +52,11 @@ export type AuditAction =
   | "security.totp_enabled"
   | "security.totp_reset"
   | "security.recovery_code_used"
-  | "security.recovery_codes_regenerated";
+  | "security.recovery_codes_regenerated"
+  // Phase 17: automation (actorId null = the system)
+  | "review.auto_hidden"
+  | "automation.request_reminders"
+  | "automation.drivers_offline";
 
 export async function audit(
   db: Prisma.TransactionClient | typeof prisma,

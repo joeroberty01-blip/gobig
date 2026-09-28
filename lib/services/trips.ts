@@ -10,6 +10,7 @@ import { notify, providerUserIds, type NotificationType } from "@/lib/services/n
 import { nearestAreaName } from "@/lib/services/discovery";
 import { enqueue } from "@/lib/jobs/queue";
 import { mediaUrl } from "@/lib/storage";
+import { getPlatformSettings } from "@/lib/services/platformSettings";
 
 // Phase 17: rides & deliveries (ADR-055). One engine for both kinds:
 //   REQUESTED → (a nearby verified driver accepts) ACCEPTED → ARRIVED → IN_PROGRESS → COMPLETED
@@ -18,18 +19,18 @@ import { mediaUrl } from "@/lib/storage";
 // TRIP_PURGE_DAYS; drivers see exact points only once they've accepted. Fares come from the
 // driver's own rates; payment is settled off-app and only recorded.
 
+// Defaults; the live values come from platform settings (admin → Settings), Phase 17.
 export const REQUEST_TTL_MIN = 10;
 export const OFFER_BATCH = 5;
 export const DISPATCH_RADII_KM = [3, 6, 10] as const;
 export const REDISPATCH_AFTER_SEC = 45;
-const MAX_DISPATCH_ROUNDS = Math.floor((REQUEST_TTL_MIN * 60) / REDISPATCH_AFTER_SEC);
+
 /** A driver who hasn't sent a position for this long is treated as offline for dispatch. */
 export const DRIVER_STALE_MIN = 2;
 export const TRIP_PURGE_DAYS = 30;
 export const MAX_ACTIVE_TRIPS = 2;
 export const RATING_WINDOW_DAYS = 7;
 const MIN_TRIP_KM = 0.2;
-const MAX_TRIP_KM = 80;
 const ACTIVE = ["REQUESTED", "ACCEPTED", "ARRIVED", "IN_PROGRESS"] as const;
 
 // Purposes bind each encrypted value to its field (a sealed pickup can't be replayed as a phone).
@@ -164,10 +165,12 @@ export async function requestTrip(customer: { id: string; role: string; status: 
   const parsed = tripRequestSchema.safeParse(raw);
   if (!parsed.success) return fail("invalid");
   const input = parsed.data;
+  const settings = await getPlatformSettings();
+  if ((input.kind === "RIDE" && !settings.ridesEnabled) || (input.kind === "DELIVERY" && !settings.deliveriesEnabled)) return fail("unavailable");
   if (!inServiceRegion(input.pickup) || !inServiceRegion(input.dropoff)) return fail("outsideArea");
   const km = distanceKm(input.pickup, input.dropoff);
   if (km < MIN_TRIP_KM) return fail("tooShort");
-  if (km > MAX_TRIP_KM) return fail("tooLong");
+  if (km > settings.tripMaxKm) return fail("tooLong");
 
   let recipientPhone: string | null = null;
   if (input.kind === "DELIVERY") {
@@ -207,7 +210,7 @@ export async function requestTrip(customer: { id: string; role: string; status: 
       noteSealed: input.note ? seal(input.note, P.note) : null,
       distanceKm: Math.round(km * 10) / 10,
       codeSealed: seal(newCode(), P.code),
-      expiresAt: new Date(now.getTime() + REQUEST_TTL_MIN * 60_000),
+      expiresAt: new Date(now.getTime() + settings.tripRequestTtlMin * 60_000),
       ...(input.kind === "DELIVERY"
         ? {
             packageSize: input.packageSize,
@@ -223,7 +226,7 @@ export async function requestTrip(customer: { id: string; role: string; status: 
 
   await dispatch(trip.id, 0);
   await enqueue("trip:redispatch", { tripId: trip.id, round: 1 }, { runAt: new Date(now.getTime() + REDISPATCH_AFTER_SEC * 1000), dedupeKey: `trip-redispatch:${trip.id}:1` });
-  await enqueue("trip:expire", { tripId: trip.id }, { runAt: new Date(now.getTime() + REQUEST_TTL_MIN * 60_000 + 5_000), dedupeKey: `trip-expire:${trip.id}` });
+  await enqueue("trip:expire", { tripId: trip.id }, { runAt: new Date(now.getTime() + settings.tripRequestTtlMin * 60_000 + 5_000), dedupeKey: `trip-expire:${trip.id}` });
   return { ok: true, tripId: trip.id };
 }
 
@@ -254,7 +257,9 @@ export async function dispatch(tripId: string, roundNo: number, now = new Date()
     select: { status: true, expiresAt: true, kind: true, vehicleType: true, pickupLatCoarse: true, pickupLngCoarse: true, offers: { select: { providerId: true } } },
   });
   if (!trip || trip.status !== "REQUESTED" || trip.expiresAt <= now) return 0;
-  const radius = DISPATCH_RADII_KM[Math.min(roundNo, DISPATCH_RADII_KM.length - 1)]!;
+  // Widen round by round up to the admin's maximum radius.
+  const maxRadius = (await getPlatformSettings()).tripMaxRadiusKm;
+  const radius = Math.min(roundNo < DISPATCH_RADII_KM.length - 1 ? DISPATCH_RADII_KM[roundNo]! : maxRadius, maxRadius);
   const from = { lat: trip.pickupLatCoarse, lng: trip.pickupLngCoarse };
   const dLat = radius / 111;
   const dLng = radius / (111 * Math.cos((from.lat * Math.PI) / 180));
@@ -672,20 +677,28 @@ export async function redispatch(tripId: string, roundNo: number, now = new Date
   if (!t || t.status !== "REQUESTED" || t.expiresAt <= now) return;
   await dispatch(tripId, roundNo, now);
   // Rounds widen through DISPATCH_RADII_KM, then keep asking newly online drivers at the widest.
-  if (roundNo < MAX_DISPATCH_ROUNDS) {
+  if (now.getTime() + REDISPATCH_AFTER_SEC * 1000 < t.expiresAt.getTime()) {
     await enqueue("trip:redispatch", { tripId, round: roundNo + 1 }, { runAt: new Date(now.getTime() + REDISPATCH_AFTER_SEC * 1000), dedupeKey: `trip-redispatch:${tripId}:${roundNo + 1}` });
   }
 }
 
 /** Erases exact points, notes, recipient details and codes of finished trips (privacy retention). */
 export async function purgeOldTrips(now = new Date()): Promise<number> {
-  const before = new Date(now.getTime() - TRIP_PURGE_DAYS * 86_400_000);
+  const days = (await getPlatformSettings()).tripPurgeDays ?? TRIP_PURGE_DAYS;
+  const before = new Date(now.getTime() - days * 86_400_000);
   const { count } = await prisma.trip.updateMany({
     where: { purgedAt: null, status: { in: ["COMPLETED", "CANCELLED", "EXPIRED"] }, updatedAt: { lt: before } },
     data: { pickupSealed: null, dropoffSealed: null, noteSealed: null, recipientNameSealed: null, recipientPhoneSealed: null, codeSealed: null, purgedAt: now },
   });
   await prisma.tripMessage.deleteMany({ where: { trip: { purgedAt: { not: null } } } });
-  // Drivers who closed the app without going offline stop sharing their position.
-  await prisma.driverProfile.updateMany({ where: { online: true, lastSeenAt: { lt: new Date(now.getTime() - 30 * 60_000) } }, data: { online: false, lastLat: null, lastLng: null } });
+  return count;
+}
+
+/** Drivers who closed the app without going offline stop sharing their position (automation). */
+export async function autoOfflineDrivers(afterMin: number, now = new Date()): Promise<number> {
+  const { count } = await prisma.driverProfile.updateMany({
+    where: { online: true, lastSeenAt: { lt: new Date(now.getTime() - afterMin * 60_000) } },
+    data: { online: false, lastLat: null, lastLng: null, lastSeenAt: null },
+  });
   return count;
 }

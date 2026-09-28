@@ -12,7 +12,34 @@ export type PlatformSettings = {
   maxRequestMatches: number;
   requestTtlDays: number;
   aiSearchEnabled: boolean;
+  // Phase 17: feature switches, trip limits and automation rules (0 = rule off).
+  ridesEnabled: boolean;
+  deliveriesEnabled: boolean;
+  tripRequestTtlMin: number;
+  tripMaxRadiusKm: number;
+  tripMaxKm: number;
+  tripPurgeDays: number;
+  driverAutoOfflineMin: number;
+  autoHideReviewAtReports: number;
+  requestReminderHours: number;
 };
+
+/** Everything except contact details — what the audit log records before/after. */
+const TUNABLES = [
+  "maxOpenRequests",
+  "maxRequestMatches",
+  "requestTtlDays",
+  "aiSearchEnabled",
+  "ridesEnabled",
+  "deliveriesEnabled",
+  "tripRequestTtlMin",
+  "tripMaxRadiusKm",
+  "tripMaxKm",
+  "tripPurgeDays",
+  "driverAutoOfflineMin",
+  "autoHideReviewAtReports",
+  "requestReminderHours",
+] as const;
 
 export const PLATFORM_DEFAULTS: PlatformSettings = {
   supportEmail: null,
@@ -22,6 +49,15 @@ export const PLATFORM_DEFAULTS: PlatformSettings = {
   maxRequestMatches: 15,
   requestTtlDays: 14,
   aiSearchEnabled: true,
+  ridesEnabled: true,
+  deliveriesEnabled: true,
+  tripRequestTtlMin: 10,
+  tripMaxRadiusKm: 10,
+  tripMaxKm: 80,
+  tripPurgeDays: 30,
+  driverAutoOfflineMin: 30,
+  autoHideReviewAtReports: 0,
+  requestReminderHours: 0,
 };
 
 const ID = "default";
@@ -40,7 +76,8 @@ export async function getPlatformSettings(opts: { fresh?: boolean } = {}): Promi
         maxRequestMatches: row.maxRequestMatches,
         requestTtlDays: row.requestTtlDays,
         aiSearchEnabled: row.aiSearchEnabled,
-      }
+        ...Object.fromEntries(TUNABLES.slice(4).map((k) => [k, row[k]])),
+      } as PlatformSettings
     : { ...PLATFORM_DEFAULTS };
   cached = { at: Date.now(), value };
   return value;
@@ -56,8 +93,8 @@ export async function savePlatformSettings(actorId: string, next: PlatformSettin
       entityType: "PlatformSettings",
       entityId: ID,
       metadata: {
-        before: before ? { maxOpenRequests: before.maxOpenRequests, maxRequestMatches: before.maxRequestMatches, requestTtlDays: before.requestTtlDays, aiSearchEnabled: before.aiSearchEnabled } : null,
-        after: { maxOpenRequests: next.maxOpenRequests, maxRequestMatches: next.maxRequestMatches, requestTtlDays: next.requestTtlDays, aiSearchEnabled: next.aiSearchEnabled },
+        before: before ? Object.fromEntries(TUNABLES.map((k) => [k, before[k]])) : null,
+        after: Object.fromEntries(TUNABLES.map((k) => [k, next[k]])),
       },
     });
   });

@@ -352,38 +352,65 @@ export function AnnouncementForm() {
   );
 }
 
-export function PlatformSettingsForm({
-  initial,
-  canEdit,
-}: {
-  initial: {
-    supportEmail: string | null;
-    supportPhone: string | null;
-    supportWhatsapp: string | null;
-    maxOpenRequests: number;
-    maxRequestMatches: number;
-    requestTtlDays: number;
-    aiSearchEnabled: boolean;
-  };
-  canEdit: boolean;
-}) {
+type SettingsValues = {
+  supportEmail: string | null;
+  supportPhone: string | null;
+  supportWhatsapp: string | null;
+  maxOpenRequests: number;
+  maxRequestMatches: number;
+  requestTtlDays: number;
+  aiSearchEnabled: boolean;
+  ridesEnabled: boolean;
+  deliveriesEnabled: boolean;
+  tripRequestTtlMin: number;
+  tripMaxRadiusKm: number;
+  tripMaxKm: number;
+  tripPurgeDays: number;
+  driverAutoOfflineMin: number;
+  autoHideReviewAtReports: number;
+  requestReminderHours: number;
+};
+type NumKey = { [K in keyof SettingsValues]: SettingsValues[K] extends number ? K : never }[keyof SettingsValues];
+type BoolKey = { [K in keyof SettingsValues]: SettingsValues[K] extends boolean ? K : never }[keyof SettingsValues];
+
+/** Platform settings centre (Phase 12, extended in Phase 17 with switches, trips and automation). */
+export function PlatformSettingsForm({ initial, canEdit }: { initial: SettingsValues; canEdit: boolean }) {
   const { t } = useI18n();
   const s = t.adminPlatform.settings;
   const [f, setF] = useState({ ...initial, supportEmail: initial.supportEmail ?? "", supportPhone: initial.supportPhone ?? "", supportWhatsapp: initial.supportWhatsapp ?? "" });
   const { pending, error, done, run } = useRun();
-  const num = (k: "maxOpenRequests" | "maxRequestMatches" | "requestTtlDays", label: string, max: number) => (
-    <Field id={`ps-${k}`} label={label}>
-      <Input id={`ps-${k}`} type="number" min={1} max={max} value={f[k]} onChange={(e) => setF({ ...f, [k]: Number(e.target.value) })} />
+
+  const num = (k: NumKey, label: string, min: number, max: number, hint?: string, offAtZero = false) => (
+    <Field id={`ps-${k}`} label={label} hint={offAtZero && f[k] === 0 ? `${s.off} · ${hint ?? ""}` : hint}>
+      <Input id={`ps-${k}`} type="number" inputMode="numeric" min={min} max={max} value={f[k]} onChange={(e) => setF({ ...f, [k]: Math.max(0, Math.floor(Number(e.target.value) || 0)) })} />
     </Field>
   );
+  const toggle = (k: BoolKey, label: string) => (
+    <label className="flex min-h-12 items-center justify-between gap-3 rounded-xl border border-line px-3.5 text-sm">
+      <span className="font-medium">{label}</span>
+      <span className="flex items-center gap-2">
+        <span className={`text-xs font-semibold ${f[k] ? "text-success" : "text-ink-muted"}`}>{f[k] ? s.on : s.off}</span>
+        <input type="checkbox" role="switch" checked={f[k]} onChange={(e) => setF({ ...f, [k]: e.target.checked })} className="peer sr-only" />
+        <span aria-hidden className="relative h-6 w-11 rounded-full bg-line transition peer-checked:bg-success peer-focus-visible:outline-2 peer-focus-visible:outline-brand-500 after:absolute after:top-0.5 after:left-0.5 after:size-5 after:rounded-full after:bg-white after:shadow after:transition peer-checked:after:translate-x-5" />
+      </span>
+    </label>
+  );
+  const section = (id: string, title: string, hint: string | null, children: React.ReactNode) => (
+    <section id={id} className="scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-soft">
+      <h2 className="font-bold">{title}</h2>
+      {hint && <p className="mt-1 text-sm text-ink-muted">{hint}</p>}
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+
   return (
-    <form noValidate className="flex flex-col gap-5" onSubmit={(e) => (e.preventDefault(), run(() => savePlatformSettingsAction(f)))}>
-      <Err error={error} />
-      {done && <Alert tone="success">{t.adminPlatform.common.saved}</Alert>}
+    <form noValidate className="flex flex-col gap-4" onSubmit={(e) => (e.preventDefault(), run(() => savePlatformSettingsAction(f)))}>
       {!canEdit && <Alert tone="info">{s.superOnly}</Alert>}
-      <fieldset disabled={!canEdit || pending} className="flex flex-col gap-5">
-        <div>
-          <h2 className="mb-2 font-semibold">{s.support}</h2>
+      <fieldset disabled={!canEdit || pending} className="flex flex-col gap-4">
+        {section(
+          "support",
+          s.support,
+          null,
           <div className="grid gap-3 sm:grid-cols-3">
             <Field id="ps-email" label={s.supportEmail}>
               <Input id="ps-email" type="email" value={f.supportEmail} onChange={(e) => setF({ ...f, supportEmail: e.target.value })} maxLength={120} />
@@ -394,26 +421,58 @@ export function PlatformSettingsForm({
             <Field id="ps-wa" label={s.supportWhatsapp}>
               <Input id="ps-wa" inputMode="tel" value={f.supportWhatsapp} onChange={(e) => setF({ ...f, supportWhatsapp: e.target.value })} maxLength={20} />
             </Field>
-          </div>
-        </div>
-        <div>
-          <h2 className="mb-2 font-semibold">{s.requests}</h2>
+          </div>,
+        )}
+        {section(
+          "features",
+          s.features,
+          s.featuresHint,
+          <div className="grid gap-2">
+            {toggle("ridesEnabled", s.ridesEnabled)}
+            {toggle("deliveriesEnabled", s.deliveriesEnabled)}
+            {toggle("aiSearchEnabled", s.aiSearchEnabled)}
+          </div>,
+        )}
+        {section(
+          "requests",
+          s.requests,
+          null,
           <div className="grid gap-3 sm:grid-cols-3">
-            {num("maxOpenRequests", s.maxOpenRequests, 50)}
-            {num("maxRequestMatches", s.maxRequestMatches, 50)}
-            {num("requestTtlDays", s.requestTtlDays, 60)}
-          </div>
-        </div>
-        <div>
-          <h2 className="mb-2 font-semibold">{s.ai}</h2>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={f.aiSearchEnabled} onChange={(e) => setF({ ...f, aiSearchEnabled: e.target.checked })} className="size-4 accent-brand-700" />
-            {s.aiSearchEnabled}
-          </label>
-        </div>
+            {num("maxOpenRequests", s.maxOpenRequests, 1, 50)}
+            {num("maxRequestMatches", s.maxRequestMatches, 1, 50)}
+            {num("requestTtlDays", s.requestTtlDays, 1, 60)}
+          </div>,
+        )}
+        {section(
+          "trips",
+          s.trips,
+          null,
+          <div className="grid gap-3 sm:grid-cols-2">
+            {num("tripRequestTtlMin", s.tripRequestTtlMin, 3, 60)}
+            {num("tripMaxRadiusKm", s.tripMaxRadiusKm, 3, 30)}
+            {num("tripMaxKm", s.tripMaxKm, 5, 200)}
+            {num("tripPurgeDays", s.tripPurgeDays, 7, 90)}
+          </div>,
+        )}
+        {section(
+          "automation",
+          s.automation,
+          s.automationHint,
+          <div className="grid gap-4">
+            {num("autoHideReviewAtReports", s.autoHideReviewAtReports, 0, 50, s.autoHideReviewAtReportsHint, true)}
+            {num("requestReminderHours", s.requestReminderHours, 0, 72, s.requestReminderHoursHint, true)}
+            {num("driverAutoOfflineMin", s.driverAutoOfflineMin, 5, 240, s.driverAutoOfflineMinHint)}
+          </div>,
+        )}
         {canEdit && (
-          <div>
-            <Button type="submit">{t.adminPlatform.common.save}</Button>
+          <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 flex items-center gap-3 rounded-2xl border border-line bg-surface/95 p-3 shadow-lift backdrop-blur md:bottom-4">
+            <Button type="submit" variant="cta" className="min-w-32">
+              {t.adminPlatform.common.save}
+            </Button>
+            <div className="min-w-0 flex-1">
+              <Err error={error} />
+              {done && <p className="text-sm font-semibold text-success">{t.adminPlatform.common.saved}</p>}
+            </div>
           </div>
         )}
       </fieldset>
