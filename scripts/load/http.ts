@@ -4,8 +4,8 @@
 // Afterwards remove the samples again (`... with-test-db.ts npm run db:demo:remove`) — some
 // integration tests search names the samples share.
 // Run it against a production build (`next start`) pointed at the TEST database, never the live
-// site. The discovery pages are rate-limited per client address; set LOAD_TEST_SPREAD=1 on the
-// server under test only if TRUSTED_PROXY_HOPS lets the tool vary its address (see SEC-052).
+// site. The pages are rate-limited per client address; locally (TRUSTED_PROXY_HOPS=1, no proxy)
+// the tool's varying X-Forwarded-For spreads its requests over many addresses (see SEC-052).
 import autocannon from "autocannon";
 
 const arg = (name: string, fallback: string) => {
