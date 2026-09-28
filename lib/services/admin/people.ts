@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { invalidateBounded } from "@/lib/cache";
 import type { Prisma } from "@/generated/prisma/client";
 import { audit } from "@/lib/services/audit";
 import { completionSnapshot } from "@/lib/services/providerProfile";
@@ -124,6 +125,7 @@ async function changeListing(tx: Tx, actor: Actor, providerId: string, from: str
     entityId: providerId,
     metadata: { reason, from, to: status, cause },
   });
+  invalidateBounded("search:"); // a suspended business leaves search results at once (Phase 19)
   return status;
 }
 

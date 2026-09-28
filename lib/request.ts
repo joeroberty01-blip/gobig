@@ -1,12 +1,8 @@
 import "server-only";
 import { headers } from "next/headers";
+import { clientIpFrom } from "@/lib/clientIp";
 
-/**
- * Best-effort client IP for rate limiting. On Vercel/most proxies the first X-Forwarded-For entry
- * is the client. Never used for authorization — only to count attempts.
- */
+/** Client address for rate limiting (see lib/clientIp.ts). Never used for authorization. */
 export async function clientIp(): Promise<string> {
-  const h = await headers();
-  const forwarded = h.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || h.get("x-real-ip") || "unknown";
+  return clientIpFrom(await headers());
 }

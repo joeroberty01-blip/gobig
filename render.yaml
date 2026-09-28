@@ -23,6 +23,10 @@ services:
         value: provider-media
       - key: S3_PRIVATE_BUCKET
         value: verification-docs
+      # Phase 19 (SEC-052, measured 2026-09-28): Render appends to X-Forwarded-For behind two proxies
+      # (Cloudflare + Render), so the visitor is the 3rd address from the right.
+      - key: TRUSTED_PROXY_HOPS
+        value: "3"
       # Keep model spend small while testing.
       - key: AI_DAILY_CALL_CAP
         value: "200"

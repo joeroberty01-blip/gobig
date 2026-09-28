@@ -6,6 +6,7 @@ import { roleHome } from "@/lib/roles";
 import { VISITOR_COOKIE } from "@/lib/visitor";
 import { buildCsp, newNonce } from "@/lib/csp";
 import { createMemoryLimiter, DISCOVERY_PAGE_LIMIT } from "@/lib/memoryLimit";
+import { clientIpFrom } from "@/lib/clientIp";
 
 // First layer of the permission model (docs/PHASE-0-ARCHITECTURE.md §4). Pages and actions
 // check again through lib/session.ts and lib/permissions.ts; this gate only keeps people out of
@@ -68,8 +69,8 @@ const discoveryLimiter = createMemoryLimiter(DISCOVERY_PAGE_LIMIT);
  */
 function discoveryLimited(req: Request): NextResponse | null {
   if (req.method !== "GET") return null;
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip");
-  if (!ip) return null;
+  const ip = clientIpFrom(req.headers);
+  if (ip === "unknown") return null;
   const r = discoveryLimiter.hit(ip);
   if (r.ok) return null;
   return new NextResponse("Too many requests. Please wait a few minutes and try again.", {

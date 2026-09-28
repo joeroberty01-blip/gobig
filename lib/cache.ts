@@ -26,3 +26,33 @@ export function invalidate(...prefixes: string[]): void {
 }
 
 export const REFERENCE_TTL_MS = 5 * 60_000;
+
+// Phase 19: a bounded short-lived cache for per-query results (e.g. identical searches from many
+// visitors). Unlike memo() above, keys are open-ended, so the number of entries is capped: when
+// full, the oldest entry is dropped. Only for public, non-personal data.
+const bounded = new Map<string, Entry>();
+
+export function memoBounded<T>(key: string, ttlMs: number, load: () => Promise<T>, maxEntries = 1000): Promise<T> {
+  const hit = bounded.get(key);
+  if (hit && Date.now() - hit.at < hit.ttl) return hit.value as Promise<T>;
+  if (hit) bounded.delete(key);
+  const value = load();
+  bounded.set(key, { at: Date.now(), ttl: ttlMs, value });
+  while (bounded.size > maxEntries) bounded.delete(bounded.keys().next().value!);
+  value.catch(() => {
+    if (bounded.get(key)?.value === value) bounded.delete(key);
+  });
+  return value;
+}
+
+export function invalidateBounded(prefix = ""): void {
+  for (const key of [...bounded.keys()]) if (key.startsWith(prefix)) bounded.delete(key);
+}
+
+/** How long identical public reads are shared (Phase 19). PUBLIC_CACHE_SEC=0 turns it off; tests never cache. */
+export function publicCacheMs(): number {
+  if (process.env.NODE_ENV === "test") return 0;
+  const raw = process.env.PUBLIC_CACHE_SEC?.trim();
+  const n = raw ? Number(raw) : 20;
+  return (Number.isFinite(n) && n >= 0 ? n : 20) * 1000;
+}

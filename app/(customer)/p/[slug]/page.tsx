@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { memoBounded, publicCacheMs } from "@/lib/cache";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -63,7 +64,19 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
   const today = darWeekday();
   const areaLabel = p.area ? [p.area.name, p.area.district].filter(Boolean).join(", ") : null;
-  const stats = (await providerStats([p.id])).get(p.id);
+  // Phase 19: independent reads in parallel; public ones shared briefly between visitors.
+  const ttl = publicCacheMs();
+  const [statsMap, favorite, [reviews, eligibility, mine]] = await Promise.all([
+    ttl ? memoBounded(`pstats:${p.id}`, ttl, () => providerStats([p.id])) : providerStats([p.id]),
+    viewer?.role === "CUSTOMER" ? isFavorite(viewer.id, p.id) : Promise.resolve(false),
+    Promise.all([
+      // Guests share the review list; signed-in viewers read it fresh (they may have just written one).
+      ttl && !viewer ? memoBounded(`previews:${p.id}:${reviewsPage}`, ttl, () => publicReviews(p.id, reviewsPage)) : publicReviews(p.id, reviewsPage),
+      reviewEligibility(viewer, p.id),
+      viewer ? ownReview(viewer.id, p.id) : Promise.resolve(null),
+    ]),
+  ]);
+  const stats = statsMap.get(p.id);
   const avail = availability(p.openingHoursMode, p.openingHours);
   const availText = availabilityLabel(avail, t);
   const badges = trustBadges({
@@ -75,12 +88,6 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
     medianResponseMinutes: publicMedianResponse(stats),
   });
   const verified = badges.some((b) => b.kind === "VERIFIED");
-  const favorite = viewer?.role === "CUSTOMER" ? await isFavorite(viewer.id, p.id) : false;
-  const [reviews, eligibility, mine] = await Promise.all([
-    publicReviews(p.id, reviewsPage),
-    reviewEligibility(viewer, p.id),
-    viewer ? ownReview(viewer.id, p.id) : Promise.resolve(null),
-  ]);
   const canReport = !!viewer && (viewer.role === "CUSTOMER" || viewer.role === "PROVIDER");
   const reviewBlocked = {
     login: t.trust.reviews.loginToReview,

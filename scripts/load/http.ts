@@ -1,5 +1,8 @@
 // Phase 19: HTTP load test for the public pages.
 //   npx tsx scripts/load/http.ts [--base http://localhost:3002] [--connections 50] [--seconds 20]
+// Setup: `npx tsx scripts/load/with-test-db.ts npm run db:demo:seed`, then `npm run load:serve`.
+// Afterwards remove the samples again (`... with-test-db.ts npm run db:demo:remove`) — some
+// integration tests search names the samples share.
 // Run it against a production build (`next start`) pointed at the TEST database, never the live
 // site. The discovery pages are rate-limited per client address; set LOAD_TEST_SPREAD=1 on the
 // server under test only if TRUSTED_PROXY_HOPS lets the tool vary its address (see SEC-052).

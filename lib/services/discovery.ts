@@ -1,5 +1,5 @@
 import { prisma, prismaRead } from "@/lib/db";
-import { memo, REFERENCE_TTL_MS } from "@/lib/cache";
+import { memo, memoBounded, publicCacheMs, REFERENCE_TTL_MS } from "@/lib/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { mediaUrl } from "@/lib/storage";
 import { availability, isAvailableNow, type Availability } from "@/lib/provider/availability";
@@ -431,11 +431,28 @@ function catalogIndex() {
  * @param point the customer's shared position (already rounded), used only when no area is chosen
  *   explicitly — an explicit area always wins.
  */
+/**
+ * Discovery search. Identical public searches (same filters, same ~110 m customer point) within
+ * a few seconds share one result, so a busy area costs the database once instead of per visitor.
+ * Nothing personal is in the key; ranking experiments (weights/explain) and fixed clocks bypass it.
+ */
 export async function searchProviders(
   params: SearchParams,
-  now: Date = new Date(),
+  now?: Date,
   point: Point | null = null,
   opts: { weights?: Weights; explain?: boolean } = {},
+): Promise<SearchResult & { explain?: Map<string, RankExplain> }> {
+  const ttl = publicCacheMs();
+  if (!ttl || now || opts.weights || opts.explain) return searchProvidersUncached(params, now ?? new Date(), point, opts);
+  const p = point ? `${point.lat.toFixed(3)},${point.lng.toFixed(3)}` : "-";
+  return memoBounded(`search:${JSON.stringify(params)}:${p}`, ttl, () => searchProvidersUncached(params, new Date(), point, opts));
+}
+
+async function searchProvidersUncached(
+  params: SearchParams,
+  now: Date,
+  point: Point | null,
+  opts: { weights?: Weights; explain?: boolean },
 ): Promise<SearchResult & { explain?: Map<string, RankExplain> }> {
   // A place name inside the text becomes the area filter unless one was chosen explicitly.
   let q = params.q;

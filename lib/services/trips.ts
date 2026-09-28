@@ -1,7 +1,7 @@
 import { randomInt, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import type { PaymentMethod, Prisma, TripKind, VehicleType } from "@/generated/prisma/client";
+import { Prisma, type PaymentMethod, type TripKind, type VehicleType } from "@/generated/prisma/client";
 import { distanceKm, inServiceRegion, publicPoint, round, type Point } from "@/lib/geo";
 import { normalizePhone } from "@/lib/phone";
 import { encryptionConfigured, open, openPoint, seal, sealPoint } from "@/lib/crypto/fieldCipher";
@@ -294,7 +294,8 @@ export async function dispatch(tripId: string, roundNo: number, now = new Date()
   if (!chosen.length) return 0;
 
   await prisma.tripOffer.createMany({ data: chosen.map((c) => ({ tripId, providerId: c.providerId, distanceKm: Math.round(c.km * 10) / 10 })), skipDuplicates: true });
-  const userIds = (await Promise.all(chosen.map((c) => providerUserIds(prisma, c.providerId)))).flat();
+  // One query for every chosen driver's accounts (Phase 19: was one query per driver).
+  const userIds = (await prisma.providerMember.findMany({ where: { providerId: { in: chosen.map((c) => c.providerId) } }, select: { userId: true } })).map((m) => m.userId);
   await notify(prisma, userIds, "TRIP_OFFER", { tripId });
   return chosen.length;
 }
@@ -310,12 +311,14 @@ export async function acceptOffer(providerId: string, offerId: string, now = new
   const blocked = await driverEligible(providerId);
   if (blocked) return fail(blocked);
 
-  const won = await prisma.$transaction(async (tx) => {
-    const busy = await tx.trip.count({ where: { driverProviderId: providerId, status: { in: ["ACCEPTED", "ARRIVED", "IN_PROGRESS"] } } });
-    if (busy) return "busy" as const;
-    const trip = await tx.trip.findUnique({ where: { id: offer.tripId }, select: { distanceKm: true } });
-    // The status guard makes acceptance first-come: only one update can match REQUESTED.
-    const { count } = await tx.trip.updateMany({
+  const trip = await prisma.trip.findUnique({ where: { id: offer.tripId }, select: { distanceKm: true } });
+  if (!trip) return fail("notFound");
+  // One atomic statement, no held transaction (Phase 19): the status guard makes acceptance
+  // first-come, and the partial unique index "Trip_one_active_per_driver" rejects a second active
+  // trip for the same driver even when two acceptances race.
+  let count = 0;
+  try {
+    ({ count } = await prisma.trip.updateMany({
       where: { id: offer.tripId, status: "REQUESTED", expiresAt: { gt: now } },
       data: {
         status: "ACCEPTED",
@@ -323,18 +326,19 @@ export async function acceptOffer(providerId: string, offerId: string, now = new
         acceptedAt: now,
         fareBase: driver.baseFare,
         farePerKm: driver.perKmFare,
-        fareEstimate: fareFor(driver.baseFare, driver.perKmFare, trip!.distanceKm),
+        fareEstimate: fareFor(driver.baseFare, driver.perKmFare, trip.distanceKm),
       },
-    });
-    if (!count) {
-      await tx.tripOffer.update({ where: { id: offer.id }, data: { status: "MISSED", respondedAt: now } });
-      return "taken" as const;
-    }
-    await tx.tripOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", respondedAt: now } });
-    await tx.tripOffer.updateMany({ where: { tripId: offer.tripId, status: "OFFERED" }, data: { status: "MISSED", respondedAt: now } });
-    return "ok" as const;
-  });
-  if (won !== "ok") return fail(won);
+    }));
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return fail("busy");
+    throw err;
+  }
+  if (!count) {
+    await prisma.tripOffer.updateMany({ where: { id: offer.id, status: "OFFERED" }, data: { status: "MISSED", respondedAt: now } });
+    return fail("taken");
+  }
+  await prisma.tripOffer.update({ where: { id: offer.id }, data: { status: "ACCEPTED", respondedAt: now } });
+  await prisma.tripOffer.updateMany({ where: { tripId: offer.tripId, status: "OFFERED" }, data: { status: "MISSED", respondedAt: now } });
   await notifyCustomer(offer.tripId, "TRIP_ACCEPTED");
   return { ok: true, tripId: offer.tripId };
 }

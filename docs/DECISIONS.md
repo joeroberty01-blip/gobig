@@ -596,3 +596,22 @@ run every 5 minutes by the job queue (`lib/jobs/automation.ts`):
 Every automatic action is audit-logged with the system as the actor and listed under "Automation
 activity"; nothing is deleted. Only a super admin can change settings; every save is audited with
 before/after values. Limits are bounded in validation (e.g. trip data kept 7–90 days).
+
+## ADR-057 — Load testing and what it changed (2026-09-28)
+
+**Context.** Phase 19 of the 5M-user plan: measure, then harden.
+
+**Decision.**
+- Load tests never touch live data: `scripts/load/with-test-db.ts` runs the production build on the
+  test database and storage. `load:http` (pages) and `load:dispatch` (concurrent trips) are kept.
+- Invariants that must hold under concurrency live in the database (partial unique index: one
+  active trip per driver), not in read-then-write application code.
+- Public reads are shared briefly (`PUBLIC_CACHE_SEC`, default 20 s): identical searches, a
+  business's row and stats, and guests' review lists. Owners/admins and personal data are never
+  cached; publish/suspend clears search results. In-process for now; the same keys can move to
+  Redis when several servers run.
+- Client addresses for rate limits come from `TRUSTED_PROXY_HOPS` (measured: 3 on Render).
+- The health check's status means "server alive"; database state is informational.
+
+**Next at scale.** Shared Redis cache and CDN caching for guest pages; batch analytics writes; run
+the load tests from the hosting region for real latency numbers.

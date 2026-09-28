@@ -1,4 +1,5 @@
 import "server-only";
+import { memoBounded, publicCacheMs } from "@/lib/cache";
 import { cache } from "react";
 import { prisma } from "@/lib/db";
 import { mediaUrl } from "@/lib/storage";
@@ -137,7 +138,11 @@ export async function getPublicProfile(
   origin: Point | null = null,
   locale: "sw" | "en" = "sw",
 ) {
-  const p = await prisma.provider.findUnique({
+  // Phase 19: the business row is shared for a few seconds between guests and customers (the most
+  // viewed pages are the same popular businesses). Owners and admins always read it fresh.
+  const staff = viewer && viewer.role !== "CUSTOMER";
+  const ttl = staff ? 0 : publicCacheMs();
+  const load = () => prisma.provider.findUnique({
     where: { slug },
     select: {
       id: true,
@@ -187,6 +192,7 @@ export async function getPublicProfile(
       socialLinks: { select: { platform: true, url: true } },
     },
   });
+  const p = ttl ? await memoBounded(`profile:${slug}`, ttl, load) : await load();
   if (!p || p.deletedAt || !p.profile) return null;
 
   const isOwner = !!viewer && p.members.some((m) => m.userId === viewer.id);

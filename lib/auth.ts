@@ -1,4 +1,5 @@
 import NextAuth, { CredentialsSignin } from "next-auth";
+import { clientIpFrom } from "@/lib/clientIp";
 import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/validators/auth";
 import { verifyCredentials } from "@/lib/services/auth";
@@ -47,7 +48,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // SEC-010: slow down credential stuffing — per account and per address, checked before
         // the password so a locked-out attacker learns nothing more.
-        const ip = request?.headers?.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+        const ip = request?.headers ? clientIpFrom(request.headers) : "unknown";
         const identifier = parsed.data.identifier.trim().toLowerCase();
         const [byId, byIp] = await Promise.all([hit(LIMITS.loginPerIdentifier, identifier), hit(LIMITS.loginPerIp, ip)]);
         if (!byId.ok || !byIp.ok) throw new RateLimitedError();

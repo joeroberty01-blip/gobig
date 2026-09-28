@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { invalidateBounded } from "@/lib/cache";
 import { Prisma } from "@/generated/prisma/client";
 import { computeCompletion, type CompletionSnapshot } from "@/lib/provider/completion";
 import { isActionAvailable, type ConnectAction } from "@/lib/provider/connect";
@@ -345,11 +346,13 @@ export async function publishProvider(providerId: string): Promise<Result> {
   if (p.status === "ACTIVE") return { ok: true };
   if (!computeCompletion(await completionSnapshot(prisma, providerId)).canPublish) return { ok: false, error: "cannotPublish" };
   await prisma.provider.update({ where: { id: providerId }, data: { status: "ACTIVE", publishedAt: new Date() } });
+  invalidateBounded("search:");
   return { ok: true };
 }
 
 /** Provider hides their own profile. Admin suspension is separate and can't be undone here. */
 export async function unpublishProvider(providerId: string): Promise<Result> {
   const updated = await prisma.provider.updateMany({ where: { id: providerId, status: "ACTIVE" }, data: { status: "DRAFT" } });
+  invalidateBounded("search:");
   return updated.count === 1 ? { ok: true } : { ok: false, error: "notAllowed" };
 }

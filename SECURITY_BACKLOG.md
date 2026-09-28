@@ -83,6 +83,10 @@ Last full review: **2026-09-26** (Phase 13 security & performance audit). Previo
 | SEC-049 | MEDIUM | Trip codes are 4 digits | Trips | Guessing a ride PIN or delivery code | 10 attempts per trip per hour (`tripCodePerTrip`), constant-time compare, codes never logged | **MITIGATED** — 10,000 combinations at 10/hour | 2026-09-26 | 2026-09-26 | `tests/integration/trips.test.ts` |
 | SEC-050 | MEDIUM | Driver position pings and trip polling are frequent | Trips / API | Flooding, or stalking by polling someone else's trip | Owner/assignment checked on every poll (404 otherwise); pings only from the session's own online driver, same-origin, ≤200-byte body, rate limited; polls rate limited per user | **FIXED** (Phase 17) | 2026-09-26 | 2026-09-26 | |
 | SEC-051 | LOW | Unit-test guard for the public dictionary didn't exclude admin files on Windows paths | Tooling | Guard behaved differently on Windows and Linux | Normalise separators before matching; also guard the admin-only subsections now stripped from public pages | **FIXED** | 2026-09-26 | 2026-09-26 | `tests/unit/clientDictionary.test.ts` |
+| SEC-052 | HIGH | Rate limits trusted the first X-Forwarded-For address, which the client controls | Auth / signup / reset / AI / discovery | Measured on Render: it appends, so a client could send a new fake address per request and bypass every per-address limit (credential stuffing, signup spam, scraping) | Take the address `TRUSTED_PROXY_HOPS` from the right (Render: 3, measured with a counts-only probe) or a host-overwritten header; one helper for all callers | **FIXED** (Phase 19) — `lib/clientIp.ts` used by login, signup/reset/AI and the page limiter; `TRUSTED_PROXY_HOPS=3` set on Render before the code shipped | 2026-09-28 | 2026-09-28 | `tests/unit/clientIp.test.ts` |
+| SEC-053 | HIGH | Concurrent acceptances could give one driver two trips; bursts crashed acceptance | Trips | Found by the dispatch stress test: the "busy" check and the assignment were separate steps, and the interactive transaction timed out under load (P2028) | Partial unique index "one active trip per driver" in the database; acceptance is one guarded statement | **FIXED** (Phase 19) — 300 simultaneous accepts: no trip with two drivers, no driver with two trips | 2026-09-28 | 2026-09-28 | `scripts/load/dispatch.ts`, `tests/integration/trips.test.ts` |
+| SEC-054 | MEDIUM | Every page view hit the database; a burst exhausted the connection pool (pages failed after 10 s) | Discovery / availability | A traffic spike (or a cheap flood) takes public pages down | Short shared cache (20 s) for identical public searches and business pages; profile reads in parallel; search cache cleared on publish/suspend | **MITIGATED** (Phase 19) — load test from 0 → 700/560/1,100 successful home/search/profile responses in 20 s with 50 connections, zero errors; next: Redis-backed shared cache and CDN caching for guests | 2026-09-28 | 2026-09-28 | `scripts/load/http.ts` |
+| SEC-055 | LOW | Health check reported the server down while the database woke from sleep | Operations | The host could restart a healthy server repeatedly | Status code = server alive; database state in the body; 8 s database check | **FIXED** (Phase 19) | 2026-09-28 | 2026-09-28 | |
 
 ## Phase 14 security review (UI polish, 2026-09-26)
 
@@ -128,3 +132,13 @@ null), is idempotent (reminders are claimed with a guarded update before notifyi
 uses a status guard), never deletes data, and is audit-logged. The status panel shows up/down and
 counts only — no hostnames, keys or error text. Feature switches are enforced in the service layer
 (`requestTrip`), not just hidden in the UI.
+
+
+### Phase 19 load testing & hardening (2026-09-28)
+
+Tools: `npm run load:serve` (production build on the TEST database and storage, port 3003),
+`npm run load:http`, `npm run load:dispatch`. Findings fixed: SEC-052 (spoofable client address),
+SEC-053 (double assignment under concurrency), SEC-054 (no shared caching), SEC-055 (health check vs
+database cold start), plus per-driver notification lookups batched into one query and queue workers
+limitable by job type. Measured from Tanzania (~200 ms per database round trip), so absolute
+latencies are pessimistic; the production server sits next to the database.

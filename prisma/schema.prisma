@@ -1268,6 +1268,8 @@ model Trip {
   messages            TripMessage[]
 
   @@index([customerId, createdAt])
+  // Also (hand-written, migration 20260928090000): partial unique index "Trip_one_active_per_driver"
+  // — at most one ACCEPTED/ARRIVED/IN_PROGRESS trip per driver.
   @@index([driverProviderId, status])
   @@index([status, expiresAt])
   @@index([status, completedAt])
