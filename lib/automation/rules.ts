@@ -1,13 +1,14 @@
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { audit } from "@/lib/services/audit";
 import { notify, providerUserIds } from "@/lib/services/notifications";
-import { getPlatformSettings } from "@/lib/services/platformSettings";
 import { refreshRating } from "@/lib/services/reviews";
 import { autoOfflineDrivers } from "@/lib/services/trips";
+import { defineRule, type AnyRule } from "./registry";
 
-// Phase 17 automation rules, switched and tuned in admin → Settings (0 = off). Run every few
-// minutes by the job queue. Every action they take is audit-logged with the system as the actor,
-// and nothing is deleted: hidden reviews stay restorable by an admin.
+// The automation rules (Phase B moved the Phase 17 rules here unchanged). Every action they take is
+// audit-logged with the system as the actor, and nothing is deleted: hidden reviews stay
+// restorable by an admin. New rules are added to RULES at the bottom.
 
 /** Hides a published review once it has `threshold` open reports from different people. */
 export async function autoHideReportedReviews(threshold: number, now = new Date()): Promise<number> {
@@ -56,11 +57,43 @@ export async function remindUnansweredRequests(hours: number, now = new Date()):
   return sent;
 }
 
-export async function runAutomation(now = new Date()) {
-  const s = await getPlatformSettings({ fresh: true });
-  const reviewsHidden = await autoHideReportedReviews(s.autoHideReviewAtReports, now);
-  const reminders = await remindUnansweredRequests(s.requestReminderHours, now);
-  const driversOffline = await autoOfflineDrivers(s.driverAutoOfflineMin, now);
-  if (driversOffline) await audit(prisma, { actorId: null, action: "automation.drivers_offline", entityType: "Automation", entityId: "drivers-offline", metadata: { count: driversOffline, afterMin: s.driverAutoOfflineMin } });
-  return { reviewsHidden, reminders, driversOffline };
-}
+// ─── Registry ───────────────────────────────────────────────────────────────────────────────
+
+export const RULES: AnyRule[] = [
+  defineRule({
+    id: "review.auto-hide",
+    group: "trust",
+    trigger: { kind: "schedule", every: "5m" },
+    enabledByDefault: false,
+    params: z.object({ threshold: z.number().int().min(1).max(50) }),
+    fields: [{ key: "threshold", min: 1, max: 50 }],
+    defaults: { threshold: 3 },
+    run: async ({ params, now }) => ({ hidden: await autoHideReportedReviews(params.threshold, now) }),
+  }),
+  defineRule({
+    id: "request.unanswered-reminder",
+    group: "providers",
+    trigger: { kind: "schedule", every: "5m" },
+    enabledByDefault: false,
+    params: z.object({ hours: z.number().int().min(1).max(72) }),
+    fields: [{ key: "hours", min: 1, max: 72 }],
+    defaults: { hours: 4 },
+    run: async ({ params, now }) => ({ sent: await remindUnansweredRequests(params.hours, now) }),
+  }),
+  defineRule({
+    id: "driver.auto-offline",
+    group: "trips",
+    trigger: { kind: "schedule", every: "5m" },
+    enabledByDefault: true,
+    params: z.object({ afterMin: z.number().int().min(5).max(240) }),
+    fields: [{ key: "afterMin", min: 5, max: 240 }],
+    defaults: { afterMin: 30 },
+    run: async ({ params, now }) => {
+      const count = await autoOfflineDrivers(params.afterMin, now);
+      if (count) await audit(prisma, { actorId: null, action: "automation.drivers_offline", entityType: "Automation", entityId: "drivers-offline", metadata: { count, afterMin: params.afterMin } });
+      return { offline: count };
+    },
+  }),
+];
+
+export const RULE_IDS = RULES.map((r) => r.id);

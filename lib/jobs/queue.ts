@@ -9,7 +9,7 @@ import { log } from "@/lib/log";
 // backed by a dedicated queue without touching callers.
 
 export type JobPayload = Record<string, unknown>;
-export type JobHandler = (payload: JobPayload, job: { id: string; attempts: number }) => Promise<void>;
+export type JobHandler = (payload: JobPayload, job: { id: string; attempts: number; maxAttempts: number }) => Promise<void>;
 
 /** A RUNNING job whose worker hasn't finished in this long is assumed crashed and reclaimed. */
 export const LOCK_TIMEOUT_MS = 5 * 60_000;
@@ -87,7 +87,7 @@ export async function runDueJobs(
     const handler = handlers[job.type];
     try {
       if (!handler) throw new Error(`no handler for job type "${job.type}"`);
-      await handler(job.payload ?? {}, { id: job.id, attempts: job.attempts });
+      await handler(job.payload ?? {}, { id: job.id, attempts: job.attempts, maxAttempts: job.maxAttempts });
       await prisma.job.updateMany({
         where: { id: job.id, lockedBy: workerId, status: "RUNNING" },
         data: { status: "DONE", lockedAt: null, lockedBy: null, lastError: null, dedupeKey: null },

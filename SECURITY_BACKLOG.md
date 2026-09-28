@@ -142,3 +142,15 @@ SEC-053 (double assignment under concurrency), SEC-054 (no shared caching), SEC-
 database cold start), plus per-driver notification lookups batched into one query and queue workers
 limitable by job type. Measured from Tanzania (~200 ms per database round trip), so absolute
 latencies are pessimistic; the production server sits next to the database.
+
+
+### Automation Engine — Phase B review (2026-09-28)
+
+Checked: rule settings are saved only through `saveAutomationRuleAction` (`settings:manage`, i.e.
+super admin after 2FA), validated against the rule's own zod schema (bounded numbers; unknown or
+test rules rejected), and audited with before/after; retrying a DEAD run is the same permission and
+audited. Events carry ids and small facts only (no contacts, no exact locations) and are deleted 14
+days after dispatch. A rolled-back change leaves no event (tested). Duplicate delivery can't run a
+rule twice (unique run key, tested with concurrent runs). Rule errors are stored truncated (500
+chars) and logged through the redacting logger. Admins can't create rule logic, so there is no
+code-injection surface. No new public endpoints.

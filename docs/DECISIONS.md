@@ -615,3 +615,23 @@ before/after values. Limits are bounded in validation (e.g. trip data kept 7–9
 
 **Next at scale.** Shared Redis cache and CDN caching for guest pages; batch analytics writes; run
 the load tests from the hosting region for real latency numbers.
+
+## ADR-058 — Automation Engine foundation (Phase B, 2026-09-28)
+
+**Context.** Owner's Automation Engine brief (Phases A–J). Phase A audit approved.
+
+**Decision.**
+- **Transactional outbox:** `emitEvent(tx, …)` writes an `Event` in the same transaction as the
+  change (ids only). `dispatchEvents()` claims new events with `FOR UPDATE SKIP LOCKED` and, in the
+  same transaction, queues one `automation:rule` job per enabled rule (`createMany … skipDuplicates`
+  on the job dedupe key).
+- **Registry in code** (`lib/automation/rules.ts`): trigger (event types or an EAT schedule
+  slot: 5m / hourly / daily 08:00 / Monday 08:00), zod settings schema, form fields, defaults,
+  action. Admins switch rules and tune settings (`AutomationRule`), validated and audited; they
+  can't author rule logic.
+- **Exactly-once per subject:** `AutomationRun` is unique on (rule, subject) — `event:<id>` or
+  `slot:<key>` — on top of job dedupe. Statuses RUNNING → DONE / SKIPPED (switched off) / FAILED
+  (queue retries with backoff) / DEAD (last attempt; admin can retry, audited).
+- The three Phase 17 rules moved into the registry unchanged (same schedule, logic and defaults);
+  the old PlatformSettings columns are retired, not dropped.
+- Retention: DONE/SKIPPED runs 30 days, DEAD 90 days, dispatched events 14 days.

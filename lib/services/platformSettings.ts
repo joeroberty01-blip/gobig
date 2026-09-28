@@ -12,16 +12,14 @@ export type PlatformSettings = {
   maxRequestMatches: number;
   requestTtlDays: number;
   aiSearchEnabled: boolean;
-  // Phase 17: feature switches, trip limits and automation rules (0 = rule off).
+  // Phase 17: feature switches and trip limits. (Automation rules moved to AutomationRule in Phase B;
+  // the old columns autoHideReviewAtReports / requestReminderHours / driverAutoOfflineMin are retired.)
   ridesEnabled: boolean;
   deliveriesEnabled: boolean;
   tripRequestTtlMin: number;
   tripMaxRadiusKm: number;
   tripMaxKm: number;
   tripPurgeDays: number;
-  driverAutoOfflineMin: number;
-  autoHideReviewAtReports: number;
-  requestReminderHours: number;
 };
 
 /** Everything except contact details — what the audit log records before/after. */
@@ -36,9 +34,6 @@ const TUNABLES = [
   "tripMaxRadiusKm",
   "tripMaxKm",
   "tripPurgeDays",
-  "driverAutoOfflineMin",
-  "autoHideReviewAtReports",
-  "requestReminderHours",
 ] as const;
 
 export const PLATFORM_DEFAULTS: PlatformSettings = {
@@ -55,9 +50,6 @@ export const PLATFORM_DEFAULTS: PlatformSettings = {
   tripMaxRadiusKm: 10,
   tripMaxKm: 80,
   tripPurgeDays: 30,
-  driverAutoOfflineMin: 30,
-  autoHideReviewAtReports: 0,
-  requestReminderHours: 0,
 };
 
 const ID = "default";

@@ -366,9 +366,6 @@ type SettingsValues = {
   tripMaxRadiusKm: number;
   tripMaxKm: number;
   tripPurgeDays: number;
-  driverAutoOfflineMin: number;
-  autoHideReviewAtReports: number;
-  requestReminderHours: number;
 };
 type NumKey = { [K in keyof SettingsValues]: SettingsValues[K] extends number ? K : never }[keyof SettingsValues];
 type BoolKey = { [K in keyof SettingsValues]: SettingsValues[K] extends boolean ? K : never }[keyof SettingsValues];
@@ -452,16 +449,6 @@ export function PlatformSettingsForm({ initial, canEdit }: { initial: SettingsVa
             {num("tripMaxRadiusKm", s.tripMaxRadiusKm, 3, 30)}
             {num("tripMaxKm", s.tripMaxKm, 5, 200)}
             {num("tripPurgeDays", s.tripPurgeDays, 7, 90)}
-          </div>,
-        )}
-        {section(
-          "automation",
-          s.automation,
-          s.automationHint,
-          <div className="grid gap-4">
-            {num("autoHideReviewAtReports", s.autoHideReviewAtReports, 0, 50, s.autoHideReviewAtReportsHint, true)}
-            {num("requestReminderHours", s.requestReminderHours, 0, 72, s.requestReminderHoursHint, true)}
-            {num("driverAutoOfflineMin", s.driverAutoOfflineMin, 5, 240, s.driverAutoOfflineMinHint)}
           </div>,
         )}
         {canEdit && (

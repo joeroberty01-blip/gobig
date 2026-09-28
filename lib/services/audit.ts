@@ -56,7 +56,10 @@ export type AuditAction =
   // Phase 17: automation (actorId null = the system)
   | "review.auto_hidden"
   | "automation.request_reminders"
-  | "automation.drivers_offline";
+  | "automation.drivers_offline"
+  // Automation Engine (Phase B)
+  | "automation.rule_saved"
+  | "automation.run_retried";
 
 export async function audit(
   db: Prisma.TransactionClient | typeof prisma,

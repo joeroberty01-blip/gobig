@@ -10,6 +10,9 @@ import { encryptionConfigured } from "@/lib/crypto/fieldCipher";
 import { getPlatformSettings } from "@/lib/services/platformSettings";
 import { PlatformSettingsForm } from "@/components/admin/platform/Controls";
 import { PageHeader } from "@/components/ui";
+import { RuleCards } from "@/components/admin/automation/RuleCards";
+import { allRuleSettings, registry } from "@/lib/automation/engine";
+import { RULE_IDS } from "@/lib/automation/rules";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -33,9 +36,23 @@ export default async function AdminSettingsPage() {
     prisma.job.count({ where: { status: { in: ["PENDING", "RUNNING"] }, runAt: { lte: new Date() } } }),
     prisma.job.count({ where: { status: "DEAD" } }),
     prisma.driverProfile.count({ where: { online: true } }),
-    prisma.job.findFirst({ where: { type: "automation", status: "DONE" }, orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
+    prisma.automationRun.findFirst({ where: { status: { in: ["DONE", "SKIPPED"] } }, orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
     prisma.auditLog.findMany({ where: { action: { in: [...AUTOMATION_ACTIONS] } }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, action: true, metadata: true, createdAt: true } }),
   ]);
+  const [ruleSettings, runs] = await Promise.all([
+    allRuleSettings(),
+    prisma.automationRun.findMany({ where: { NOT: { status: "SKIPPED" } }, orderBy: { updatedAt: "desc" }, take: 15, select: { id: true, ruleId: true, status: true, durationMs: true, result: true, error: true, updatedAt: true } }),
+  ]);
+  const rules = registry()
+    .filter((r) => RULE_IDS.includes(r.id))
+    .map((r) => ({
+      id: r.id,
+      trigger: r.trigger.kind === "schedule" ? { kind: "schedule" as const, every: r.trigger.every } : { kind: "event" as const },
+      enabled: ruleSettings.get(r.id)!.enabled,
+      params: ruleSettings.get(r.id)!.params as Record<string, number>,
+      fields: r.fields,
+    }));
+  const ruleTitle = (id: string) => (s.rules as Record<string, { title: string }>)[id]?.title ?? id;
   const r = redis();
   const time = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Dar_es_Salaam" });
   const encryption = encryptionConfigured();
@@ -96,6 +113,29 @@ export default async function AdminSettingsPage() {
       </section>
 
       <PlatformSettingsForm initial={settings} canEdit={can(actor, "settings:manage")} />
+
+      <section id="automation" className="mt-4 scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-soft">
+        <h2 className="font-bold">{s.automation}</h2>
+        <p className="mt-1 mb-4 text-sm text-ink-muted">{s.automationHint}</p>
+        <RuleCards rules={rules} canEdit={can(actor, "settings:manage")} />
+        {runs.length > 0 && (
+          <div className="mt-5">
+            <h3 className="mb-2 text-sm font-semibold">{s.runsTitle}</h3>
+            <ul className="divide-y divide-line text-sm">
+              {runs.map((r) => (
+                <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
+                  <span className="min-w-0 flex-1 truncate">{ruleTitle(r.ruleId)}</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.status === "DONE" ? "bg-success-soft text-success" : r.status === "DEAD" || r.status === "FAILED" ? "bg-danger-soft text-danger" : "bg-canvas text-ink-muted"}`}>{s.runStatus[r.status]}</span>
+                  <span className="text-xs text-ink-subtle">
+                    {r.result && typeof r.result === "object" ? Object.entries(r.result as Record<string, unknown>).map(([k, v]) => `${k}: ${String(v)}`).join(", ") : ""}
+                    {r.durationMs != null ? ` · ${r.durationMs} ms` : ""} · {time.format(r.updatedAt)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
 
       <section id="activity" className="mt-4 scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-soft">
         <h2 className="flex items-center gap-2 font-bold">

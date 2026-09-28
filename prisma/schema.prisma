@@ -1081,6 +1081,7 @@ model PlatformSettings {
   tripMaxRadiusKm           Int     @default(10)
   tripMaxKm                 Int     @default(80)
   tripPurgeDays             Int     @default(30)
+  /// Retired in Phase B (settings now live in AutomationRule); kept, not dropped, so no data is lost.
   driverAutoOfflineMin      Int     @default(30)
   autoHideReviewAtReports   Int     @default(0)
   requestReminderHours      Int     @default(0)
@@ -1305,4 +1306,61 @@ model TripMessage {
   trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
 
   @@index([tripId, createdAt])
+}
+
+// ─── Automation Engine (Phase B) ────────────────────────────────────────────────────────────
+// Events are written in the same transaction as the change they describe (transactional outbox),
+// so none is lost and none describes a change that rolled back. They carry ids only — never
+// contact details or exact locations. A dispatcher turns each event into one job per enabled rule.
+
+model Event {
+  id           String    @id @default(cuid())
+  type         String
+  subjectType  String
+  subjectId    String
+  payload      Json      @default("{}")
+  occurredAt   DateTime  @default(now())
+  dispatchedAt DateTime?
+
+  @@index([dispatchedAt, occurredAt])
+  @@index([subjectType, subjectId])
+}
+
+/// Admin settings for a rule defined in code (lib/automation/rules.ts). Rules themselves can't be
+/// written by admins — only switched on/off and tuned within each rule's validated limits.
+model AutomationRule {
+  id          String   @id
+  enabled     Boolean
+  params      Json     @default("{}")
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+enum AutomationRunStatus {
+  RUNNING
+  DONE
+  SKIPPED
+  FAILED
+  DEAD
+}
+
+/// One row per (rule, subject): the unique key makes every rule run at most once per event or
+/// schedule slot, however often it is retried or re-dispatched.
+model AutomationRun {
+  id         String              @id @default(cuid())
+  ruleId     String
+  subjectKey String
+  trigger    String
+  eventId    String?
+  status     AutomationRunStatus @default(RUNNING)
+  attempts   Int                 @default(1)
+  result     Json?
+  error      String?
+  durationMs Int?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  @@unique([ruleId, subjectKey])
+  @@index([ruleId, createdAt])
+  @@index([status, updatedAt])
 }

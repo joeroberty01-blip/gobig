@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { prisma } from "@/lib/db";
 import * as profile from "@/lib/services/providerProfile";
-import { autoHideReportedReviews, remindUnansweredRequests } from "@/lib/jobs/automation";
+import { autoHideReportedReviews, remindUnansweredRequests } from "@/lib/automation/rules";
 import { getPlatformSettings, savePlatformSettings, _clearPlatformSettingsCache } from "@/lib/services/platformSettings";
 import * as trips from "@/lib/services/trips";
 
