@@ -16,6 +16,11 @@ export type NotificationType =
   | "REQUEST_COMPLETED" // provider: the customer marked the job done
   | "REQUEST_CANCELLED_BY_ADMIN" // customer: NEXA closed your request (Phase 12)
   | "REQUEST_REMINDER" // provider: a matching request is still waiting for your answer (automation)
+  // Automation Engine, Phase C (customer follow-ups)
+  | "REQUEST_NO_RESPONSE" // customer: no business has answered yet
+  | "REQUEST_CHOOSE_REMINDER" // customer: quotes are waiting for your choice
+  | "REQUEST_DONE_CHECK" // customer: was the job done?
+  | "REVIEW_INVITE" // customer: rate the business you chose
   | "ANNOUNCEMENT" // everyone: a message from NEXA (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you
@@ -33,7 +38,10 @@ type Db = Prisma.TransactionClient | typeof prisma;
 export async function notify(db: Db, userIds: string[], type: NotificationType, data: NotificationData): Promise<void> {
   const unique = [...new Set(userIds)];
   if (!unique.length) return;
-  await db.notification.createMany({ data: unique.map((userId) => ({ userId, type, data })) });
+  const created = await db.notification.createManyAndReturn({ data: unique.map((userId) => ({ userId, type, data })), select: { id: true } });
+  // Automation Engine, Phase C: each notification may also go out by push/email. The delivery job
+  // is queued in the same transaction, so it exists exactly when the notification does.
+  await db.job.createMany({ data: created.map((n) => ({ type: "notify:deliver", payload: { notificationId: n.id }, maxAttempts: 4 })) });
 }
 
 /** Everyone who acts for a provider (owner + staff). */

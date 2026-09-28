@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { emitEvent } from "@/lib/automation/engine";
 import { can, type Actor } from "@/lib/permissions";
 import sharp from "sharp";
 import { prisma } from "@/lib/db";
@@ -109,7 +110,8 @@ export async function createRequest(
       { ...parseSearchParams({}), service: service?.slug ?? null, category: service ? null : (category?.slug ?? null), area: location.slug },
       now,
     );
-    providerIds = found.results.map((c) => c.id).filter((id) => !ownProviders.has(id)).slice(0, limits.maxRequestMatches);
+    // Sample (test-deployment) businesses never receive real customers' requests (Phase C).
+    providerIds = found.results.filter((c) => !c.demo && !ownProviders.has(c.id)).map((c) => c.id).slice(0, limits.maxRequestMatches);
   }
 
   const request = await prisma.$transaction(async (tx) => {
@@ -131,6 +133,8 @@ export async function createRequest(
       },
       select: { id: true },
     });
+    // Automation Engine (Phase C): events commit with the change they describe (ids only).
+    await emitEvent(tx, { type: "request.created", subjectType: "ServiceRequest", subjectId: r.id, payload: { matched: providerIds.length, direct: !!targetProviderId } });
     if (providerIds.length) {
       await tx.requestMatch.createMany({ data: providerIds.map((providerId) => ({ requestId: r.id, providerId })) });
       const members = await tx.providerMember.findMany({ where: { providerId: { in: providerIds } }, select: { userId: true } });
@@ -349,6 +353,7 @@ export async function expressInterest(providerId: string, requestId: string, now
     await tx.requestMatch.updateMany({ where: { id: m.id, status: "NOTIFIED" }, data: { status: "INTERESTED" } });
     if (!m.firstResponseAt) await tx.requestMatch.update({ where: { id: m.id }, data: { firstResponseAt: now } });
     await notify(tx, [m.request.customerId], "REQUEST_INTEREST", { requestId, matchId: m.id });
+    await emitEvent(tx, { type: "request.responded", subjectType: "ServiceRequest", subjectId: requestId, payload: { providerId, kind: "interest" } });
     return { ok: true as const };
   });
 }
@@ -379,6 +384,7 @@ export async function sendQuote(
     });
     await tx.requestMatch.update({ where: { id: m.id }, data: { status: "QUOTED", firstResponseAt: m.firstResponseAt ?? now } });
     await notify(tx, [m.request.customerId], "QUOTE_NEW", { requestId, matchId: m.id });
+    await emitEvent(tx, { type: "request.responded", subjectType: "ServiceRequest", subjectId: requestId, payload: { providerId, kind: "quote" } });
     return { ok: true as const };
   });
 }
@@ -469,6 +475,7 @@ export async function acceptProvider(customerId: string, requestId: string, prov
     await notify(tx, await providerUserIds(tx, providerId), "QUOTE_ACCEPTED", { requestId, matchId: match.id });
     const otherUsers = await tx.providerMember.findMany({ where: { providerId: { in: others.map((o) => o.providerId) } }, select: { userId: true } });
     await notify(tx, otherUsers.map((u) => u.userId), "REQUEST_NOT_SELECTED", { requestId });
+    await emitEvent(tx, { type: "request.accepted", subjectType: "ServiceRequest", subjectId: requestId, payload: { providerId } });
     return { ok: true as const };
   });
 }
@@ -484,6 +491,7 @@ export async function cancelRequest(customerId: string, requestId: string, now =
     const active = await tx.requestMatch.findMany({ where: { requestId, status: { notIn: ["DECLINED", "NOT_SELECTED"] } }, select: { providerId: true } });
     const users = await tx.providerMember.findMany({ where: { providerId: { in: active.map((a) => a.providerId) } }, select: { userId: true } });
     await notify(tx, users.map((u) => u.userId), "REQUEST_CANCELLED", { requestId });
+    await emitEvent(tx, { type: "request.cancelled", subjectType: "ServiceRequest", subjectId: requestId });
     return { ok: true as const };
   });
 }
@@ -494,6 +502,7 @@ export async function completeRequest(customerId: string, requestId: string, now
     if (!req?.acceptedProviderId) return { ok: false as const, error: "requestClosed" as const };
     await tx.serviceRequest.update({ where: { id: requestId }, data: { status: "COMPLETED", completedAt: now } });
     await notify(tx, await providerUserIds(tx, req.acceptedProviderId), "REQUEST_COMPLETED", { requestId });
+    await emitEvent(tx, { type: "request.completed", subjectType: "ServiceRequest", subjectId: requestId, payload: { providerId: req.acceptedProviderId } });
     return { ok: true as const };
   });
 }

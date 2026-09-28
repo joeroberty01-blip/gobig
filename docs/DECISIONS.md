@@ -635,3 +635,23 @@ the load tests from the hosting region for real latency numbers.
 - The three Phase 17 rules moved into the registry unchanged (same schedule, logic and defaults);
   the old PlatformSettings columns are retired, not dropped.
 - Retention: DONE/SKIPPED runs 30 days, DEAD 90 days, dispatched events 14 days.
+
+## ADR-059 — Notification delivery, preferences and customer follow-ups (Phase C, 2026-09-28)
+
+**Decision.**
+- In-app notifications are unchanged and remain the record. `notify()` now also queues one
+  `notify:deliver` job per notification **in the same transaction**. The job decides per channel
+  (push, email) once — recorded in `NotificationDelivery` (unique per notification + channel):
+  skipped with a reason (preference, noSubscription, dailyCap, alreadyRead, notConfigured…),
+  held until quiet hours end (Dar time), or sent. Live-trip updates are urgent: no quiet hours or cap.
+- Defaults: push on for every category except marketing; email opt-in; quiet 21:00–07:00; daily
+  caps 30 push / 10 email. People change these under Notifications → Settings.
+- Web Push (free, VAPID) via `/sw.js` and a web app manifest (also the basis of the Play Store
+  package). Push text is built from ids in the reader's language — no message text, phone numbers
+  or places on a lock screen. Endpoints are limited to the real push services (SEC-056).
+- Customer follow-ups as engine rules (hourly, each once per request via the run log): no answer
+  after 24 h, quote waiting 24 h, "was the job done?" 3 days after choosing, review invitation 2 h
+  after completion (only if not yet reviewed).
+- Requests are matched with the full ranking as before; sample businesses are now excluded.
+- Request changes emit events (`request.created/responded/accepted/cancelled/completed`) in their
+  transactions, for later phases.

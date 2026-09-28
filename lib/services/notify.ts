@@ -8,7 +8,7 @@ import type { ResetRequest } from "@/lib/services/auth";
 // link to the server console so the flow can be tested; production logs an error and sends
 // nothing — it never exposes the link to the browser.
 
-function smtpConfigured(): boolean {
+export function smtpConfigured(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
@@ -16,7 +16,7 @@ function smsConfigured(): boolean {
   return Boolean(process.env.SMS_GATEWAY_USER && process.env.SMS_GATEWAY_PASS);
 }
 
-async function sendEmail(to: string, subject: string, text: string): Promise<void> {
+export async function sendEmail(to: string, subject: string, text: string): Promise<void> {
   const port = Number(process.env.SMTP_PORT || 587);
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,

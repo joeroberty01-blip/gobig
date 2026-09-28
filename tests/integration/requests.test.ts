@@ -114,6 +114,22 @@ describe("posting a request", () => {
     expect(matched.length).toBeLessThanOrEqual(requests.MAX_MATCHES);
   });
 
+  it("never sends a real request to a sample business, and records the event with the request", async () => {
+    await prisma.provider.update({ where: { id: providerB }, data: { isDemo: true } });
+    try {
+      const r = await requests.createRequest(customer(customer2Id), base(), now);
+      if (!r.ok) throw new Error("create failed");
+      const matched = (await prisma.requestMatch.findMany({ where: { requestId: r.requestId }, select: { providerId: true } })).map((m) => m.providerId);
+      expect(matched).toContain(providerA);
+      expect(matched).not.toContain(providerB);
+      expect(await prisma.event.count({ where: { type: "request.created", subjectId: r.requestId } })).toBe(1);
+      await requests.cancelRequest(customer2Id, r.requestId, now);
+      expect(await prisma.event.count({ where: { type: "request.cancelled", subjectId: r.requestId } })).toBe(1);
+    } finally {
+      await prisma.provider.update({ where: { id: providerB }, data: { isDemo: false } });
+    }
+  });
+
   it("matched providers are notified; unmatched ones are not", async () => {
     const types = async (userId: string) => (await prisma.notification.findMany({ where: { userId }, select: { type: true } })).map((n) => n.type);
     expect(await types(ownerAId)).toContain("REQUEST_NEW");

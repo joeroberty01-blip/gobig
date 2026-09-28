@@ -87,6 +87,8 @@ Last full review: **2026-09-26** (Phase 13 security & performance audit). Previo
 | SEC-053 | HIGH | Concurrent acceptances could give one driver two trips; bursts crashed acceptance | Trips | Found by the dispatch stress test: the "busy" check and the assignment were separate steps, and the interactive transaction timed out under load (P2028) | Partial unique index "one active trip per driver" in the database; acceptance is one guarded statement | **FIXED** (Phase 19) — 300 simultaneous accepts: no trip with two drivers, no driver with two trips | 2026-09-28 | 2026-09-28 | `scripts/load/dispatch.ts`, `tests/integration/trips.test.ts` |
 | SEC-054 | MEDIUM | Every page view hit the database; a burst exhausted the connection pool (pages failed after 10 s) | Discovery / availability | A traffic spike (or a cheap flood) takes public pages down | Short shared cache (20 s) for identical public searches and business pages; profile reads in parallel; search cache cleared on publish/suspend | **MITIGATED** (Phase 19) — load test from 0 → 700/560/1,100 successful home/search/profile responses in 20 s with 50 connections, zero errors; next: Redis-backed shared cache and CDN caching for guests | 2026-09-28 | 2026-09-28 | `scripts/load/http.ts` |
 | SEC-055 | LOW | Health check reported the server down while the database woke from sleep | Operations | The host could restart a healthy server repeatedly | Status code = server alive; database state in the body; 8 s database check | **FIXED** (Phase 19) | 2026-09-28 | 2026-09-28 | |
+| SEC-056 | HIGH | Push endpoints are URLs the server later calls | Notifications | A user could register an internal address as their "push endpoint" and make the server send requests to it (SSRF) | Accept only https endpoints on the real push services (Google FCM, Mozilla, Apple, Microsoft), no ports or credentials; same-origin, signed-in, rate-limited, ≤2 KB body; at most 10 devices per person | **FIXED** (Phase C) | 2026-09-28 | 2026-09-28 | `tests/unit/notifications.test.ts`, `tests/integration/notifications.test.ts` |
+| SEC-057 | MEDIUM | Sample businesses could receive real customers' requests | Requests | A customer's request (description, area, contact preference) sent to a business that doesn't exist | Exclude `isDemo` providers from request matching (trips already excluded them) | **FIXED** (Phase C) | 2026-09-28 | 2026-09-28 | `tests/integration/requests.test.ts` |
 
 ## Phase 14 security review (UI polish, 2026-09-26)
 
@@ -154,3 +156,14 @@ days after dispatch. A rolled-back change leaves no event (tested). Duplicate de
 rule twice (unique run key, tested with concurrent runs). Rule errors are stored truncated (500
 chars) and logged through the redacting logger. Admins can't create rule logic, so there is no
 code-injection surface. No new public endpoints.
+
+
+### Automation Engine — Phase C review (2026-09-28)
+
+Checked: preferences are saved only for the session's own user (rate limited, zod-validated,
+quiet hours both-or-neither); push payloads carry only a type-based sentence built from ids plus a
+same-site path — the service worker re-checks the path is on this site before opening it; the
+worker caches nothing. VAPID private key and SMTP credentials are server-side secrets; without
+them push/email are skipped with a recorded reason. Delivery can't double-send (unique record per
+notification + channel; tested). Follow-up rules act once per request (run-log claim; tested).
+CSP gains `worker-src 'self'` and `manifest-src 'self'` only.

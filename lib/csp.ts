@@ -24,6 +24,10 @@ export function buildCsp(nonce: string, isDev = process.env.NODE_ENV !== "produc
     `img-src 'self' data: blob: ${[...new Set(imageHosts)].join(" ")}`.trim(),
     "font-src 'self'",
     `connect-src 'self'${isDev ? " ws: wss:" : ""}`,
+    // Phase C: the push service worker (/sw.js). Needed explicitly: with 'strict-dynamic',
+    // script-src ignores 'self', which would otherwise block registering it.
+    "worker-src 'self'",
+    "manifest-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

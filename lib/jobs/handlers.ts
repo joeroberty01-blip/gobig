@@ -3,6 +3,7 @@ import { enqueue, pruneJobs, runDueJobs, type JobHandler } from "./queue";
 import { expireTrip, purgeOldTrips, redispatch } from "@/lib/services/trips";
 import { dispatchEvents, pruneAutomation, RULE_JOB, runRuleJob, scheduleDueRules } from "@/lib/automation/engine";
 import { log } from "@/lib/log";
+import { deliverNotification, DELIVER_JOB } from "@/lib/notifications/delivery";
 
 // Phase 16: every job type the worker understands. Feature phases add theirs here.
 export const handlers: Record<string, JobHandler> = {
@@ -17,6 +18,8 @@ export const handlers: Record<string, JobHandler> = {
   [RULE_JOB]: (payload, job) => runRuleJob(payload, job),
   /** Phase 17's single "automation" job, replaced by the engine; jobs already queued finish quietly. */
   automation: async () => undefined,
+  // Phase C: push/email for one in-app notification.
+  [DELIVER_JOB]: (p) => deliverNotification(String(p.notificationId)),
   "trip:expire": async (p) => void (await expireTrip(String(p.tripId))),
   "trip:redispatch": async (p) => redispatch(String(p.tripId), Number(p.round) || 1),
 };

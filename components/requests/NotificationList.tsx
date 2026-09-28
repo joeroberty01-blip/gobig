@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, Car, Megaphone } from "lucide-react";
+import { Bell, Car, Megaphone, Settings } from "lucide-react";
 import { prisma } from "@/lib/db";
 import { fill, type Dictionary, type Locale } from "@/lib/i18n/dictionaries";
 import { listNotifications, type NotificationData, type NotificationType } from "@/lib/services/notifications";
@@ -18,6 +18,10 @@ const REQUEST_TYPES: NotificationType[] = [
   "REQUEST_COMPLETED",
   "REQUEST_CANCELLED_BY_ADMIN",
   "REQUEST_REMINDER",
+  "REQUEST_NO_RESPONSE",
+  "REQUEST_CHOOSE_REMINDER",
+  "REQUEST_DONE_CHECK",
+  "REVIEW_INVITE",
 ];
 const TRIP_TYPES: NotificationType[] = ["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"];
 type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"];
@@ -53,7 +57,18 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
 
   return (
     <div className="mx-auto max-w-2xl">
-      <PageHeader title={n.title} action={<MarkAllRead disabled={!unread} />} />
+      <PageHeader
+        title={n.title}
+        action={
+          <div className="flex items-center gap-2">
+            <Link href={basePath === "/requests" ? "/account/notifications" : "/provider/account/notifications"} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-link hover:bg-canvas">
+              <Settings aria-hidden className="size-4" />
+              {t.notify.link}
+            </Link>
+            <MarkAllRead disabled={!unread} />
+          </div>
+        }
+      />
       {valid.length === 0 ? (
         <Card className="text-center text-sm text-ink-muted">{n.empty}</Card>
       ) : (

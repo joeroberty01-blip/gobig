@@ -50,6 +50,9 @@ export const LIMITS = {
   driverLocationPerProvider: { name: "driverloc:provider", max: 1000, windowSec: 60 * 60 },
   // Status polling from open trip screens (every ~5 s).
   tripPollPerUser: { name: "trippoll:user", max: 1500, windowSec: 60 * 60 },
+  // Automation Engine, Phase C: push subscribe/unsubscribe and preference saves.
+  pushSubscribePerUser: { name: "pushsub:user", max: 30, windowSec: 60 * 60 },
+  notificationPrefsPerUser: { name: "nprefs:user", max: 60, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 export type LimitResult = { ok: true; remaining: number } | { ok: false; retryAfterSec: number };

@@ -209,3 +209,5 @@ export async function retryDeadRun(actorId: string, runId: string): Promise<{ ok
   });
   return { ok: true };
 }
+
+export { claimOnce } from "./once";

@@ -138,6 +138,8 @@ model User {
   messagesSent        Message[]             @relation("MessageSender")
   notifications       Notification[]        @relation("NotificationUser")
   trips               Trip[]                @relation("TripCustomer")
+  notificationPrefs   NotificationPreference[]
+  pushSubscriptions   PushSubscription[]
   favorites           Favorite[]
   reportsFiled        Report[]              @relation("ReportFiler")
   recoveryCodes       TotpRecoveryCode[]
@@ -768,7 +770,8 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime  @default(now())
 
-  user User @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  user       User                   @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  deliveries NotificationDelivery[]
 
   @@index([userId, readAt, createdAt])
 }
@@ -1363,4 +1366,84 @@ model AutomationRun {
   @@unique([ruleId, subjectKey])
   @@index([ruleId, createdAt])
   @@index([status, updatedAt])
+}
+
+// ─── Notifications (Automation Engine, Phase C) ─────────────────────────────────────────────
+// In-app notifications are unchanged. Each one may also go out by push or email, depending on the
+// person's preferences, quiet hours and daily caps; every attempt is recorded in NotificationDelivery.
+
+enum NotificationCategory {
+  REQUESTS
+  MESSAGES
+  TRIPS
+  REVIEWS
+  REMINDERS
+  ACCOUNT
+  SUMMARIES
+  MARKETING
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  SKIPPED
+  FAILED
+}
+
+/// One row per (user, category). Missing rows mean the defaults in lib/notifications/preferences.ts.
+model NotificationPreference {
+  id         String               @id @default(cuid())
+  userId     String
+  category   NotificationCategory
+  push       Boolean
+  email      Boolean
+  /// Quiet hours in Dar es Salaam time, minutes after midnight (null = none). Push and email wait
+  /// until they end; urgent trip updates don't.
+  quietStart Int?
+  quietEnd   Int?
+  updatedAt  DateTime             @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+}
+
+model NotificationDelivery {
+  id             String              @id @default(cuid())
+  notificationId String
+  userId         String
+  channel        NotificationChannel
+  status         DeliveryStatus      @default(QUEUED)
+  /// Why it was skipped or failed: "preference", "quietHours", "dailyCap", "noSubscription", …
+  reason         String?
+  attempts       Int                 @default(0)
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, channel])
+  @@index([userId, channel, createdAt])
+  @@index([status, createdAt])
+}
+
+/// A browser/app install that accepted push. Removed when the push service says it's gone.
+model PushSubscription {
+  id         String   @id @default(cuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
