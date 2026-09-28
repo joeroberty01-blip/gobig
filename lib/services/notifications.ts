@@ -21,6 +21,15 @@ export type NotificationType =
   | "REQUEST_CHOOSE_REMINDER" // customer: quotes are waiting for your choice
   | "REQUEST_DONE_CHECK" // customer: was the job done?
   | "REVIEW_INVITE" // customer: rate the business you chose
+  // Phase D: bookings (linked to the request) and business nudges (fixed pages)
+  | "BOOKING_PROPOSED" // the other side proposed a time
+  | "BOOKING_CONFIRMED" // the other side confirmed the time
+  | "BOOKING_CANCELLED" // the other side cancelled the booking
+  | "BOOKING_REMINDER" // both: the booking is coming up
+  | "BOOKING_AT_RISK" // customer: the business went away around your booking
+  | "REVIEW_REPLY_REMINDER" // provider: reviews waiting for your reply
+  | "PROFILE_INCOMPLETE" // provider: finish your profile to appear in search
+  | "PROVIDER_INACTIVE" // provider: customers asked while you were away
   | "ANNOUNCEMENT" // everyone: a message from NEXA (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you

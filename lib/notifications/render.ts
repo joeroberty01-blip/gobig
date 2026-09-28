@@ -25,6 +25,12 @@ export async function renderNotification(n: { type: string; data: unknown }, rea
     return { title, body: reader.locale === "sw" ? a.titleSw : a.titleEn, url: provider ? "/provider/notifications" : "/notifications" };
   }
 
+  const nudge = (t.notify.nudges as Record<string, string>)[type];
+  if (nudge) {
+    const href = type === "REVIEW_REPLY_REMINDER" ? "/provider/reviews" : type === "PROFILE_INCOMPLETE" ? "/provider/setup" : "/provider/requests";
+    return { title, body: nudge, url: href };
+  }
+
   if (TRIP_TYPES.has(type)) {
     if (!data.tripId) return null;
     const trip = await prisma.trip.findUnique({ where: { id: data.tripId }, select: { id: true, pickupLabel: true, dropoffLabel: true } });

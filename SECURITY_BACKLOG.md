@@ -167,3 +167,15 @@ worker caches nothing. VAPID private key and SMTP credentials are server-side se
 them push/email are skipped with a recorded reason. Delivery can't double-send (unique record per
 notification + channel; tested). Follow-up rules act once per request (run-log claim; tested).
 CSP gains `worker-src 'self'` and `manifest-src 'self'` only.
+
+
+### Automation Engine — Phase D review (2026-09-28)
+
+Checked: the acting side of every booking action comes from the session (the customer's own user
+id, or the provider owned by the signed-in user), never from input; only that request's customer
+and its chosen business can act (others get notFound; tested); the proposer can't confirm their own
+time; confirm/cancel are guarded single updates, so a double click or race can't confirm a
+superseded time. Times are parsed strictly (`YYYY-MM-DDTHH:MM`, Dar time) and bounded. Away mode is
+set only by the business's own owner (`provider:edit-own`), bounded to 60 days. Notes are length
+capped and shown as text only. Engagement rules send in-app notifications through the same
+preference/quiet-hours/cap gate as everything else and act once per item (run-log claims).

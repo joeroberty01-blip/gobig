@@ -175,9 +175,16 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
             </p>
           )}
           {p.description && <p className="line-clamp-3 max-w-2xl text-sm leading-relaxed text-white/85">{p.description}</p>}
-          {(availText || badges.some((b) => b.kind === "FAST_RESPONSE" || b.kind === "TOP_RATED")) && (
+          {(availText || p.awayUntil || badges.some((b) => b.kind === "FAST_RESPONSE" || b.kind === "TOP_RATED")) && (
             <div className="mt-1 flex flex-wrap gap-1.5">
-              {availText && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${AVAIL_TONE[availText.tone]}`}>{availText.text}</span>}
+              {/* Phase D: away mode outranks opening hours. */}
+              {p.awayUntil ? (
+                <span className="rounded-full bg-cta px-2.5 py-1 text-xs font-semibold text-white" title={p.awayNote ?? undefined}>
+                  {fill(t.bookings.away.publicBadge, { date: new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeZone: "Africa/Dar_es_Salaam" }).format(p.awayUntil) })}
+                </span>
+              ) : (
+                availText && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${AVAIL_TONE[availText.tone]}`}>{availText.text}</span>
+              )}
               <TrustBadges badges={badges.filter((b) => b.kind === "FAST_RESPONSE" || b.kind === "TOP_RATED")} t={t} locale={locale} />
             </div>
           )}

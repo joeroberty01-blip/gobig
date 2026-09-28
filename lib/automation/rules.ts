@@ -123,6 +123,72 @@ export async function remindUnansweredRequests(hours: number, now = new Date()):
   return sent;
 }
 
+
+// ─── Business engagement and bookings (Phase D) ─────────────────────────────────────────────
+
+/** Confirmed bookings starting within `withinMin` minutes (and not yet started). */
+export function bookingsStartingWithin(withinMin: number, now: Date) {
+  return prisma.booking.findMany({
+    where: { status: "CONFIRMED", scheduledAt: { gt: now, lte: new Date(now.getTime() + withinMin * 60_000) } },
+    select: { requestId: true, customerId: true, providerId: true, scheduledAt: true },
+    take: SWEEP_LIMIT,
+  });
+}
+
+async function remindBookings(windowKey: string, withinMin: number, now: Date): Promise<number> {
+  let sent = 0;
+  for (const b of await bookingsStartingWithin(withinMin, now)) {
+    if (!(await claimOnce("booking.reminder", `${b.requestId}:${b.scheduledAt.getTime()}:${windowKey}`))) continue;
+    await notify(prisma, [b.customerId, ...(await providerUserIds(prisma, b.providerId))], "BOOKING_REMINDER", { requestId: b.requestId });
+    sent++;
+  }
+  return sent;
+}
+
+/** Published reviews without a reply, older than `days` (looked at for 30 days). */
+export function reviewsAwaitingReply(days: number, now: Date) {
+  return prisma.review.findMany({
+    where: { status: "PUBLISHED", response: null, createdAt: { lt: new Date(now.getTime() - days * DAY), gt: new Date(now.getTime() - 30 * DAY) } },
+    select: { id: true, providerId: true },
+    take: SWEEP_LIMIT,
+  });
+}
+
+/** Businesses left unfinished (draft) for `days`, whose owner account is active. */
+export function unfinishedBusinesses(days: number, now: Date) {
+  return prisma.provider.findMany({
+    where: { status: "DRAFT", deletedAt: null, isDemo: false, createdAt: { lt: new Date(now.getTime() - days * DAY) }, members: { some: { role: "OWNER", user: { status: "ACTIVE", deletedAt: null } } } },
+    select: { id: true },
+    take: SWEEP_LIMIT,
+  });
+}
+
+/** Live businesses whose people haven't signed in for `days` while customers sent them requests. */
+export function inactiveBusinessesWithLeads(days: number, now: Date) {
+  const since = new Date(now.getTime() - days * DAY);
+  return prisma.provider.findMany({
+    where: {
+      status: "ACTIVE",
+      deletedAt: null,
+      isDemo: false,
+      members: { every: { user: { OR: [{ lastLoginAt: null }, { lastLoginAt: { lt: since } }] } } },
+      requestMatches: { some: { status: "NOTIFIED", notifiedAt: { gt: since } } },
+    },
+    select: { id: true },
+    take: SWEEP_LIMIT,
+  });
+}
+
+async function nudgeProviders(ruleId: string, keySuffix: string, providers: { id: string }[], type: Parameters<typeof notify>[2]): Promise<number> {
+  let sent = 0;
+  for (const p of providers) {
+    if (!(await claimOnce(ruleId, `${p.id}:${keySuffix}`))) continue;
+    await notify(prisma, await providerUserIds(prisma, p.id), type, {});
+    sent++;
+  }
+  return sent;
+}
+
 // ─── Registry ───────────────────────────────────────────────────────────────────────────────
 
 export const RULES: AnyRule[] = [
@@ -200,6 +266,61 @@ export const RULES: AnyRule[] = [
     fields: [{ key: "hours", min: 1, max: 72 }],
     defaults: { hours: 2 },
     run: async ({ params, now }) => ({ sent: await nudgeOnce("review.invite", await requestsToReview(params.hours, now), "REVIEW_INVITE") }),
+  }),
+  // Phase D: bookings and business engagement.
+  defineRule({
+    id: "booking.reminder",
+    group: "customers",
+    trigger: { kind: "schedule", every: "5m" },
+    enabledByDefault: true,
+    params: z.object({ dayBeforeHours: z.number().int().min(2).max(48), soonMinutes: z.number().int().min(15).max(180) }),
+    fields: [
+      { key: "dayBeforeHours", min: 2, max: 48 },
+      { key: "soonMinutes", min: 15, max: 180 },
+    ],
+    defaults: { dayBeforeHours: 24, soonMinutes: 60 },
+    run: async ({ params, now }) => ({
+      soon: await remindBookings("soon", params.soonMinutes, now),
+      dayBefore: await remindBookings("day", params.dayBeforeHours * 60, now),
+    }),
+  }),
+  defineRule({
+    id: "review.reply-reminder",
+    group: "providers",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({ days: z.number().int().min(1).max(14) }),
+    fields: [{ key: "days", min: 1, max: 14 }],
+    defaults: { days: 3 },
+    run: async ({ params, now }) => {
+      // One reminder per review, but a business with several waiting reviews gets one message a day.
+      const waiting = await reviewsAwaitingReply(params.days, now);
+      const fresh: { id: string }[] = [];
+      for (const r of waiting) if (await claimOnce("review.reply-reminder", r.id)) fresh.push({ id: r.providerId });
+      const providers = [...new Map(fresh.map((f) => [f.id, f])).values()];
+      const day = now.toISOString().slice(0, 10);
+      return { sent: await nudgeProviders("review.reply-reminder:day", day, providers, "REVIEW_REPLY_REMINDER") };
+    },
+  }),
+  defineRule({
+    id: "provider.profile-incomplete",
+    group: "providers",
+    trigger: { kind: "schedule", every: "weekly@mon-08:00" },
+    enabledByDefault: true,
+    params: z.object({ days: z.number().int().min(1).max(30) }),
+    fields: [{ key: "days", min: 1, max: 30 }],
+    defaults: { days: 2 },
+    run: async ({ params, now }) => ({ sent: await nudgeProviders("provider.profile-incomplete", now.toISOString().slice(0, 10), await unfinishedBusinesses(params.days, now), "PROFILE_INCOMPLETE") }),
+  }),
+  defineRule({
+    id: "provider.inactive",
+    group: "providers",
+    trigger: { kind: "schedule", every: "weekly@mon-08:00" },
+    enabledByDefault: true,
+    params: z.object({ days: z.number().int().min(3).max(60) }),
+    fields: [{ key: "days", min: 3, max: 60 }],
+    defaults: { days: 14 },
+    run: async ({ params, now }) => ({ sent: await nudgeProviders("provider.inactive", now.toISOString().slice(0, 10), await inactiveBusinessesWithLeads(params.days, now), "PROVIDER_INACTIVE") }),
   }),
 ];
 

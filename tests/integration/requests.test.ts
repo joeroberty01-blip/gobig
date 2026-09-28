@@ -130,6 +130,20 @@ describe("posting a request", () => {
     }
   });
 
+  it("skips businesses in away mode (Phase D)", async () => {
+    await prisma.provider.update({ where: { id: providerB }, data: { awayUntil: new Date(Date.now() + 86_400_000) } });
+    try {
+      const r = await requests.createRequest(customer(customer2Id), base(), now);
+      if (!r.ok) throw new Error("create failed");
+      const matched = (await prisma.requestMatch.findMany({ where: { requestId: r.requestId }, select: { providerId: true } })).map((m) => m.providerId);
+      expect(matched).toContain(providerA);
+      expect(matched).not.toContain(providerB);
+      await requests.cancelRequest(customer2Id, r.requestId, now);
+    } finally {
+      await prisma.provider.update({ where: { id: providerB }, data: { awayUntil: null } });
+    }
+  });
+
   it("matched providers are notified; unmatched ones are not", async () => {
     const types = async (userId: string) => (await prisma.notification.findMany({ where: { userId }, select: { type: true } })).map((n) => n.type);
     expect(await types(ownerAId)).toContain("REQUEST_NEW");

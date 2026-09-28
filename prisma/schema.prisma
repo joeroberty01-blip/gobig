@@ -176,6 +176,10 @@ model Provider {
   /// Test-deployment sample business (owner's request, 2026-09-26). Shown with a "Sample" label,
   /// its call/WhatsApp buttons don't dial anyone, and `npm run db:demo:remove` deletes them all.
   isDemo              Boolean        @default(false)
+  /// Phase D: away mode (holiday, sick, fully booked). While set and in the future the business
+  /// gets no new requests or trips and can't be booked; it ends by itself at this time.
+  awayUntil           DateTime?
+  awayNote            String?
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   deletedAt           DateTime?
@@ -205,6 +209,7 @@ model Provider {
   tripsDriven          Trip[]                 @relation("TripDriver")
   tripsDestined        Trip[]                 @relation("TripDestination")
   tripOffers           TripOffer[]
+  bookings             Booking[]
 
   @@index([status])
 }
@@ -687,6 +692,7 @@ model ServiceRequest {
   photos           RequestPhoto[]
   matches          RequestMatch[]
   quotes           Quote[]
+  booking          Booking?
 
   @@index([customerId, createdAt])
   @@index([status, expiresAt])
@@ -1446,4 +1452,42 @@ model PushSubscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// ─── Bookings (Automation Engine, Phase D) ──────────────────────────────────────────────────
+// After a customer chooses a business, either side proposes a time and the other confirms.
+// Reminders go out before confirmed bookings; the booking completes with the request.
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum BookingParty {
+  CUSTOMER
+  PROVIDER
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  requestId   String        @unique
+  customerId  String
+  providerId  String
+  scheduledAt DateTime
+  status      BookingStatus @default(PENDING)
+  proposedBy  BookingParty
+  note        String?
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  cancelledBy BookingParty?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  request  ServiceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider Provider       @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId, scheduledAt])
+  @@index([status, scheduledAt])
 }

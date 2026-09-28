@@ -274,7 +274,7 @@ export async function dispatch(tripId: string, roundNo: number, now = new Date()
       vehicleType: trip.vehicleType,
       ...(trip.kind === "RIDE" ? { offersRides: true } : { offersDelivery: true }),
       providerId: { notIn: asked },
-      provider: { status: "ACTIVE", deletedAt: null, isDemo: false, verificationLevelId: { not: null } },
+      provider: { status: "ACTIVE", deletedAt: null, isDemo: false, verificationLevelId: { not: null }, OR: [{ awayUntil: null }, { awayUntil: { lte: now } }] },
     },
     select: { providerId: true, lastLat: true, lastLng: true },
     take: 200,

@@ -33,6 +33,11 @@ export const en = {
   save: "Save",
   saved: "Saved",
   error: "Couldn't save. Please try again.",
+  nudges: {
+    REVIEW_REPLY_REMINDER: "Customers left reviews waiting for your reply",
+    PROFILE_INCOMPLETE: "Finish your business profile so customers can find you",
+    PROVIDER_INACTIVE: "Customers sent requests while you were away — have a look",
+  },
 };
 
 export const sw: typeof en = {
@@ -68,4 +73,9 @@ export const sw: typeof en = {
   save: "Hifadhi",
   saved: "Imehifadhiwa",
   error: "Imeshindikana kuhifadhi. Tafadhali jaribu tena.",
+  nudges: {
+    REVIEW_REPLY_REMINDER: "Wateja wameacha maoni yanayosubiri jibu lako",
+    PROFILE_INCOMPLETE: "Kamilisha wasifu wa biashara yako ili wateja wakupate",
+    PROVIDER_INACTIVE: "Wateja walituma maombi ukiwa haupo — angalia",
+  },
 };

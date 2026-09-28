@@ -12,6 +12,7 @@ import * as security from "./security";
 import * as ui from "./ui";
 import * as trips from "./trips";
 import * as notifyText from "./notify";
+import * as bookingsText from "./bookings";
 
 // Every user-facing string lives here in both languages. Swahili is the default (Phase 0, Q2).
 
@@ -302,6 +303,7 @@ const en = {
   ui: ui.en,
   trips: trips.en,
   notify: notifyText.en,
+  bookings: bookingsText.en,
 };
 
 export type Dictionary = typeof en;
@@ -590,6 +592,7 @@ const sw: Dictionary = {
   ui: ui.sw,
   trips: trips.sw,
   notify: notifyText.sw,
+  bookings: bookingsText.sw,
 };
 
 export function getDictionary(locale: Locale): Dictionary {

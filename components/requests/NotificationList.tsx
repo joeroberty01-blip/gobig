@@ -22,7 +22,18 @@ const REQUEST_TYPES: NotificationType[] = [
   "REQUEST_CHOOSE_REMINDER",
   "REQUEST_DONE_CHECK",
   "REVIEW_INVITE",
+  "BOOKING_PROPOSED",
+  "BOOKING_CONFIRMED",
+  "BOOKING_CANCELLED",
+  "BOOKING_REMINDER",
+  "BOOKING_AT_RISK",
 ];
+/** Phase D: business nudges with no request — each opens a fixed page. */
+const NUDGE_HREF: Partial<Record<NotificationType, string>> = {
+  REVIEW_REPLY_REMINDER: "/provider/reviews",
+  PROFILE_INCOMPLETE: "/provider/setup",
+  PROVIDER_INACTIVE: "/provider/requests",
+};
 const TRIP_TYPES: NotificationType[] = ["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"];
 type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"];
 
@@ -37,7 +48,8 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
     (n) =>
       (REQUEST_TYPES.includes(n.type as NotificationType) && typeof data(n).requestId === "string") ||
       (n.type === "ANNOUNCEMENT" && typeof data(n).announcementId === "string") ||
-      (TRIP_TYPES.includes(n.type as NotificationType) && typeof data(n).tripId === "string"),
+      (TRIP_TYPES.includes(n.type as NotificationType) && typeof data(n).tripId === "string") ||
+      !!NUDGE_HREF[n.type as NotificationType],
   );
   const [labels, announcements, trips] = await Promise.all([
     requestLabels(valid.map((n) => data(n).requestId).filter((x): x is string => !!x)),
@@ -91,6 +103,20 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
                 </li>
               );
             }
+            const nudge = NUDGE_HREF[x.type as NotificationType];
+            if (nudge) {
+              return (
+                <li key={x.id}>
+                  <Link href={nudge} className={`flex items-start gap-3 p-4 hover:bg-canvas ${tone}`}>
+                    <Bell aria-hidden className={`mt-0.5 size-4 shrink-0 ${x.readAt ? "text-ink-subtle" : "text-brand-700"}`} />
+                    <span className="min-w-0 flex-1">
+                      <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>{t.notify.nudges[x.type as keyof typeof t.notify.nudges]}</span>
+                      <span className="text-xs text-ink-subtle">{time.format(x.createdAt)}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            }
             if (TRIP_TYPES.includes(x.type as NotificationType)) {
               const trip = trips.find((y) => y.id === d.tripId);
               if (!trip) return null;
@@ -117,7 +143,7 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
                   <Bell aria-hidden className={`mt-0.5 size-4 shrink-0 ${x.readAt ? "text-ink-subtle" : "text-brand-700"}`} />
                   <span className="min-w-0 flex-1">
                     <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>
-                      {fill(n[x.type as Exclude<NotificationType, "ANNOUNCEMENT" | TripType>], { service })}
+                      {fill(n[x.type as keyof typeof n] as string, { service })}
                     </span>
                     <span className="text-xs text-ink-subtle">{time.format(x.createdAt)}</span>
                   </span>

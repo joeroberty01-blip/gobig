@@ -655,3 +655,20 @@ the load tests from the hosting region for real latency numbers.
 - Requests are matched with the full ranking as before; sample businesses are now excluded.
 - Request changes emit events (`request.created/responded/accepted/cancelled/completed`) in their
   transactions, for later phases.
+
+## ADR-060 — Bookings, away mode and business engagement (Phase D, 2026-09-28)
+
+**Decision.**
+- **Booking** (one per request) opens once the customer has chosen a business. Either side
+  proposes a Dar-time date and time (≥ 30 min ahead, ≤ 90 days); the *other* side confirms;
+  either side can propose a new time (confirm again) or cancel. The booking completes or cancels
+  with its request, in the request's transaction. Customers can only propose inside the business's
+  opening hours; the business may pick any time. Every change notifies the other side and emits an
+  event in one transaction.
+- **Away mode** (`awayUntil`, up to 60 days, ends by itself): no new requests (matching skips the
+  business), no trip offers, no booking times inside the away period; customers with bookings in that
+  period are told (`BOOKING_AT_RISK`); the public profile shows "Away until …".
+- Rules (engine, all admin-tunable): booking reminders to both sides (a day before and shortly
+  before, once each), review-reply reminders (once per review, one message a day per business),
+  finish-your-profile nudges (Mondays), missed-customers alerts for businesses that didn't sign in
+  while requests arrived (Mondays).

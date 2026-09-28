@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { bookingFor } from "@/lib/services/bookings";
+import { BookingPanel } from "@/components/bookings/BookingPanel";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Mail, MessageCircle, Phone } from "lucide-react";
@@ -36,6 +38,7 @@ export default async function ProviderRequestPage({ params }: { params: Promise<
   const canRespond = r.effective === "OPEN" && ["NOTIFIED", "INTERESTED", "QUOTED"].includes(view.matchStatus);
   const convoOpen = r.status !== "CANCELLED" && view.matchStatus !== "DECLINED" && view.matchStatus !== "NOT_SELECTED";
   const contact = r.customerContact;
+  const booking = view.accepted ? await bookingFor(r.id) : null;
   const pref = t.requests.new[`contact${r.contactPreference}`];
 
   return (
@@ -53,6 +56,9 @@ export default async function ProviderRequestPage({ params }: { params: Promise<
       )}
       {view.accepted && r.status === "COMPLETED" && <Alert tone="success">{p.completed}</Alert>}
       {view.matchStatus === "NOT_SELECTED" && <Alert tone="info">{p.notSelected}</Alert>}
+      {view.accepted && (
+        <BookingPanel requestId={r.id} side="PROVIDER" otherName={r.customerName} canBook={r.status === "ACCEPTED"} booking={booking ? { status: booking.status, scheduledAt: booking.scheduledAt.toISOString(), proposedBy: booking.proposedBy, note: booking.note, cancelledBy: booking.cancelledBy } : null} />
+      )}
       {r.status === "CANCELLED" && <Alert tone="info">{p.cancelled}</Alert>}
       {r.effective === "EXPIRED" && <Alert tone="info">{p.closed}</Alert>}
 

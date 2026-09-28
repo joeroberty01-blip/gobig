@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { emitEvent } from "@/lib/automation/engine";
+import { closeBookingWithRequest } from "@/lib/services/bookings";
 import { can, type Actor } from "@/lib/permissions";
 import sharp from "sharp";
 import { prisma } from "@/lib/db";
@@ -110,8 +111,13 @@ export async function createRequest(
       { ...parseSearchParams({}), service: service?.slug ?? null, category: service ? null : (category?.slug ?? null), area: location.slug },
       now,
     );
-    // Sample (test-deployment) businesses never receive real customers' requests (Phase C).
-    providerIds = found.results.filter((c) => !c.demo && !ownProviders.has(c.id)).map((c) => c.id).slice(0, limits.maxRequestMatches);
+    // Sample (test-deployment) businesses never receive real customers' requests (Phase C), nor do
+    // businesses in away mode (Phase D).
+    const candidates = found.results.filter((c) => !c.demo && !ownProviders.has(c.id)).map((c) => c.id);
+    const away = new Set(
+      (await prisma.provider.findMany({ where: { id: { in: candidates }, awayUntil: { gt: now } }, select: { id: true } })).map((p) => p.id),
+    );
+    providerIds = candidates.filter((id) => !away.has(id)).slice(0, limits.maxRequestMatches);
   }
 
   const request = await prisma.$transaction(async (tx) => {
@@ -491,6 +497,7 @@ export async function cancelRequest(customerId: string, requestId: string, now =
     const active = await tx.requestMatch.findMany({ where: { requestId, status: { notIn: ["DECLINED", "NOT_SELECTED"] } }, select: { providerId: true } });
     const users = await tx.providerMember.findMany({ where: { providerId: { in: active.map((a) => a.providerId) } }, select: { userId: true } });
     await notify(tx, users.map((u) => u.userId), "REQUEST_CANCELLED", { requestId });
+    await closeBookingWithRequest(tx, requestId, "CANCELLED", now);
     await emitEvent(tx, { type: "request.cancelled", subjectType: "ServiceRequest", subjectId: requestId });
     return { ok: true as const };
   });
@@ -502,6 +509,7 @@ export async function completeRequest(customerId: string, requestId: string, now
     if (!req?.acceptedProviderId) return { ok: false as const, error: "requestClosed" as const };
     await tx.serviceRequest.update({ where: { id: requestId }, data: { status: "COMPLETED", completedAt: now } });
     await notify(tx, await providerUserIds(tx, req.acceptedProviderId), "REQUEST_COMPLETED", { requestId });
+    await closeBookingWithRequest(tx, requestId, "COMPLETED", now);
     await emitEvent(tx, { type: "request.completed", subjectType: "ServiceRequest", subjectId: requestId, payload: { providerId: req.acceptedProviderId } });
     return { ok: true as const };
   });

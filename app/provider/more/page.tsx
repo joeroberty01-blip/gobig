@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { getOwnedProviderId } from "@/lib/services/providerProfile";
+import { prisma } from "@/lib/db";
+import { AwayMode } from "@/components/bookings/AwayMode";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { BadgeCheck, Bell, ChevronRight, CreditCard, MessageSquareText, UserRound } from "lucide-react";
@@ -17,7 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /** Phones only in the tab bar: everything that doesn't fit in the four main tabs. */
 export default async function ProviderMorePage() {
-  await requirePageAccess("provider-area:access", "/provider/more");
+  const user = await requirePageAccess("provider-area:access", "/provider/more");
+  // Phase D: away mode.
+  const ownedId = await getOwnedProviderId(user.id);
+  const away = ownedId ? await prisma.provider.findUnique({ where: { id: ownedId }, select: { awayUntil: true, awayNote: true } }) : null;
   const [{ t }, jar] = await Promise.all([getServerDictionary(), cookies()]);
   const groups = [
     {
@@ -35,6 +41,7 @@ export default async function ProviderMorePage() {
     <div className="mx-auto max-w-xl">
       <PageHeader title={t.ui.more.title} />
       <div className="flex flex-col gap-6">
+        {away && <AwayMode awayUntil={away.awayUntil?.toISOString() ?? null} awayNote={away.awayNote} />}
         {groups.map((g) => (
           <section key={g.title}>
             <h2 className="mb-2 px-1 text-xs font-semibold tracking-wide text-ink-subtle uppercase">{g.title}</h2>
