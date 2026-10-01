@@ -1,4 +1,4 @@
-/** GO BIG mark: a navy tile with a white "G" whose crossbar is the orange accent. */
+/** Go Big mark: a navy tile with a white "G" whose crossbar is the orange accent. */
 export function Logo({ className = "size-8" }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" aria-hidden className={className}>
@@ -9,12 +9,12 @@ export function Logo({ className = "size-8" }: { className?: string }) {
   );
 }
 
-/** The GO BIG wordmark: "GO" in the text colour, "BIG" in the brand orange. */
+/** The Go Big wordmark: "Go" in the text colour, "Big" in the brand orange (owner: exactly "Go Big"). */
 export function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <span className={`font-extrabold tracking-[0.08em] whitespace-nowrap ${className}`} aria-label="GO BIG">
+    <span className={`font-extrabold tracking-[0.02em] whitespace-nowrap ${className}`} aria-label="Go Big">
       <span aria-hidden>
-        GO <span className="text-cta">BIG</span>
+        Go <span className="text-cta">Big</span>
       </span>
     </span>
   );

@@ -694,11 +694,11 @@ timing and urgency, asked when the service was unclear, and searched the real da
 - Model: `claude-opus-5-5` at `effort: "low"` for both AI calls (was `claude-opus-5`; cheaper and
   current), structured outputs, server-side refusal fallback (`fallbacks: "default"`).
 
-## ADR-062 — The name is GO BIG again (2026-10-01)
+## ADR-062 — The name is Go Big again (2026-10-01)
 
-**Decision (owner).** The product name returns from NEXA to **GO BIG** everywhere people see it:
-screens (English and Swahili), "Uliza GO BIG", the wordmark ("GO" + "BIG" in the brand orange), a new
+**Decision (owner).** The product name returns from NEXA to **Go Big** (exactly this capitalisation — owner) everywhere people see it:
+screens (English and Swahili), "Uliza Go Big", the wordmark ("Go" + "Big" in the brand orange), a new
 mark (navy tile, white "G" with an orange crossbar) in the app icon, favicon and manifest, push
-notifications, and the two-factor issuer ("GO BIG", encoded in otpauth links). Technical identifiers
+notifications, and the two-factor issuer ("Go Big", encoded in otpauth links). Technical identifiers
 nobody sees keep their names — the `@demo.nexa.local` sample-account domain (existing samples and
 `db:demo:remove` depend on it) and internal cache/global keys. Earlier ADRs keep their wording as history.

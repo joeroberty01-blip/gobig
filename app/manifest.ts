@@ -3,8 +3,8 @@ import type { MetadataRoute } from "next";
 // Web app manifest (Phase C): installable app + push, and the basis of the Play Store (TWA) package.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GO BIG",
-    short_name: "GO BIG",
+    name: "Go Big",
+    short_name: "Go Big",
     description: "Find trusted services near you in Dar es Salaam.",
     start_url: "/",
     scope: "/",

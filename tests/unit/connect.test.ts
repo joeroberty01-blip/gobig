@@ -21,7 +21,7 @@ describe("Phase 6 buttons are offered only when their data exists", () => {
     expect(isActionAvailable("BOOK_SERVICE", src)).toBe(true);
     expect(isActionAvailable("BOOK_RIDE", src)).toBe(false);
     expect(isActionAvailable("REQUEST_QUOTE", src)).toBe(true);
-    // Phase 7: requests are delivered inside GO BIG, so no contact details are needed.
+    // Phase 7: requests are delivered inside Go Big, so no contact details are needed.
     expect(isActionAvailable("REQUEST_QUOTE", { ...src, phone: null, whatsapp: null, email: null })).toBe(true);
   });
   it("only chosen and possible actions show, in a fixed order", () => {

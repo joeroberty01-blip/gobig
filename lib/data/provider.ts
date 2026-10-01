@@ -255,7 +255,7 @@ export async function getPublicProfile(
       email: actions.includes("EMAIL") ? pr.email : null,
     },
     // Hrefs are built here so numbers for buttons that are switched off never reach the page.
-    // WhatsApp/SMS open with a short "found you on GO BIG" greeting. REQUEST_QUOTE opens the
+    // WhatsApp/SMS open with a short "found you on Go Big" greeting. REQUEST_QUOTE opens the
     // in-app request form addressed to this provider.
     actions: actions.map((action) => ({
       action,

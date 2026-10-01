@@ -1,7 +1,7 @@
 // AI search (Phase 9). Every sentence shown to customers is written here — never by the model.
 
 export const en = {
-  title: "Ask GO BIG",
+  title: "Ask Go Big",
   intro: "Describe what you need in your own words — in Swahili or English. We'll find the service, the area and when you need it.",
   placeholder: "e.g. I need AC repair in Mikocheni today",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],
@@ -23,7 +23,7 @@ export const en = {
   noResults: "No providers match this yet.",
   seeAll: "See all {count} results",
   postRequest: "Or post a request — providers will come to you",
-  rulesNote: "Results are matched from GO BIG's own provider listings.",
+  rulesNote: "Results are matched from Go Big's own provider listings.",
   tooLong: "Please keep it under 300 characters.",
   // Phase E
   whyTitle: "Why this match",
@@ -33,7 +33,7 @@ export const en = {
     SERVES_AREA: "Serves your area",
     NEAR: "{km} km from you",
     OPEN_NOW: "Open now",
-    VERIFIED: "Verified by GO BIG",
+    VERIFIED: "Verified by Go Big",
     TOP_RATED: "Top rated",
     FAST_RESPONSE: "Replies quickly",
     PRICE_LISTED: "Prices listed",
@@ -69,7 +69,7 @@ export const en = {
 export type AiDictionary = typeof en;
 
 export const sw: AiDictionary = {
-  title: "Uliza GO BIG",
+  title: "Uliza Go Big",
   intro: "Eleza unachohitaji kwa maneno yako — kwa Kiswahili au Kiingereza. Tutatambua huduma, eneo na lini unaihitaji.",
   placeholder: "mf. Nahitaji fundi AC Mikocheni leo",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],
@@ -91,7 +91,7 @@ export const sw: AiDictionary = {
   noResults: "Bado hakuna watoa huduma wanaolingana.",
   seeAll: "Ona matokeo yote {count}",
   postRequest: "Au tuma ombi — watoa huduma watakujia",
-  rulesNote: "Matokeo yanatoka kwenye orodha za watoa huduma za GO BIG pekee.",
+  rulesNote: "Matokeo yanatoka kwenye orodha za watoa huduma za Go Big pekee.",
   tooLong: "Tafadhali andika chini ya herufi 300.",
   whyTitle: "Kwa nini inakufaa",
   reasons: {
@@ -100,7 +100,7 @@ export const sw: AiDictionary = {
     SERVES_AREA: "Inahudumia eneo lako",
     NEAR: "Km {km} kutoka ulipo",
     OPEN_NOW: "Iko wazi sasa",
-    VERIFIED: "Imethibitishwa na GO BIG",
+    VERIFIED: "Imethibitishwa na Go Big",
     TOP_RATED: "Ina alama za juu",
     FAST_RESPONSE: "Hujibu haraka",
     PRICE_LISTED: "Bei zimeorodheshwa",

@@ -92,6 +92,6 @@ async function pushOnce(userId: string, r: { title: string; body: string; url: s
 async function emailOnce(to: string | null, r: { title: string; body: string; url: string }): Promise<Outcome> {
   if (!to) return { status: "SKIPPED", reason: "noEmail" };
   if (!smtpConfigured()) return { status: "SKIPPED", reason: "emailNotConfigured" };
-  await sendEmail(to, `${r.title} — ${r.body}`.slice(0, 120), `${r.body}\n\n${appUrl(r.url)}\n\n— GO BIG`);
+  await sendEmail(to, `${r.title} — ${r.body}`.slice(0, 120), `${r.body}\n\n${appUrl(r.url)}\n\n— Go Big`);
   return { status: "SENT" };
 }

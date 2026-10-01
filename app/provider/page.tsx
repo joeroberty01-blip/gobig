@@ -39,7 +39,7 @@ function greeting(t: Dictionary, name: string): string {
 }
 
 // Provider dashboard (Phase 14): today at a glance, how findable the profile is, the latest
-// requests. Every number is measured; nothing is shown that GO BIG doesn't record (no earnings).
+// requests. Every number is measured; nothing is shown that Go Big doesn't record (no earnings).
 export default async function ProviderDashboardPage() {
   const user = await requirePageAccess("provider-area:access", "/provider");
   const { t, locale } = await getServerDictionary();

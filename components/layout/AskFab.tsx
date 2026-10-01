@@ -6,8 +6,8 @@ import { Sparkles } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { usePicked } from "@/components/discovery/Compare";
 
-// Floating "Ask GO BIG" chat button (owner's request, 2026-09-26). Only on browsing pages: never over
-// a form, a profile's request bar, or Ask GO BIG itself; it steps aside while the compare bar is up.
+// Floating "Ask Go Big" chat button (owner's request, 2026-09-26). Only on browsing pages: never over
+// a form, a profile's request bar, or Ask Go Big itself; it steps aside while the compare bar is up.
 const EXACT = ["/", "/requests", "/saved", "/notifications", "/categories"];
 const PREFIX = ["/search", "/c/"];
 

@@ -65,7 +65,7 @@ function systemPrompt(catalog: Catalog): string {
     .map((a) => `- ${a.slug} | ${a.name}`)
     .join("\n");
 
-  return `You turn a customer's request on GO BIG, a service directory for Dar es Salaam, Tanzania, into search filters. Customers write in Swahili, English or a mix, often informally ("fundi AC", "nahitaji fundi bomba Sinza leo").
+  return `You turn a customer's request on Go Big, a service directory for Dar es Salaam, Tanzania, into search filters. Customers write in Swahili, English or a mix, often informally ("fundi AC", "nahitaji fundi bomba Sinza leo").
 
 Return only what the customer actually said, mapped onto the lists below:
 - service: the one service slug that matches what they need, or null if it isn't clear which one.

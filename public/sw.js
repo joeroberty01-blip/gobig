@@ -1,4 +1,4 @@
-// GO BIG service worker (Automation Engine, Phase C): shows push notifications and opens the right
+// Go Big service worker (Automation Engine, Phase C): shows push notifications and opens the right
 // page when one is tapped. It caches nothing and never touches other sites' pages.
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -11,7 +11,7 @@ self.addEventListener("push", (event) => {
   } catch {
     data = {};
   }
-  const title = typeof data.title === "string" ? data.title.slice(0, 80) : "GO BIG";
+  const title = typeof data.title === "string" ? data.title.slice(0, 80) : "Go Big";
   const body = typeof data.body === "string" ? data.body.slice(0, 240) : "";
   const url = typeof data.url === "string" && data.url.startsWith("/") && !data.url.startsWith("//") ? data.url : "/";
   event.waitUntil(
