@@ -76,7 +76,7 @@ export const en = {
     availability: "Availability",
     ourServices: "Our Services",
     whyTitle: "Why customers choose them",
-    whyNote: "Only what NEXA checks or measures",
+    whyNote: "Only what GO BIG checks or measures",
     pricesListed: "Prices listed",
   },
   dashboard: {
@@ -112,7 +112,7 @@ export const en = {
   },
   auth: {
     panelTitle: "Trusted services, close to you.",
-    point1: "Verification is decided by NEXA, never bought.",
+    point1: "Verification is decided by GO BIG, never bought.",
     point2: "Ratings come only from customers' own reviews — we never add any.",
     point3: "A location you share is rounded, and we never store it.",
   },
@@ -124,7 +124,7 @@ export const en = {
     clear: "Clear comparison",
     go: "Compare {count}",
     title: "Compare providers",
-    orderNote: "Shown in the order you picked them. NEXA doesn't rank a comparison.",
+    orderNote: "Shown in the order you picked them. GO BIG doesn't rank a comparison.",
     needTwo: "Pick 2 or 3 providers to compare",
     howTo: "Tap Compare on providers in search results or on their profiles.",
     rating: "Rating",
@@ -141,7 +141,7 @@ export const en = {
   },
   demo: {
     tag: "Sample",
-    contactDisabled: "This is a sample business for testing NEXA. Calls and WhatsApp are switched off so no real number is dialled.",
+    contactDisabled: "This is a sample business for testing GO BIG. Calls and WhatsApp are switched off so no real number is dialled.",
   },
   moderation: {
     hiddenTitle: "Recently hidden",
@@ -236,7 +236,7 @@ export const sw: typeof en = {
     availability: "Upatikanaji",
     ourServices: "Huduma zetu",
     whyTitle: "Kwa nini wateja huwachagua",
-    whyNote: "Ni yale tu NEXA hukagua au kupima",
+    whyNote: "Ni yale tu GO BIG hukagua au kupima",
     pricesListed: "Bei zimeorodheshwa",
   },
   dashboard: {
@@ -272,7 +272,7 @@ export const sw: typeof en = {
   },
   auth: {
     panelTitle: "Huduma za kuaminika, karibu nawe.",
-    point1: "Uthibitisho hutolewa na NEXA, haununuliwi.",
+    point1: "Uthibitisho hutolewa na GO BIG, haununuliwi.",
     point2: "Alama hutokana na maoni ya wateja wenyewe — hatuongezi yoyote.",
     point3: "Mahali unaposhiriki hukadiriwa, na hatulihifadhi kamwe.",
   },
@@ -284,7 +284,7 @@ export const sw: typeof en = {
     clear: "Futa ulinganisho",
     go: "Linganisha {count}",
     title: "Linganisha watoa huduma",
-    orderNote: "Wameonyeshwa kwa mpangilio uliowachagua. NEXA haipangi ulinganisho kwa ubora.",
+    orderNote: "Wameonyeshwa kwa mpangilio uliowachagua. GO BIG haipangi ulinganisho kwa ubora.",
     needTwo: "Chagua watoa huduma 2 au 3 kulinganisha",
     howTo: "Gusa Linganisha kwa watoa huduma kwenye matokeo ya utafutaji au kwenye wasifu wao.",
     rating: "Alama",
@@ -301,7 +301,7 @@ export const sw: typeof en = {
   },
   demo: {
     tag: "Mfano",
-    contactDisabled: "Hii ni biashara ya mfano kwa ajili ya kujaribu NEXA. Simu na WhatsApp zimezimwa ili isipigwe namba halisi.",
+    contactDisabled: "Hii ni biashara ya mfano kwa ajili ya kujaribu GO BIG. Simu na WhatsApp zimezimwa ili isipigwe namba halisi.",
   },
   moderation: {
     hiddenTitle: "Yaliyofichwa hivi karibuni",

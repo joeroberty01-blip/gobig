@@ -672,3 +672,33 @@ the load tests from the hosting region for real latency numbers.
   before, once each), review-reply reminders (once per review, one message a day per business),
   finish-your-profile nudges (Mondays), missed-customers alerts for businesses that didn't sign in
   while requests arrived (Mondays).
+
+## ADR-061 — AI search explanations and help writing requests (Phase E, 2026-10-01)
+
+**Context.** Ask NEXA (Phase 9) already turned a Swahili/English sentence into catalogue slugs,
+timing and urgency, asked when the service was unclear, and searched the real database.
+
+**Decision.**
+- **Why this match** (`lib/discovery/reasons.ts`, pure): up to three reasons per result built only
+  from facts on the card — the requested service, based in / serves the area, within 3 km of the
+  customer's own shared position, open now, and earned badges (verified, top rated, quick replies),
+  prices listed. No model writes these; nothing can be claimed that the card doesn't show.
+- **Ask "where?"** when a service is understood but there is no area and no shared position:
+  popular areas plus "use my location".
+- **Help me write** (`lib/services/requestAssist.ts`): Claude re-words the customer's own text
+  (same language) and reports missing details as fixed codes; the questions are ours. Output passes
+  `guardRewrite()`, which discards any rewrite that adds numbers (prices, quantities, dates, phone
+  numbers) or links the customer didn't write. The customer sees a suggestion and chooses "Use this";
+  nothing is posted automatically. Free rule-based fallback when the model is off, capped or failing.
+  Limits: 20 per customer per day, the platform daily AI cap, the admin AI switch.
+- Model: `claude-opus-5-5` at `effort: "low"` for both AI calls (was `claude-opus-5`; cheaper and
+  current), structured outputs, server-side refusal fallback (`fallbacks: "default"`).
+
+## ADR-062 — The name is GO BIG again (2026-10-01)
+
+**Decision (owner).** The product name returns from NEXA to **GO BIG** everywhere people see it:
+screens (English and Swahili), "Uliza GO BIG", the wordmark ("GO" + "BIG" in the brand orange), a new
+mark (navy tile, white "G" with an orange crossbar) in the app icon, favicon and manifest, push
+notifications, and the two-factor issuer ("GO BIG", encoded in otpauth links). Technical identifiers
+nobody sees keep their names — the `@demo.nexa.local` sample-account domain (existing samples and
+`db:demo:remove` depend on it) and internal cache/global keys. Earlier ADRs keep their wording as history.

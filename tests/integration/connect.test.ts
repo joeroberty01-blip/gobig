@@ -50,7 +50,7 @@ describe("choosing buttons", () => {
   it("the public page only exposes what's switched on", async () => {
     const p = await getPublicProfile(slug, null, null, "en");
     expect(p?.actions.map((a) => a.action)).toEqual(["CALL", "MESSAGE", "REQUEST_QUOTE", "BOOK_RIDE"]);
-    expect(p?.actions.find((a) => a.action === "MESSAGE")?.href).toContain("I%20found%20you%20on%20NEXA");
+    expect(p?.actions.find((a) => a.action === "MESSAGE")?.href).toContain("I%20found%20you%20on%20GO BIG");
     // Phase 7: Request Quote opens the in-app request form addressed to this provider.
     expect(p?.actions.find((a) => a.action === "REQUEST_QUOTE")?.href).toBe(`/requests/new?provider=${slug}`);
   });

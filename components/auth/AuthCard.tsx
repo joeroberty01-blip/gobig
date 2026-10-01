@@ -6,7 +6,7 @@ import { Logo, Wordmark } from "@/components/layout/Logo";
 
 /**
  * Frame for login / sign-up / password reset (Phase 14): the form alone on phones; on large
- * screens a brand panel beside it stating what NEXA actually guarantees.
+ * screens a brand panel beside it stating what GO BIG actually guarantees.
  */
 export async function AuthCard({
   title,

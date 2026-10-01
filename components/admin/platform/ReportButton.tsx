@@ -10,7 +10,7 @@ import { Alert, Button, Field } from "@/components/ui";
 type ErrorKey = keyof Dictionary["errors"];
 const REASONS = ["SPAM", "FAKE", "FRAUD", "OFFENSIVE", "UNSAFE", "OTHER"] as const;
 
-/** Report a provider, a request or a conversation to NEXA (Phase 12, SEC-028). */
+/** Report a provider, a request or a conversation to GO BIG (Phase 12, SEC-028). */
 export function ReportButton({ targetType, targetId }: { targetType: "PROVIDER" | "REQUEST" | "CONVERSATION"; targetId: string }) {
   const { t } = useI18n();
   const r = t.adminPlatform.report;

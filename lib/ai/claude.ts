@@ -3,13 +3,16 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import * as z from "zod/v4";
 import { CLARIFY_REASONS, MAX_OPTIONS, TIMINGS, URGENCIES, type Catalog, type SearchIntent } from "./intent";
+import { MAX_REWRITE_CHARS, MISSING_CODES } from "./assist";
 
 // Claude as a query *parser* only (Phase 9, ADR-043). It sees the customer's sentence and our
 // catalogue, and returns catalogue slugs + fixed codes through structured outputs. It never sees
 // provider data and nothing it writes is shown to customers as text, so it cannot invent providers,
 // prices, reviews, qualifications or availability.
 
-export const AI_MODEL = "claude-opus-5";
+// Phase E: Claude Opus 5.5 (the current default; cheaper than Opus 5 at $4/$20 per MTok) at low
+// effort — these are short structured tasks, so quick and inexpensive.
+export const AI_MODEL = "claude-opus-5-5";
 const TIMEOUT_MS = 8_000;
 
 let client: Anthropic | null = null;
@@ -62,7 +65,7 @@ function systemPrompt(catalog: Catalog): string {
     .map((a) => `- ${a.slug} | ${a.name}`)
     .join("\n");
 
-  return `You turn a customer's request on NEXA, a service directory for Dar es Salaam, Tanzania, into search filters. Customers write in Swahili, English or a mix, often informally ("fundi AC", "nahitaji fundi bomba Sinza leo").
+  return `You turn a customer's request on GO BIG, a service directory for Dar es Salaam, Tanzania, into search filters. Customers write in Swahili, English or a mix, often informally ("fundi AC", "nahitaji fundi bomba Sinza leo").
 
 Return only what the customer actually said, mapped onto the lists below:
 - service: the one service slug that matches what they need, or null if it isn't clear which one.
@@ -113,4 +116,51 @@ export async function claudeIntent(query: string, catalog: Catalog): Promise<Sea
   }
 }
 
-export const _test = { intentSchema, systemPrompt };
+// ─── Phase E: help writing a request ───────────────────────────────────────────────────────
+
+const rewriteSchema = z.object({
+  description: z.string().max(MAX_REWRITE_CHARS),
+  missing: z.array(z.enum(MISSING_CODES)).max(3),
+});
+
+const REWRITE_PROMPT = `You help customers in Dar es Salaam, Tanzania describe a job for local service businesses (plumbers, electricians, cleaners, mechanics and so on). The customer's own words follow.
+
+Rewrite them as one short, clear request a business can act on: what is wrong or needed, and any details the customer gave. Write in the same language the customer used (Swahili, English, or their mix). Keep it under 400 characters, in plain sentences, with no greeting and no sign-off.
+
+Use only facts the customer stated. Do not add prices, quantities, dates, times, brands, models, sizes, places, names or contact details they did not write — if something is unknown, leave it out. Do not promise anything on the business's behalf.
+
+Then list what a business would most likely need to know that the customer did not say, as up to three codes:
+- WHEN: when they need it done
+- WHERE_DETAILS: where in the home or premises, or how to find it
+- PHOTOS: a photo would help the business understand the problem
+- SIZE_QUANTITY: how big, how many, or how much
+- BRAND_MODEL: the brand or model of the appliance, vehicle or device
+- BUDGET: what they expect to spend
+Leave the list empty if nothing important is missing.`;
+
+/**
+ * A clearer version of the customer's own words plus what's missing, or null on any failure (no
+ * key, timeout, refusal, bad output). The caller still runs guardRewrite() on the text. Never throws.
+ */
+export async function claudeRewriteRequest(text: string, serviceName: string | null): Promise<{ description: string; missing: string[] } | null> {
+  if (!aiConfigured()) return null;
+  try {
+    const response = await getClient().beta.messages.parse({
+      model: AI_MODEL,
+      max_tokens: 1024,
+      output_config: { effort: "low", format: zodOutputFormat(rewriteSchema) },
+      betas: ["server-side-fallback-2026-07-01"],
+      fallbacks: "default",
+      system: [{ type: "text", text: REWRITE_PROMPT, cache_control: { type: "ephemeral" } }],
+      messages: [{ role: "user", content: serviceName ? `Service: ${serviceName}\n\nCustomer wrote:\n${text}` : `Customer wrote:\n${text}` }],
+    });
+    if (response.stop_reason === "refusal" || !response.parsed_output) return null;
+    return response.parsed_output;
+  } catch (err) {
+    const kind = err instanceof Anthropic.APIError ? `status ${err.status}` : err instanceof Error ? err.name : "unknown";
+    console.warn(`[ai-assist] Claude rewrite failed (${kind}); keeping the customer's words`);
+    return null;
+  }
+}
+
+export const _test = { intentSchema, systemPrompt, rewriteSchema, REWRITE_PROMPT };

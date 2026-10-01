@@ -11,7 +11,7 @@ type Review = {
   createdAt: Date;
   editedAt: Date | null;
   authorName: string;
-  /** Set by the server from a completed NEXA request (never by the reviewer). */
+  /** Set by the server from a completed GO BIG request (never by the reviewer). */
   verifiedJob?: boolean;
   response: { body: string } | null;
 };

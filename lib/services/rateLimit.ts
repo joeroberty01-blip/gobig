@@ -53,6 +53,8 @@ export const LIMITS = {
   // Automation Engine, Phase C: push subscribe/unsubscribe and preference saves.
   pushSubscribePerUser: { name: "pushsub:user", max: 30, windowSec: 60 * 60 },
   notificationPrefsPerUser: { name: "nprefs:user", max: 60, windowSec: 60 * 60 },
+  // Phase E: "Help me write" on the request form (each may cost a model call).
+  aiAssistPerUser: { name: "aiassist:user", max: 20, windowSec: 24 * 60 * 60 },
 } satisfies Record<string, Limit>;
 
 export type LimitResult = { ok: true; remaining: number } | { ok: false; retryAfterSec: number };

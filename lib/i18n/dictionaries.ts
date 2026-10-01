@@ -22,7 +22,7 @@ export const DEFAULT_LOCALE: Locale = "sw";
 
 const en = {
   app: {
-    name: "NEXA",
+    name: "GO BIG",
     tagline: "Find the service you need, near you — in Dar es Salaam.",
   },
   common: {
@@ -84,11 +84,11 @@ const en = {
     newPassword: "New password",
     forgotPassword: "Forgot password?",
     loggingIn: "Logging in…",
-    noAccount: "New to NEXA?",
+    noAccount: "New to GO BIG?",
     createAccount: "Create an account",
     haveAccount: "Already have an account?",
     signupTitle: "Create your account",
-    chooseRole: "How will you use NEXA?",
+    chooseRole: "How will you use GO BIG?",
     roleCustomerTitle: "I need services",
     roleCustomerBody: "Find and contact service providers near you.",
     roleProviderTitle: "I offer services",
@@ -133,7 +133,7 @@ const en = {
     passwordsDontMatch: "Passwords don't match.",
     identifierInvalid: "Enter a valid email or phone number.",
     passwordRequired: "Enter your password.",
-    roleRequired: "Choose how you'll use NEXA.",
+    roleRequired: "Choose how you'll use GO BIG.",
     tokenInvalid: "This reset link is not valid.",
     emailTaken: "An account with this email already exists.",
     phoneTaken: "An account with this phone number already exists.",
@@ -169,7 +169,7 @@ const en = {
     pinOutsideArea: "The pin must be inside Dar es Salaam.",
     exactNeedsLocation: "To show your exact location, add a pin or a street address.",
     radiusInvalid: "Choose one of the listed distances.",
-    outsideServiceArea: "NEXA is only in Dar es Salaam for now.",
+    outsideServiceArea: "GO BIG is only in Dar es Salaam for now.",
     rateLimited: "Too many attempts. Please wait a few minutes and try again.",
     levelUnavailable: "That verification level isn't available.",
     alreadyVerified: "You already hold this level or a higher one.",
@@ -194,7 +194,7 @@ const en = {
     leadLimitReached: "You've used this month's requests on your plan. Upgrade in Plan & billing to answer more.",
     planUnavailable: "That plan isn't available.",
     planNotPriced: "That plan doesn't have a price yet. Please check back later.",
-    subscriptionOpen: "You already have a plan in progress. Wait for it to finish, or ask NEXA to change it.",
+    subscriptionOpen: "You already have a plan in progress. Wait for it to finish, or ask GO BIG to change it.",
     subscriptionNotFound: "Subscription not found.",
     amountMismatch: "The amount must match the agreed price exactly.",
     paymentDuplicate: "A payment with this reference has already been recorded.",
@@ -228,10 +228,10 @@ const en = {
     messageTooLong: "Keep messages under 2000 characters.",
   },
   resetMessage: {
-    subject: "Reset your NEXA password",
+    subject: "Reset your GO BIG password",
     body:
-      "Hello {name},\n\nSomeone asked to reset the password for your NEXA account. Open this link to choose a new one (valid for 30 minutes):\n\n{link}\n\nIf this wasn't you, ignore this message — your password stays the same.",
-    sms: "NEXA: reset your password here (valid 30 min): {link}",
+      "Hello {name},\n\nSomeone asked to reset the password for your GO BIG account. Open this link to choose a new one (valid for 30 minutes):\n\n{link}\n\nIf this wasn't you, ignore this message — your password stays the same.",
+    sms: "GO BIG: reset your password here (valid 30 min): {link}",
   },
   account: {
     title: "Account",
@@ -242,7 +242,7 @@ const en = {
     role: "Account type",
     memberSince: "Member since",
     preferences: "Preferences",
-    support: "Need help? Contact NEXA",
+    support: "Need help? Contact GO BIG",
   },
   provider: {
     dashboardTitle: "Your business",
@@ -310,7 +310,7 @@ export type Dictionary = typeof en;
 
 const sw: Dictionary = {
   app: {
-    name: "NEXA",
+    name: "GO BIG",
     tagline: "Pata huduma unayohitaji, karibu nawe — Dar es Salaam.",
   },
   common: {
@@ -372,11 +372,11 @@ const sw: Dictionary = {
     newPassword: "Nenosiri jipya",
     forgotPassword: "Umesahau nenosiri?",
     loggingIn: "Inaingia…",
-    noAccount: "Mgeni NEXA?",
+    noAccount: "Mgeni GO BIG?",
     createAccount: "Fungua akaunti",
     haveAccount: "Tayari una akaunti?",
     signupTitle: "Fungua akaunti yako",
-    chooseRole: "Utatumiaje NEXA?",
+    chooseRole: "Utatumiaje GO BIG?",
     roleCustomerTitle: "Nahitaji huduma",
     roleCustomerBody: "Tafuta na uwasiliane na watoa huduma karibu nawe.",
     roleProviderTitle: "Natoa huduma",
@@ -421,7 +421,7 @@ const sw: Dictionary = {
     passwordsDontMatch: "Manenosiri hayafanani.",
     identifierInvalid: "Weka barua pepe au namba ya simu sahihi.",
     passwordRequired: "Weka nenosiri lako.",
-    roleRequired: "Chagua jinsi utakavyotumia NEXA.",
+    roleRequired: "Chagua jinsi utakavyotumia GO BIG.",
     tokenInvalid: "Kiungo hiki si sahihi.",
     emailTaken: "Tayari kuna akaunti yenye barua pepe hii.",
     phoneTaken: "Tayari kuna akaunti yenye namba hii ya simu.",
@@ -457,7 +457,7 @@ const sw: Dictionary = {
     pinOutsideArea: "Pini lazima iwe ndani ya Dar es Salaam.",
     exactNeedsLocation: "Ili kuonyesha mahali halisi, weka pini au anwani.",
     radiusInvalid: "Chagua mojawapo ya umbali ulioorodheshwa.",
-    outsideServiceArea: "NEXA iko Dar es Salaam tu kwa sasa.",
+    outsideServiceArea: "GO BIG iko Dar es Salaam tu kwa sasa.",
     rateLimited: "Majaribio mengi mno. Tafadhali subiri dakika chache kisha ujaribu tena.",
     levelUnavailable: "Kiwango hicho cha uthibitisho hakipatikani.",
     alreadyVerified: "Tayari una kiwango hiki au cha juu zaidi.",
@@ -482,7 +482,7 @@ const sw: Dictionary = {
     leadLimitReached: "Umetumia maombi ya mwezi huu kwenye mpango wako. Pandisha mpango kwenye Mpango na malipo ili kujibu zaidi.",
     planUnavailable: "Mpango huo haupatikani.",
     planNotPriced: "Mpango huo bado hauna bei. Tafadhali angalia baadaye.",
-    subscriptionOpen: "Tayari una mpango unaoendelea. Subiri umalizike, au omba NEXA waubadilishe.",
+    subscriptionOpen: "Tayari una mpango unaoendelea. Subiri umalizike, au omba GO BIG waubadilishe.",
     subscriptionNotFound: "Usajili haukupatikana.",
     amountMismatch: "Kiasi lazima kilingane kabisa na bei iliyokubaliwa.",
     paymentDuplicate: "Malipo yenye kumbukumbu hii tayari yamerekodiwa.",
@@ -516,10 +516,10 @@ const sw: Dictionary = {
     messageTooLong: "Ujumbe uwe chini ya herufi 2000.",
   },
   resetMessage: {
-    subject: "Badilisha nenosiri lako la NEXA",
+    subject: "Badilisha nenosiri lako la GO BIG",
     body:
-      "Habari {name},\n\nMtu ameomba kubadilisha nenosiri la akaunti yako ya NEXA. Fungua kiungo hiki kuchagua jipya (kinadumu dakika 30):\n\n{link}\n\nKama si wewe, puuza ujumbe huu — nenosiri lako halitabadilika.",
-    sms: "NEXA: badilisha nenosiri lako hapa (dakika 30): {link}",
+      "Habari {name},\n\nMtu ameomba kubadilisha nenosiri la akaunti yako ya GO BIG. Fungua kiungo hiki kuchagua jipya (kinadumu dakika 30):\n\n{link}\n\nKama si wewe, puuza ujumbe huu — nenosiri lako halitabadilika.",
+    sms: "GO BIG: badilisha nenosiri lako hapa (dakika 30): {link}",
   },
   account: {
     title: "Akaunti",
@@ -530,7 +530,7 @@ const sw: Dictionary = {
     role: "Aina ya akaunti",
     memberSince: "Mwanachama tangu",
     preferences: "Mapendeleo",
-    support: "Unahitaji msaada? Wasiliana na NEXA",
+    support: "Unahitaji msaada? Wasiliana na GO BIG",
   },
   provider: {
     dashboardTitle: "Biashara yako",

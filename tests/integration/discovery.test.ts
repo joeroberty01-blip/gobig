@@ -184,7 +184,7 @@ describe("popular services", () => {
 });
 
 describe("Phase 14 filters", () => {
-  it("verified only: providers with a NEXA verification level", async () => {
+  it("verified only: providers with a GO BIG verification level", async () => {
     const level = await prisma.verificationLevel.findFirst({ where: { isActive: true }, orderBy: { rank: "asc" } });
     if (!level) return; // No levels on this branch: nothing can be verified, covered by the empty case below.
     await prisma.provider.update({ where: { id: ids.acMik }, data: { verificationLevelId: level.id, verifiedAt: new Date() } });

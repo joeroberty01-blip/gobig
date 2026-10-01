@@ -114,7 +114,7 @@ export const en = {
     chosen: "Chosen",
     counts: "{matches} providers · {quotes} quotes",
     cancel: "Cancel request",
-    cancelHint: "The customer and the providers are told it was closed by NEXA.",
+    cancelHint: "The customer and the providers are told it was closed by GO BIG.",
   },
   reports: {
     title: "Reports",
@@ -183,7 +183,7 @@ export const en = {
   },
   settings: {
     title: "Platform settings",
-    intro: "Change how NEXA works without a code change. Every save is recorded in the audit log.",
+    intro: "Change how GO BIG works without a code change. Every save is recorded in the audit log.",
     support: "Support contacts (shown to users)",
     supportEmail: "Support email",
     supportPhone: "Support phone",
@@ -193,7 +193,7 @@ export const en = {
     maxRequestMatches: "Providers each request is sent to",
     requestTtlDays: "Days an undated request stays open",
     ai: "AI search",
-    aiSearchEnabled: "Use the AI model for Ask NEXA (off = built-in parser only)",
+    aiSearchEnabled: "Use the AI model for Ask GO BIG (off = built-in parser only)",
     superOnly: "Only a super admin can change these.",
     // Phase 17: settings centre
     sections: { status: "System status", general: "Support", features: "Features", requests: "Requests", trips: "Rides & deliveries", automation: "Automation", activity: "Activity" },
@@ -384,7 +384,7 @@ export const sw: AdminPlatformDictionary = {
     chosen: "Aliyechaguliwa",
     counts: "Watoa huduma {matches} · Bei {quotes}",
     cancel: "Ghairi ombi",
-    cancelHint: "Mteja na watoa huduma wanaambiwa kwamba limefungwa na NEXA.",
+    cancelHint: "Mteja na watoa huduma wanaambiwa kwamba limefungwa na GO BIG.",
   },
   reports: {
     title: "Ripoti",
@@ -453,7 +453,7 @@ export const sw: AdminPlatformDictionary = {
   },
   settings: {
     title: "Mipangilio ya jukwaa",
-    intro: "Badilisha jinsi NEXA inavyofanya kazi bila kubadilisha msimbo. Kila uhifadhi unarekodiwa kwenye kumbukumbu za ukaguzi.",
+    intro: "Badilisha jinsi GO BIG inavyofanya kazi bila kubadilisha msimbo. Kila uhifadhi unarekodiwa kwenye kumbukumbu za ukaguzi.",
     support: "Mawasiliano ya msaada (yanaonyeshwa kwa watumiaji)",
     supportEmail: "Barua pepe ya msaada",
     supportPhone: "Simu ya msaada",
@@ -463,7 +463,7 @@ export const sw: AdminPlatformDictionary = {
     maxRequestMatches: "Watoa huduma wanaotumiwa kila ombi",
     requestTtlDays: "Siku ombi lisilo na tarehe linabaki wazi",
     ai: "Utafutaji wa AI",
-    aiSearchEnabled: "Tumia modeli ya AI kwa Uliza NEXA (ikizimwa = kichanganuzi cha ndani tu)",
+    aiSearchEnabled: "Tumia modeli ya AI kwa Uliza GO BIG (ikizimwa = kichanganuzi cha ndani tu)",
     superOnly: "Ni msimamizi mkuu tu anayeweza kubadilisha haya.",
     sections: { status: "Hali ya mfumo", general: "Msaada", features: "Huduma", requests: "Maombi", trips: "Usafiri na mizigo", automation: "Otomatiki", activity: "Shughuli" },
     features: "Kuwasha na kuzima huduma",

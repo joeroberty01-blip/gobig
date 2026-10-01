@@ -7,6 +7,7 @@ import { createRequestAction } from "@/lib/actions/requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fill, type Dictionary } from "@/lib/i18n/dictionaries";
 import { Alert, Button, Field, Input } from "@/components/ui";
+import { WriteHelper } from "./WriteHelper";
 
 type ErrorKey = keyof Dictionary["errors"];
 type Named = { id: string; nameEn: string; nameSw: string };
@@ -148,6 +149,8 @@ export function RequestForm({
           className={textarea}
         />
       </Field>
+      {/* Phase E: optional help turning the customer's words into a clear request. */}
+      <WriteHelper text={description} serviceId={serviceId} onUse={setDescription} />
 
       <Field id="area" label={r.area} error={fieldError("locationId")}>
         <select id="area" value={locationId} onChange={(e) => setLocationId(e.target.value)} className={control}>

@@ -179,3 +179,16 @@ superseded time. Times are parsed strictly (`YYYY-MM-DDTHH:MM`, Dar time) and bo
 set only by the business's own owner (`provider:edit-own`), bounded to 60 days. Notes are length
 capped and shown as text only. Engagement rules send in-app notifications through the same
 preference/quiet-hours/cap gate as everything else and act once per item (run-log claims).
+
+
+### Automation Engine — Phase E review (2026-10-01)
+
+Checked: AI never sees provider data and never writes text shown as fact about a business — match
+explanations are computed from card fields; search results come only from the normal, access-
+controlled search. The request helper sees only the customer's own draft (the session's customer);
+its suggestion is shown to that customer alone and applied only on their tap. Invention guard:
+rewrites adding digits or links are discarded (tested with prices, quantities, phone numbers, links).
+Missing-detail output is a closed enum; question text is ours. Cost/abuse: per-customer daily limit
+(20), platform daily AI cap, admin switch; input bounded to 1,000 characters; failures logged by
+kind only (never the customer's text). Prompt text is static (cached); customer text goes only in
+the user turn.

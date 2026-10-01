@@ -57,16 +57,16 @@ export function isActionAvailable(action: ConnectAction, s: ConnectSource): bool
     case "BOOK_RIDE":
       return !!s.rideUrl;
     case "REQUEST_QUOTE":
-      // Phase 7: a direct service request inside NEXA — needs no contact details.
+      // Phase 7: a direct service request inside GO BIG — needs no contact details.
       return true;
     case "DIRECTIONS":
       return s.locationVisibility === "EXACT" && (!!s.addressText || (s.latitude != null && s.longitude != null));
   }
 }
 
-/** "via NEXA" opener for prefilled messages, so providers know where the customer came from. */
+/** "via GO BIG" opener for prefilled messages, so providers know where the customer came from. */
 export function openerText(locale: "sw" | "en", providerName: string): string {
-  return locale === "sw" ? `Habari ${providerName}, nimekupata kupitia NEXA.` : `Hello ${providerName}, I found you on NEXA.`;
+  return locale === "sw" ? `Habari ${providerName}, nimekupata kupitia GO BIG.` : `Hello ${providerName}, I found you on GO BIG.`;
 }
 
 /**

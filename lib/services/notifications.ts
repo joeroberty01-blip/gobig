@@ -14,7 +14,7 @@ export type NotificationType =
   | "REQUEST_NOT_SELECTED" // provider: the customer chose someone else
   | "REQUEST_CANCELLED" // provider: the customer cancelled
   | "REQUEST_COMPLETED" // provider: the customer marked the job done
-  | "REQUEST_CANCELLED_BY_ADMIN" // customer: NEXA closed your request (Phase 12)
+  | "REQUEST_CANCELLED_BY_ADMIN" // customer: GO BIG closed your request (Phase 12)
   | "REQUEST_REMINDER" // provider: a matching request is still waiting for your answer (automation)
   // Automation Engine, Phase C (customer follow-ups)
   | "REQUEST_NO_RESPONSE" // customer: no business has answered yet
@@ -30,7 +30,7 @@ export type NotificationType =
   | "REVIEW_REPLY_REMINDER" // provider: reviews waiting for your reply
   | "PROFILE_INCOMPLETE" // provider: finish your profile to appear in search
   | "PROVIDER_INACTIVE" // provider: customers asked while you were away
-  | "ANNOUNCEMENT" // everyone: a message from NEXA (Phase 12)
+  | "ANNOUNCEMENT" // everyone: a message from GO BIG (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you
   | "TRIP_ACCEPTED" // customer: a driver accepted

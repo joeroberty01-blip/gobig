@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { Search, SearchX, SlidersHorizontal, Sparkles, Zap } from "lucide-react";
+import { CheckCircle2, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { searchHref } from "@/lib/discovery/query";
@@ -15,6 +15,8 @@ import { MAX_QUERY_CHARS } from "@/lib/ai/intent";
 import { ProviderCard } from "@/components/discovery/ProviderCard";
 import { Alert, ButtonLink, Card, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
+import { matchReasons } from "@/lib/discovery/reasons";
+import { LocateMe } from "@/components/discovery/LocateMe";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -40,7 +42,8 @@ export default async function AskPage({ searchParams }: Props) {
   const a = t.ai;
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
 
-  const result = q && !tooLong ? await aiSearch(q, await getSavedPoint(), new Date(), { useAi: await aiAllowed() }) : null;
+  const point = await getSavedPoint();
+  const result = q && !tooLong ? await aiSearch(q, point, new Date(), { useAi: await aiAllowed() }) : null;
   const [catalog, categories] = await Promise.all([loadCatalog(), result?.intent.clarify?.reason === "SERVICE_UNKNOWN" ? topCategories() : []]);
   const serviceOf = new Map(catalog.services.map((s) => [s.slug, s]));
   const categoryOf = new Map(catalog.categories.map((c) => [c.slug, c]));
@@ -142,6 +145,28 @@ export default async function AskPage({ searchParams }: Props) {
             </Card>
           )}
 
+          {filters && (filters.service || filters.category) && !intent.area && !point && (
+            <Card className="mt-4 flex flex-col gap-3">
+              <div>
+                <p className="flex items-center gap-1.5 font-semibold">
+                  <MapPin aria-hidden className="size-4 text-link" />
+                  {a.whereTitle}
+                </p>
+                <p className="text-sm text-ink-muted">{a.whereHint}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_AREAS.map((slug) => areaOf.get(slug))
+                  .filter((x) => !!x)
+                  .map((x) => (
+                    <ButtonLink key={x!.slug} href={searchHref({ ...filters, area: x!.slug })} variant="secondary" className="min-h-9">
+                      {x!.name}
+                    </ButtonLink>
+                  ))}
+              </div>
+              <LocateMe active={false} areaName={null} />
+            </Card>
+          )}
+
           {(intent.urgency === "EMERGENCY" || intent.timing === "NOW") && search && search.total > 0 && (
             <div className="mt-4">
               <Alert tone="info">
@@ -188,6 +213,7 @@ export default async function AskPage({ searchParams }: Props) {
                           variant="row"
                           requestHref={`/requests/new?provider=${encodeURIComponent(p.slug)}`}
                         />
+                        <WhyThisMatch reasons={matchReasons(p, { service: !!filters?.service || !!filters?.category, area: !!intent.area })} title={a.whyTitle} text={a.reasons} />
                       </li>
                     ))}
                   </ul>
@@ -211,6 +237,26 @@ export default async function AskPage({ searchParams }: Props) {
           </div>
         </section>
       )}
+    </div>
+  );
+}
+
+/** Areas offered first when we have to ask where (largest demand in Dar). */
+const POPULAR_AREAS = ["kariakoo", "sinza", "mikocheni", "kinondoni", "masaki", "mbezi", "kimara", "tegeta"];
+
+/** Phase E: explanation built only from facts on the card (lib/discovery/reasons.ts). */
+function WhyThisMatch({ reasons, title, text }: { reasons: ReturnType<typeof matchReasons>; title: string; text: Record<string, string> }) {
+  if (!reasons.length) return null;
+  return (
+    <div className="mt-1.5 px-1" aria-label={title}>
+      <ul className="flex flex-wrap gap-x-3 gap-y-1">
+        {reasons.map((r) => (
+          <li key={r.code} className="flex items-center gap-1 text-[11px] font-medium text-ink-muted">
+            <CheckCircle2 aria-hidden className="size-3 text-success" />
+            {r.code === "NEAR" ? fill(text.NEAR!, { km: r.km.toFixed(1) }) : text[r.code]}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

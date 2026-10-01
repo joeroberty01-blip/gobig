@@ -39,7 +39,7 @@ type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"]
 
 /**
  * The signed-in user's notifications. Request notifications are written here in the reader's
- * language from the stored type + request id; announcements are NEXA's own text (Phase 12).
+ * language from the stored type + request id; announcements are GO BIG's own text (Phase 12).
  */
 export async function NotificationList({ userId, basePath, t, locale }: { userId: string; basePath: "/requests" | "/provider/requests"; t: Dictionary; locale: Locale }) {
   const rows = await listNotifications(userId);
