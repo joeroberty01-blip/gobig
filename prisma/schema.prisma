@@ -1538,3 +1538,27 @@ model RiskFlag {
   @@index([status, createdAt])
   @@index([subjectType, subjectId])
 }
+
+// ─── Automation Engine, Phase G: analytics rollups ──────────────────────────────────────────
+
+enum RollupPeriod {
+  WEEK
+  MONTH
+}
+
+/// A frozen summary of one finished week (Mon–Sun) or month, in Dar es Salaam time, for the whole
+/// platform (scopeId "") or one business. Counts only — never per-person data.
+model MetricRollup {
+  id          String       @id @default(cuid())
+  period      RollupPeriod
+  /// First day of the period (Dar date).
+  periodStart DateTime     @db.Date
+  /// PLATFORM or PROVIDER.
+  scope       String
+  scopeId     String       @default("")
+  metrics     Json
+  createdAt   DateTime     @default(now())
+
+  @@unique([period, periodStart, scope, scopeId])
+  @@index([scope, scopeId, period, periodStart])
+}

@@ -4,6 +4,7 @@ import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { requirePageAccess } from "@/lib/session";
 import { platformAnalytics } from "@/lib/services/admin/insights";
+import { platformRollups } from "@/lib/analytics/rollups";
 import { formatTzs } from "@/lib/provider/format";
 import { DailyBars } from "@/components/insights/DailyBars";
 import { BarList } from "@/components/insights/BarList";
@@ -32,7 +33,7 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
   const a = t.adminPlatform.analytics;
   const raw = Number((await searchParams).days);
   const days = (PERIODS as readonly number[]).includes(raw) ? (raw as (typeof PERIODS)[number]) : 30;
-  const d = await platformAnalytics(days);
+  const [d, weeks, months] = await Promise.all([platformAnalytics(days), platformRollups("WEEK", 8), platformRollups("MONTH", 6)]);
   const n = (x: number) => x.toLocaleString("en-US");
   const dayKeys = d.series.map((x) => x.day.toISOString());
 
@@ -72,6 +73,53 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
       <Card>
         <h2 className="mb-3 font-semibold">{a.topCategories}</h2>
         <BarList rows={d.topCategories.map((c) => ({ label: locale === "sw" ? c.nameSw : c.nameEn, value: c.n }))} empty={a.none} />
+      </Card>
+      <Card>
+        <h2 className="font-semibold">{a.summaries.title}</h2>
+        <p className="mb-3 text-xs text-ink-subtle">{a.summaries.hint}</p>
+        {weeks.length + months.length === 0 ? (
+          <p className="text-sm text-ink-muted">{a.summaries.none}</p>
+        ) : (
+          ([["WEEK", weeks], ["MONTH", months]] as const).map(([kind, rows]) =>
+            rows.length === 0 ? null : (
+              <div key={kind} className="mb-4 overflow-x-auto">
+                <h3 className="mb-1 text-sm font-semibold text-ink-muted">{a.summaries[kind]}</h3>
+                <table className="w-full min-w-[640px] text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-ink-subtle">
+                      {[a.summaries.period, a.customers, a.providers, a.requests, a.completed, a.reviews, a.views, a.summaries.contacts, a.summaries.trips, a.revenue].map((h) => (
+                        <th key={h} scope="col" className="py-1.5 pr-3 font-medium">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    {rows.map(({ periodStart, metrics: m }) => (
+                      <tr key={periodStart.toISOString()}>
+                        <th scope="row" className="py-1.5 pr-3 text-left font-medium whitespace-nowrap">
+                          {new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", kind === "WEEK" ? { day: "numeric", month: "short", timeZone: "UTC" } : { month: "long", year: "numeric", timeZone: "UTC" }).format(periodStart)}
+                        </th>
+                        <td className="py-1.5 pr-3">+{n(m.newCustomers)}</td>
+                        <td className="py-1.5 pr-3">+{n(m.newProviders)}</td>
+                        <td className="py-1.5 pr-3">{n(m.requests)}</td>
+                        <td className="py-1.5 pr-3">{n(m.completed)}</td>
+                        <td className="py-1.5 pr-3">
+                          {n(m.reviews)}
+                          {m.avgRating != null && <span className="text-ink-subtle"> · {m.avgRating.toFixed(1)}★</span>}
+                        </td>
+                        <td className="py-1.5 pr-3">{n(m.views)}</td>
+                        <td className="py-1.5 pr-3">{n(m.contacts)}</td>
+                        <td className="py-1.5 pr-3">{n(m.trips)}</td>
+                        <td className="py-1.5 pr-3 whitespace-nowrap">{formatTzs(m.revenueTzs)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ),
+          )
+        )}
       </Card>
     </div>
   );

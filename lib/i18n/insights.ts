@@ -26,6 +26,16 @@ export const en = {
   noPrevious: "no data for the previous {days} days",
   notLive: "Your profile isn't live, so customers can't find it yet. Publish it to start collecting insights.",
   noBusiness: "Set up your business profile first.",
+  week: {
+    title: "Last week",
+    range: "{from} – {to}",
+    requests: "Requests",
+    replied: "You replied",
+    completed: "Jobs done",
+    reviews: "New reviews",
+    avg: "average {avg}★",
+    vs: "{change} vs the week before",
+  },
   funnel: {
     title: "From search to contact",
     appearances: "Saw you in results",
@@ -88,6 +98,16 @@ export const sw: InsightsDictionary = {
   noPrevious: "hakuna data ya siku {days} zilizopita",
   notLive: "Wasifu wako haupo hewani, kwa hiyo wateja hawawezi kuupata bado. Uchapishe ili kuanza kukusanya takwimu.",
   noBusiness: "Weka wasifu wa biashara yako kwanza.",
+  week: {
+    title: "Wiki iliyopita",
+    range: "{from} – {to}",
+    requests: "Maombi",
+    replied: "Ulijibu",
+    completed: "Kazi zilizokamilika",
+    reviews: "Maoni mapya",
+    avg: "wastani {avg}★",
+    vs: "{change} ukilinganisha na wiki iliyotangulia",
+  },
   funnel: {
     title: "Kutoka utafutaji hadi mawasiliano",
     appearances: "Walikuona kwenye matokeo",

@@ -8,4 +8,6 @@ export const NUDGE_HREF: Partial<Record<NotificationType, string>> = {
   // Phase F
   VERIFICATION_EXPIRING: "/provider/verification",
   VERIFICATION_EXPIRED: "/provider/verification",
+  // Phase G
+  WEEKLY_SUMMARY: "/provider/insights",
 };

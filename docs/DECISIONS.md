@@ -750,3 +750,13 @@ removed automatically: the business is reminded 30 days before and when it passe
 admin decides. Thresholds are settings on each rule; a flag is raised at most once per kind, subject
 and day (verification: once per verification), so sweeps can repeat safely. The existing
 `review.auto-hide` rule stays off by default.
+
+## ADR-067 — Weekly and monthly summaries (Automation Engine Phase G, 2026-10-02)
+
+After each finished week (Monday–Sunday) and month in Dar es Salaam time, `MetricRollup` keeps a
+frozen copy of the numbers for the platform and for every business with any activity: profile views,
+search appearances, contacts, requests, replies, completed jobs, reviews (and for the platform: new
+accounts, trips, revenue). A period is stored once and never recomputed, so a summary that was sent
+always matches what the dashboards show later. Each Monday at 08:00 businesses get their week as an
+in-app and push notification (email only if they switched it on in Settings) and see a "Last week"
+card on Insights; admins get weekly and monthly tables on Analytics. Counts only — no per-person data.

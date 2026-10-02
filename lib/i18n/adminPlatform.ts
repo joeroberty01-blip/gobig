@@ -164,6 +164,7 @@ export const en = {
   },
   analytics: {
     title: "Platform analytics",
+    summaries: { title: "Weekly and monthly summaries", hint: "Saved after each finished week (Mon–Sun) and month, Dar es Salaam time.", WEEK: "Weeks", MONTH: "Months", period: "Period", contacts: "Contacts", trips: "Trips", none: "The first summary appears after the first full week." },
     customers: "Customers",
     providers: "Provider accounts",
     newInPeriod: "+{count} in period",
@@ -250,6 +251,8 @@ export const en = {
       "trust.repeated-reports": { title: "Flag businesses reported by several people", hint: "Counts different people reporting the same business in 30 days.", reporters: "Different reporters" },
       "trust.trip-cancellations": { title: "Flag customers who cancel many trips", hint: "Drivers lose time and fuel; an admin decides what to do.", perDay: "Cancellations in a day" },
       "trust.verification-expiry": { title: "Verification renewal", hint: "Reminds the business before and when its verification gets old, and flags it for an admin. The badge is not removed automatically.", months: "Valid for (months)", warnDays: "Remind before (days)" },
+      "analytics.weekly": { title: "Weekly summaries", hint: "Mondays: saves last week's numbers and sends each business its summary (in-app and push).", minActivity: "Only if at least (views, contacts, requests, reviews)" },
+      "analytics.monthly": { title: "Monthly summaries", hint: "Saves last month's numbers on the 1st, for Analytics." },
     },
     runsTitle: "Recent runs",
     runStatus: { RUNNING: "Running", DONE: "Done", SKIPPED: "Skipped", FAILED: "Retrying", DEAD: "Failed" },
@@ -440,6 +443,7 @@ export const sw: AdminPlatformDictionary = {
   },
   analytics: {
     title: "Takwimu za jukwaa",
+    summaries: { title: "Muhtasari wa wiki na mwezi", hint: "Huhifadhiwa baada ya kila wiki kamili (Jumatatu–Jumapili) na mwezi, saa za Dar es Salaam.", WEEK: "Wiki", MONTH: "Miezi", period: "Kipindi", contacts: "Mawasiliano", trips: "Safari", none: "Muhtasari wa kwanza utaonekana baada ya wiki ya kwanza kamili." },
     customers: "Wateja",
     providers: "Akaunti za watoa huduma",
     newInPeriod: "+{count} katika kipindi",
@@ -525,6 +529,8 @@ export const sw: AdminPlatformDictionary = {
       "trust.repeated-reports": { title: "Tia alama biashara zilizoripotiwa na watu kadhaa", hint: "Inahesabu watu tofauti walioripoti biashara moja ndani ya siku 30.", reporters: "Waliripoti tofauti" },
       "trust.trip-cancellations": { title: "Tia alama wateja wanaoghairi safari nyingi", hint: "Madereva hupoteza muda na mafuta; msimamizi anaamua.", perDay: "Kughairi kwa siku" },
       "trust.verification-expiry": { title: "Kuhuisha uthibitisho", hint: "Inakumbusha biashara kabla na wakati uthibitisho wake unapozeeka, na kuweka alama kwa msimamizi. Beji haiondolewi yenyewe.", months: "Halali kwa (miezi)", warnDays: "Kumbusha kabla ya (siku)" },
+      "analytics.weekly": { title: "Muhtasari wa wiki", hint: "Jumatatu: huhifadhi takwimu za wiki iliyopita na kutuma kila biashara muhtasari wake (ndani ya programu na push).", minActivity: "Ikiwa tu angalau (kuonwa, mawasiliano, maombi, maoni)" },
+      "analytics.monthly": { title: "Muhtasari wa mwezi", hint: "Huhifadhi takwimu za mwezi uliopita tarehe 1, kwa Takwimu." },
     },
     runsTitle: "Utekelezaji wa karibuni",
     runStatus: { RUNNING: "Inaendelea", DONE: "Imekamilika", SKIPPED: "Imerukwa", FAILED: "Inajaribiwa tena", DEAD: "Imeshindwa" },

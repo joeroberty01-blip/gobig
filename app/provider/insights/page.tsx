@@ -11,6 +11,7 @@ import { PERIODS, providerAnalytics, type Analytics, type Period } from "@/lib/s
 import { DailyBars } from "@/components/insights/DailyBars";
 import { BarList } from "@/components/insights/BarList";
 import { Alert, ButtonLink, Card, PageHeader } from "@/components/ui";
+import { change, providerWeeks } from "@/lib/analytics/rollups";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
@@ -43,6 +44,43 @@ function Tile({ label, value, children }: { label: string; value: string; childr
   );
 }
 
+/** Phase G: the saved summary of the last finished week, with the week before for comparison. */
+function LastWeek({ weeks, t, locale }: { weeks: Awaited<ReturnType<typeof providerWeeks>>; t: Dictionary; locale: string }) {
+  const w = t.insights.week;
+  const [now, before] = weeks;
+  const m = now!.metrics;
+  const b = before && before.periodStart.getTime() === now!.periodStart.getTime() - 7 * 86_400_000 ? before.metrics : undefined;
+  const fmt = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  const end = new Date(now!.periodStart.getTime() + 6 * 86_400_000);
+  const items: [string, number, number | undefined][] = [
+    [w.requests, m.requests, b?.requests],
+    [w.replied, m.responded, b?.responded],
+    [w.completed, m.completed, b?.completed],
+    [w.reviews, m.reviews, b?.reviews],
+  ];
+  return (
+    <section aria-labelledby="last-week" className="rounded-2xl border border-line bg-surface p-4">
+      <h2 id="last-week" className="flex flex-wrap items-baseline gap-2 font-semibold">
+        {w.title}
+        <span className="text-xs font-normal text-ink-subtle">{fill(w.range, { from: fmt.format(now!.periodStart), to: fmt.format(end) })}</span>
+      </h2>
+      <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {items.map(([label, value, prev]) => {
+          const c = change(value, prev);
+          return (
+            <div key={label}>
+              <dt className="text-xs text-ink-muted">{label}</dt>
+              <dd className="text-2xl font-semibold">{value}</dd>
+              {c != null && <dd className="text-[11px] text-ink-subtle">{fill(w.vs, { change: `${c > 0 ? "+" : ""}${c}%` })}</dd>}
+              {label === w.reviews && m.reviews > 0 && <dd className="text-[11px] text-ink-subtle">{fill(w.avg, { avg: (m.ratingSum / m.reviews).toFixed(1) })}</dd>}
+            </div>
+          );
+        })}
+      </dl>
+    </section>
+  );
+}
+
 function tips(a: Analytics, t: Dictionary): string[] {
   const out: string[] = [];
   if (a.appearances.count >= 20 && (a.conversion.viewRate ?? 1) < 0.05) out.push(t.insights.tip.lowViewRate);
@@ -70,9 +108,10 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
 
   const raw = Number((await searchParams).days);
   const days: Period = (PERIODS as readonly number[]).includes(raw) ? (raw as Period) : 30;
-  const [a, provider] = await Promise.all([
+  const [a, provider, weeks] = await Promise.all([
     providerAnalytics(providerId, days),
     prisma.provider.findUnique({ where: { id: providerId }, select: { status: true } }),
+    providerWeeks(providerId),
   ]);
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
   const dayKeys = a.series.map((d) => d.day.toISOString());
@@ -98,6 +137,8 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
       </nav>
 
       {provider?.status !== "ACTIVE" && <Alert tone="info">{i.notLive}</Alert>}
+
+      {weeks[0] && <LastWeek weeks={weeks} t={t} locale={locale} />}
 
       <section aria-labelledby="funnel">
         <h2 id="funnel" className="mb-2 font-semibold">

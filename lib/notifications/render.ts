@@ -28,7 +28,7 @@ export async function renderNotification(n: { type: string; data: unknown }, rea
 
   const nudge = (t.notify.nudges as Record<string, string>)[type];
   if (nudge) {
-    return { title, body: nudge, url: NUDGE_HREF[type as NotificationType] ?? "/provider/notifications" };
+    return { title, body: fill(nudge, data.summary ?? {}), url: NUDGE_HREF[type as NotificationType] ?? "/provider/notifications" };
   }
 
   if (TRIP_TYPES.has(type)) {

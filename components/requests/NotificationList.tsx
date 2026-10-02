@@ -105,7 +105,7 @@ export async function NotificationList({ userId, basePath, t, locale }: { userId
                   <Link href={nudge} className={`flex items-start gap-3 p-4 hover:bg-canvas ${tone}`}>
                     <Bell aria-hidden className={`mt-0.5 size-4 shrink-0 ${x.readAt ? "text-ink-subtle" : "text-brand-700"}`} />
                     <span className="min-w-0 flex-1">
-                      <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>{t.notify.nudges[x.type as keyof typeof t.notify.nudges]}</span>
+                      <span className={`block text-sm ${x.readAt ? "text-ink-muted" : "font-semibold text-ink"}`}>{fill(t.notify.nudges[x.type as keyof typeof t.notify.nudges], d.summary ?? {})}</span>
                       <span className="text-xs text-ink-subtle">{time.format(x.createdAt)}</span>
                     </span>
                   </Link>

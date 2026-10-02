@@ -39,6 +39,7 @@ export const en = {
     PROVIDER_INACTIVE: "Customers sent requests while you were away — have a look",
     VERIFICATION_EXPIRING: "Your verification ends within a month — renew it to keep your badge",
     VERIFICATION_EXPIRED: "Your verification is more than a year old — renew it so customers keep trusting your badge",
+    WEEKLY_SUMMARY: "Your week on Go Big: {views} profile views, {contacts} contacts, {requests} requests, {reviews} new reviews",
   },
 };
 
@@ -81,5 +82,6 @@ export const sw: typeof en = {
     PROVIDER_INACTIVE: "Wateja walituma maombi ukiwa haupo — angalia",
     VERIFICATION_EXPIRING: "Uthibitisho wako unaisha ndani ya mwezi mmoja — uhuishe ili ubaki na beji",
     VERIFICATION_EXPIRED: "Uthibitisho wako una zaidi ya mwaka mmoja — uhuishe ili wateja waendelee kuamini beji yako",
+    WEEKLY_SUMMARY: "Wiki yako Go Big: watu {views} waliona wasifu, mawasiliano {contacts}, maombi {requests}, maoni mapya {reviews}",
   },
 };

@@ -33,6 +33,8 @@ export type NotificationType =
   // Phase F: verification is valid for 12 months
   | "VERIFICATION_EXPIRING" // provider: your verification ends soon — renew it
   | "VERIFICATION_EXPIRED" // provider: your verification has ended — renew it
+  // Phase G
+  | "WEEKLY_SUMMARY" // provider: last week's numbers (in-app and push; email only if they turn it on)
   | "ANNOUNCEMENT" // everyone: a message from Go Big (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you
@@ -43,7 +45,7 @@ export type NotificationType =
   | "TRIP_CANCELLED" // the other side cancelled
   | "TRIP_EXPIRED"; // customer: no driver accepted in time
 
-export type NotificationData = { requestId?: string; matchId?: string; providerName?: string; announcementId?: string; tripId?: string };
+export type NotificationData = { requestId?: string; matchId?: string; providerName?: string; announcementId?: string; tripId?: string; /** Phase G: counts shown in a summary. */ summary?: Record<string, number> };
 
 type Db = Prisma.TransactionClient | typeof prisma;
 

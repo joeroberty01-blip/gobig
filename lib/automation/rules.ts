@@ -6,6 +6,7 @@ import { refreshRating } from "@/lib/services/reviews";
 import { autoOfflineDrivers } from "@/lib/services/trips";
 import { defineRule, type AnyRule } from "./registry";
 import { claimOnce } from "./once";
+import { activity, lastMonthStart, lastWeekStart, rollUp } from "@/lib/analytics/rollups";
 import { messageSpam, newAccountReviews, raiseFlags, repeatedReports, requestSpam, reviewBursts, tripCancellations, verificationAges } from "@/lib/trust/risk";
 
 // ─── Customer follow-ups (Phase C) ──────────────────────────────────────────────────────────
@@ -215,6 +216,33 @@ async function verificationExpiry(months: number, warnDays: number, now: Date) {
   return { expiring: expiring.length, expired: expired.length, reminded, flags };
 }
 
+// ─── Analytics (Phase G) ────────────────────────────────────────────────────────────────────
+
+/** Rolls up last week, then sends each business with enough activity its summary, once. */
+async function weeklySummaries(minActivity: number, now: Date) {
+  const start = lastWeekStart(now);
+  const { providers } = await rollUp("WEEK", start);
+  const week = start.toISOString().slice(0, 10);
+  let sent = 0;
+  for (const [providerId, m] of providers) {
+    if (activity(m) < minActivity) continue;
+    if (!(await claimOnce("analytics.weekly", `${providerId}:${week}`))) continue;
+    const summary = { views: m.views, contacts: m.contacts, requests: m.requests, reviews: m.reviews };
+    await notify(prisma, await providerUserIds(prisma, providerId), "WEEKLY_SUMMARY", { summary });
+    sent++;
+  }
+  return { week, businesses: providers.size, sent };
+}
+
+/** Rolls up last month once (the daily check is cheap when it's already done). */
+async function monthlyRollup(now: Date) {
+  const start = lastMonthStart(now);
+  const done = await prisma.metricRollup.count({ where: { period: "MONTH", periodStart: start, scope: "PLATFORM" } });
+  if (done) return { month: start.toISOString().slice(0, 7), businesses: 0, skipped: true };
+  const { providers } = await rollUp("MONTH", start);
+  return { month: start.toISOString().slice(0, 7), businesses: providers.size, skipped: false };
+}
+
 // ─── Registry ───────────────────────────────────────────────────────────────────────────────
 
 export const RULES: AnyRule[] = [
@@ -410,6 +438,26 @@ export const RULES: AnyRule[] = [
     ],
     defaults: { months: 12, warnDays: 30 },
     run: async ({ params, now }) => verificationExpiry(params.months, params.warnDays, now),
+  }),
+  defineRule({
+    id: "analytics.weekly",
+    group: "business",
+    trigger: { kind: "schedule", every: "weekly@mon-08:00" },
+    enabledByDefault: true,
+    params: z.object({ minActivity: z.number().int().min(1).max(1000) }),
+    fields: [{ key: "minActivity", min: 1, max: 1000 }],
+    defaults: { minActivity: 1 },
+    run: async ({ params, now }) => weeklySummaries(params.minActivity, now),
+  }),
+  defineRule({
+    id: "analytics.monthly",
+    group: "business",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({}),
+    fields: [],
+    defaults: {},
+    run: async ({ now }) => monthlyRollup(now),
   }),
 ];
 
