@@ -59,7 +59,11 @@ export type AuditAction =
   | "automation.drivers_offline"
   // Automation Engine (Phase B)
   | "automation.rule_saved"
-  | "automation.run_retried";
+  | "automation.run_retried"
+  // Settings page
+  | "account.password_changed"
+  | "account.signed_out_everywhere"
+  | "account.deleted";
 
 export async function audit(
   db: Prisma.TransactionClient | typeof prisma,

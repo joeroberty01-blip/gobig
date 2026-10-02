@@ -5,7 +5,7 @@ import { AccountPanel } from "@/components/account/AccountPanel";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
-  return { title: t.account.title };
+  return { title: t.settings.title };
 }
 
 export default async function ProviderAccountPage() {

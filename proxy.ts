@@ -16,6 +16,7 @@ const AREAS: { prefix: string; action: Action }[] = [
   { prefix: "/admin", action: "admin-area:access" },
   { prefix: "/provider", action: "provider-area:access" },
   { prefix: "/account", action: "account:view" },
+  { prefix: "/settings", action: "account:view" },
   { prefix: "/requests", action: "requests:create" },
   { prefix: "/notifications", action: "notifications:view" },
   { prefix: "/saved", action: "favorites:use" },

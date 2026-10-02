@@ -726,3 +726,15 @@ fixed reason codes; the server re-checks each reason against the facts (`lib/ai/
 the panel can never show an invented price, rating or opening time. Businesses' own free text is not
 sent (SEC-058). Without an API key, over the AI allowance, or on any failure, the panel shows the top
 three of the trust ranking instead and says so. Paid placement never enters this list.
+
+## ADR-065 — One Settings page for every role (2026-10-02)
+
+`/account` (customers), `/provider/account` and `/admin/account` now show the same Settings page in each
+area's own shell; `/settings` is a short address that sends each role to theirs. Sections: profile
+(edit name; phone and email changes go through support because they are sign-in identifiers),
+language and theme, location (see and forget it), notifications, security (change password, sign out
+on all devices, admins' two-factor), help, and delete account. Deletion is required for Play Store
+listing: it is immediate for customers and wipes personal details but keeps reviews and past jobs
+under "Deleted user" for businesses' records. The database requires an email or phone on every row,
+so a deleted account keeps `deleted-<id>@deleted.invalid`, which can never receive mail. Business
+owners and staff close accounts through support, so no business loses its owner by accident.

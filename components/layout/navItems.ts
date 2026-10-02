@@ -36,7 +36,7 @@ export const customerNav = (t: Dictionary): Nav => ({
     { href: "/categories", label: t.ui.nav.services, icon: "categories" },
     { href: "/help", label: t.ui.nav.help, icon: "bell" },
     { href: "/saved", label: t.nav.saved, icon: "saved" },
-    { href: "/account", label: t.ui.nav.profile, icon: "account" },
+    { href: "/account", label: t.settings.title, icon: "account" },
   ],
 });
 
@@ -58,7 +58,7 @@ export const providerNav = (t: Dictionary): Nav => ({
     { href: "/provider/verification", label: t.nav.verification, icon: "verification" },
     { href: "/provider/plan", label: t.billing.nav, icon: "plan" },
     { href: "/provider/notifications", label: t.requests.notifications.title, icon: "bell" },
-    { href: "/provider/account", label: t.nav.account, icon: "account" },
+    { href: "/provider/account", label: t.settings.title, icon: "account" },
   ],
 });
 
@@ -70,7 +70,7 @@ export const adminNav = (t: Dictionary): Nav => {
       { href: "/admin/users", label: t.nav.users, icon: "users" },
       { href: "/admin/verification", label: t.nav.verification, icon: "verification" },
       { href: "/admin/reports", label: t.adminPlatform.nav.reports, icon: "reports" },
-      { href: "/admin/account", label: t.nav.account, icon: "account" },
+      { href: "/admin/account", label: t.settings.title, icon: "account" },
       // On phones everything else is reached from the overview hub.
     ],
     side: [
@@ -90,7 +90,7 @@ export const adminNav = (t: Dictionary): Nav => {
       { href: "/admin/ranking", label: L.ranking, icon: "ranking" },
       { href: "/admin/audit", label: L.audit, icon: "audit" },
       { href: "/admin/settings", label: L.settings, icon: "settings" },
-      { href: "/admin/account", label: t.nav.account, icon: "account" },
+      { href: "/admin/account", label: t.settings.title, icon: "account" },
     ],
   };
 };

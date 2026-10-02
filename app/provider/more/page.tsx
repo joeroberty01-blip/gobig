@@ -35,7 +35,7 @@ export default async function ProviderMorePage() {
         { href: "/provider/notifications", label: t.requests.notifications.title, Icon: Bell },
       ],
     },
-    { title: t.ui.more.account, links: [{ href: "/provider/account", label: t.nav.account, Icon: UserRound }] },
+    { title: t.ui.more.account, links: [{ href: "/provider/account", label: t.settings.title, Icon: UserRound }] },
   ];
   return (
     <div className="mx-auto max-w-xl">

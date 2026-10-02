@@ -55,6 +55,9 @@ export const LIMITS = {
   notificationPrefsPerUser: { name: "nprefs:user", max: 60, windowSec: 60 * 60 },
   // Phase E: "Help me write" on the request form (each may cost a model call).
   aiAssistPerUser: { name: "aiassist:user", max: 20, windowSec: 24 * 60 * 60 },
+  // Settings page: password checks (change password, delete account) and profile edits.
+  accountPasswordPerUser: { name: "acctpw:user", max: 5, windowSec: 15 * 60 },
+  accountEditPerUser: { name: "acctedit:user", max: 20, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 export type LimitResult = { ok: true; remaining: number } | { ok: false; retryAfterSec: number };
