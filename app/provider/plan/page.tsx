@@ -70,7 +70,7 @@ export default async function ProviderPlanPage() {
         <p className="text-sm text-ink-muted">{b.current}</p>
         <p className="text-2xl font-semibold">{info.plan ? name(info.plan) : "—"}</p>
         <p className="mt-1 text-sm text-ink-muted">
-          {info.active?.currentPeriodEnd ? fill(b.renews, { date: date.format(info.active.currentPeriodEnd) }) : b.free}
+          {info.active?.currentPeriodEnd ? fill(info.active.isTrial ? b.trialUntil : b.renews, { date: date.format(info.active.currentPeriodEnd) }) : b.free}
         </p>
         {info.leads.limit != null && <p className="mt-1 text-sm text-ink-muted">{fill(b.leadsUsed, { used: info.leads.used, limit: info.leads.limit })}</p>}
       </Card>

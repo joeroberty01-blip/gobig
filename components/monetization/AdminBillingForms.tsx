@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   cancelSubscriptionAction,
   campaignAction,
+  grantTrialAction,
   recordPaymentAction,
   saveMonetizationSettingsAction,
   savePlanAction,
@@ -186,6 +187,46 @@ export function SettingsForm({
           </div>
         )}
       </fieldset>
+    </form>
+  );
+}
+
+/** Phase H: start a free trial for a business (no payment, never charged). */
+export function TrialForm({ plans }: { plans: { id: string; name: string }[] }) {
+  const { t } = useI18n();
+  const a = t.billing.admin;
+  const { pending, error, done, run } = useRun();
+  const [f, setF] = useState({ slug: "", planId: plans[0]?.id ?? "", days: 14 });
+  return (
+    <form
+      className="flex flex-col gap-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        run(() => grantTrialAction(f));
+      }}
+    >
+      <p className="text-sm text-ink-muted">{a.trialHint}</p>
+      <div className="grid gap-3 sm:grid-cols-[2fr_1fr_120px]">
+        <Field id="trial-slug" label={a.trialBusiness}>
+          <Input id="trial-slug" value={f.slug} onChange={(e) => setF({ ...f, slug: e.target.value })} required maxLength={200} />
+        </Field>
+        <Field id="trial-plan" label={a.trialPlan}>
+          <select id="trial-plan" className={control} value={f.planId} onChange={(e) => setF({ ...f, planId: e.target.value })}>
+            {plans.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field id="trial-days" label={a.trialDays}>
+          <Input id="trial-days" type="number" min={1} max={90} value={f.days} onChange={(e) => setF({ ...f, days: Number(e.target.value) })} />
+        </Field>
+      </div>
+      <Status error={error} done={done} />
+      <Button type="submit" disabled={pending || !f.slug || !f.planId} className="self-start">
+        {a.trialGive}
+      </Button>
     </form>
   );
 }

@@ -35,6 +35,12 @@ export type NotificationType =
   | "VERIFICATION_EXPIRED" // provider: your verification has ended — renew it
   // Phase G
   | "WEEKLY_SUMMARY" // provider: last week's numbers (in-app and push; email only if they turn it on)
+  // Phase H: plans and campaigns (Go Big never charges automatically)
+  | "SUBSCRIPTION_ENDING" // provider: your plan ends in {days} days
+  | "SUBSCRIPTION_ENDED" // provider: your plan ended; you're on Free
+  | "PAYMENT_PENDING" // provider: your plan request is waiting for payment
+  | "CAMPAIGN_ENDING" // provider: your sponsored campaign ends soon
+  | "CAMPAIGN_ENDED" // provider: your sponsored campaign has ended
   | "ANNOUNCEMENT" // everyone: a message from Go Big (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you

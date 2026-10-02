@@ -8,6 +8,8 @@ import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { getOwnedProviderId } from "@/lib/services/providerProfile";
 import * as billing from "@/lib/services/billing";
 import * as v from "@/lib/validators/billing";
+import { prisma } from "@/lib/db";
+import { grantTrial } from "@/lib/billing/lifecycle";
 
 // Phase 11 server actions: authenticate → can() → validate → service (audited). Provider ids come
 // from the session; admins act on ids that the service re-checks.
@@ -102,6 +104,22 @@ export async function recordPaymentAction(kind: "subscription" | "campaign", inp
       : kind === "campaign"
         ? await billing.recordCampaignPayment(user!.id, targetId, payment)
         : ({ ok: false, error: "notAllowed" } as const);
+  if (!r.ok) return fail(r.error);
+  refresh();
+  return { ok: true };
+}
+
+/** Phase H: an admin gives a business a plan free for some days (nothing is ever charged). */
+export async function grantTrialAction(input: { slug: unknown; planId: unknown; days: unknown }): Promise<BillingActionResult> {
+  const user = await getCurrentUser();
+  if (!can(user, "billing:manage")) return fail("forbidden");
+  const slug = typeof input.slug === "string" ? input.slug.trim().replace(/^.*\/p\//, "").replace(/[/?#].*$/, "").toLowerCase() : "";
+  const days = Number(input.days);
+  if (!/^[a-z0-9-]{1,80}$/.test(slug)) return fail("providerNotFound");
+  if (typeof input.planId !== "string" || !Number.isInteger(days) || days < 1 || days > 90) return fail("generic");
+  const provider = await prisma.provider.findUnique({ where: { slug }, select: { id: true } });
+  if (!provider) return fail("providerNotFound");
+  const r = await grantTrial(user!.id, provider.id, input.planId, days);
   if (!r.ok) return fail(r.error);
   refresh();
   return { ok: true };

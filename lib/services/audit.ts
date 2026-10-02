@@ -26,6 +26,7 @@ export type AuditAction =
   | "subscription.activated"
   | "subscription.renewed"
   | "subscription.cancelled"
+  | "subscription.trial_granted"
   | "payment.voided"
   | "campaign.requested"
   | "campaign.approve"

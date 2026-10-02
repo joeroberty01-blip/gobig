@@ -7,7 +7,7 @@ import { adminCampaigns, adminSubscriptions, getSettings, instructionsLastChange
 import { formatTzs } from "@/lib/provider/format";
 import { fill } from "@/lib/i18n/dictionaries";
 import { darToday } from "@/lib/validators/requests";
-import { CampaignControls, PaymentForm, PlanEditor, ReasonButton, SettingsForm } from "@/components/monetization/AdminBillingForms";
+import { CampaignControls, PaymentForm, PlanEditor, ReasonButton, SettingsForm, TrialForm } from "@/components/monetization/AdminBillingForms";
 import { Card, PageHeader } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -60,7 +60,7 @@ export default async function AdminMonetizationPage() {
                       <Link href={`/p/${s.provider.slug}`} className="font-semibold hover:underline">
                         {s.provider.profile?.displayName ?? s.provider.slug}
                       </Link>
-                      <span className="text-ink-muted"> · {name(s.plan)} · {formatTzs(s.priceTzs)}</span>
+                      <span className="text-ink-muted"> · {name(s.plan)} · {s.isTrial ? a.trialLabel : formatTzs(s.priceTzs)}</span>
                     </span>
                     <span className="flex items-center gap-2">
                       <span className="rounded-full bg-canvas px-2 py-0.5 text-xs font-semibold">{a.subscriptionStatus[s.effective]}</span>
@@ -72,13 +72,22 @@ export default async function AdminMonetizationPage() {
                       {["PENDING_PAYMENT", "ACTIVE", "PAST_DUE"].includes(s.status) && <ReasonButton kind="cancelSubscription" id={s.id} />}
                     </span>
                   </div>
-                  {["PENDING_PAYMENT", "ACTIVE", "PAST_DUE"].includes(s.status) && <PaymentForm kind="subscription" targetId={s.id} amount={s.priceTzs} today={today} />}
+                  {["PENDING_PAYMENT", "ACTIVE", "PAST_DUE"].includes(s.status) && !s.isTrial && <PaymentForm kind="subscription" targetId={s.id} amount={s.priceTzs} today={today} />}
                   <Payments list={s.payments} />
                 </Card>
               </li>
             ))}
           </ul>
         )}
+      </section>
+
+      <section aria-labelledby="trial">
+        <h2 id="trial" className="mb-2 font-semibold">
+          {a.trialTitle}
+        </h2>
+        <Card>
+          <TrialForm plans={plans.filter((p) => p.code !== "FREE" && p.isActive).map((p) => ({ id: p.id, name: name(p) }))} />
+        </Card>
       </section>
 
       <section aria-labelledby="campaigns">

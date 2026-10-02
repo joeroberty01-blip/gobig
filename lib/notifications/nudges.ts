@@ -10,4 +10,10 @@ export const NUDGE_HREF: Partial<Record<NotificationType, string>> = {
   VERIFICATION_EXPIRED: "/provider/verification",
   // Phase G
   WEEKLY_SUMMARY: "/provider/insights",
+  // Phase H
+  SUBSCRIPTION_ENDING: "/provider/plan",
+  SUBSCRIPTION_ENDED: "/provider/plan",
+  PAYMENT_PENDING: "/provider/plan",
+  CAMPAIGN_ENDING: "/provider/plan",
+  CAMPAIGN_ENDED: "/provider/plan",
 };

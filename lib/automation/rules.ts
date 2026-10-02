@@ -6,6 +6,7 @@ import { refreshRating } from "@/lib/services/reviews";
 import { autoOfflineDrivers } from "@/lib/services/trips";
 import { defineRule, type AnyRule } from "./registry";
 import { claimOnce } from "./once";
+import { campaignsEnding, endFinishedCampaigns, paymentsPending, subscriptionsEnded, subscriptionsEnding } from "@/lib/billing/lifecycle";
 import { activity, lastMonthStart, lastWeekStart, rollUp } from "@/lib/analytics/rollups";
 import { messageSpam, newAccountReviews, raiseFlags, repeatedReports, requestSpam, reviewBursts, tripCancellations, verificationAges } from "@/lib/trust/risk";
 
@@ -243,6 +244,38 @@ async function monthlyRollup(now: Date) {
   return { month: start.toISOString().slice(0, 7), businesses: providers.size, skipped: false };
 }
 
+// ─── Plans and campaigns (Phase H): remind only, never charge ───────────────────────────────
+
+const daysLeft = (end: Date, now: Date) => Math.max(1, Math.ceil((end.getTime() - now.getTime()) / DAY));
+
+/** One notice per item and stage, to every member of the business. */
+async function tellBusiness(key: string, providerId: string, type: Parameters<typeof notify>[2], summary?: Record<string, number>): Promise<number> {
+  if (!(await claimOnce("billing.notices", key))) return 0;
+  await notify(prisma, await providerUserIds(prisma, providerId), type, summary ? { summary } : {});
+  return 1;
+}
+
+async function planReminders(firstDays: number, lastDays: number, now: Date) {
+  let ending = 0;
+  let ended = 0;
+  for (const s of await subscriptionsEnding(firstDays, now)) {
+    const end = s.currentPeriodEnd!;
+    const stage = end.getTime() - now.getTime() <= lastDays * DAY ? "last" : "first";
+    ending += await tellBusiness(`${s.id}:${end.toISOString()}:${stage}`, s.providerId, "SUBSCRIPTION_ENDING", { days: daysLeft(end, now) });
+  }
+  for (const s of await subscriptionsEnded(now)) ended += await tellBusiness(`${s.id}:${s.currentPeriodEnd!.toISOString()}:ended`, s.providerId, "SUBSCRIPTION_ENDED");
+  return { ending, ended };
+}
+
+async function campaignLifecycle(endingDays: number, now: Date) {
+  let ending = 0;
+  let ended = 0;
+  // A campaign's last day runs until midnight in Dar.
+  for (const c of await campaignsEnding(endingDays, now)) ending += await tellBusiness(`campaign:${c.id}:ending`, c.providerId, "CAMPAIGN_ENDING", { days: daysLeft(new Date(c.endsAt.getTime() + DAY - 3 * HOUR), now) });
+  for (const c of await endFinishedCampaigns(now)) ended += await tellBusiness(`campaign:${c.id}:ended`, c.providerId, "CAMPAIGN_ENDED");
+  return { ending, ended };
+}
+
 // ─── Registry ───────────────────────────────────────────────────────────────────────────────
 
 export const RULES: AnyRule[] = [
@@ -458,6 +491,43 @@ export const RULES: AnyRule[] = [
     fields: [],
     defaults: {},
     run: async ({ now }) => monthlyRollup(now),
+  }),
+  defineRule({
+    id: "billing.renewal-reminder",
+    group: "business",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({ firstDays: z.number().int().min(2).max(30), lastDays: z.number().int().min(1).max(7) }),
+    fields: [
+      { key: "firstDays", min: 2, max: 30 },
+      { key: "lastDays", min: 1, max: 7 },
+    ],
+    defaults: { firstDays: 7, lastDays: 1 },
+    run: async ({ params, now }) => planReminders(params.firstDays, Math.min(params.lastDays, params.firstDays - 1), now),
+  }),
+  defineRule({
+    id: "billing.payment-pending",
+    group: "business",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({ hours: z.number().int().min(12).max(240) }),
+    fields: [{ key: "hours", min: 12, max: 240 }],
+    defaults: { hours: 48 },
+    run: async ({ params, now }) => {
+      let sent = 0;
+      for (const s of await paymentsPending(params.hours, now)) sent += await tellBusiness(`${s.id}:pending`, s.providerId, "PAYMENT_PENDING");
+      return { sent };
+    },
+  }),
+  defineRule({
+    id: "campaign.lifecycle",
+    group: "business",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({ endingDays: z.number().int().min(1).max(14) }),
+    fields: [{ key: "endingDays", min: 1, max: 14 }],
+    defaults: { endingDays: 2 },
+    run: async ({ params, now }) => campaignLifecycle(params.endingDays, now),
   }),
 ];
 

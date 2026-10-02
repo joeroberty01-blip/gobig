@@ -760,3 +760,14 @@ accounts, trips, revenue). A period is stored once and never recomputed, so a su
 always matches what the dashboards show later. Each Monday at 08:00 businesses get their week as an
 in-app and push notification (email only if they switched it on in Settings) and see a "Last week"
 card on Insights; admins get weekly and monthly tables on Analytics. Counts only — no per-person data.
+
+## ADR-068 — Plan reminders and free trials, never automatic charges (Automation Engine Phase H, 2026-10-02)
+
+Go Big never takes money by itself: businesses pay off-app (mobile money, bank, cash) and an admin
+records the payment. Three daily rules only remind: 7 days and 1 day before a plan or trial ends, once
+when it has ended (the business then reads as Free, as before), once when a plan request has waited 48
+hours for payment, and before a sponsored campaign's last day; finished campaigns are marked ENDED
+(they had already stopped showing). Every notice says nothing is charged automatically. Admins can
+give a business a free trial of a paid plan for 1–90 days from Monetization; it is stored as a
+subscription with `isTrial`, price 0 and no payment, and is audited. Which plans get trials, and for
+how long, is the owner's call — nothing grants trials on its own.

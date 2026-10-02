@@ -40,6 +40,11 @@ export const en = {
     VERIFICATION_EXPIRING: "Your verification ends within a month — renew it to keep your badge",
     VERIFICATION_EXPIRED: "Your verification is more than a year old — renew it so customers keep trusting your badge",
     WEEKLY_SUMMARY: "Your week on Go Big: {views} profile views, {contacts} contacts, {requests} requests, {reviews} new reviews",
+    SUBSCRIPTION_ENDING: "Your plan ends in {days} days. Renew to keep its features — nothing is charged automatically.",
+    SUBSCRIPTION_ENDED: "Your plan has ended and you're on the Free plan. Renew any time — nothing was charged.",
+    PAYMENT_PENDING: "Your plan request is waiting for payment. See how to pay on your Plan page.",
+    CAMPAIGN_ENDING: "Your sponsored campaign ends in {days} days.",
+    CAMPAIGN_ENDED: "Your sponsored campaign has ended.",
   },
 };
 
@@ -83,5 +88,10 @@ export const sw: typeof en = {
     VERIFICATION_EXPIRING: "Uthibitisho wako unaisha ndani ya mwezi mmoja — uhuishe ili ubaki na beji",
     VERIFICATION_EXPIRED: "Uthibitisho wako una zaidi ya mwaka mmoja — uhuishe ili wateja waendelee kuamini beji yako",
     WEEKLY_SUMMARY: "Wiki yako Go Big: watu {views} waliona wasifu, mawasiliano {contacts}, maombi {requests}, maoni mapya {reviews}",
+    SUBSCRIPTION_ENDING: "Mpango wako unaisha baada ya siku {days}. Uhuishe ili ubaki na huduma zake — hakuna kinachotozwa chenyewe.",
+    SUBSCRIPTION_ENDED: "Mpango wako umeisha na sasa uko kwenye mpango wa Bure. Uhuishe wakati wowote — hakuna kilichotozwa.",
+    PAYMENT_PENDING: "Ombi lako la mpango linasubiri malipo. Angalia jinsi ya kulipa kwenye ukurasa wa Mpango.",
+    CAMPAIGN_ENDING: "Kampeni yako ya kudhaminiwa inaisha baada ya siku {days}.",
+    CAMPAIGN_ENDED: "Kampeni yako ya kudhaminiwa imeisha.",
   },
 };
