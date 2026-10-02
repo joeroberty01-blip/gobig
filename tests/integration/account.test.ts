@@ -18,6 +18,7 @@ async function makeUser(name: string, role: "CUSTOMER" | "PROVIDER" = "CUSTOMER"
 }
 
 async function cleanup() {
+  await prisma.provider.deleteMany({ where: { slug: { startsWith: `account-biz-${run}` } } });
   await prisma.user.deleteMany({ where: { OR: [{ id: { in: ids } }, { email: { endsWith: domain } }] } });
 }
 
@@ -72,7 +73,8 @@ describe("settings: delete account", () => {
 
   it("wipes personal details, saved items and open requests; the account can't be used again", async () => {
     const id = await makeUser("Leaving Person");
-    const provider = await prisma.provider.findFirstOrThrow({ where: { status: "ACTIVE", deletedAt: null } });
+    // Its own business, so the test doesn't depend on what else is in the test database.
+    const provider = await prisma.provider.create({ data: { slug: `account-biz-${run}`, status: "ACTIVE" } });
     await prisma.favorite.create({ data: { userId: id, providerId: provider.id } });
     const location = await prisma.location.findUniqueOrThrow({ where: { slug: "kariakoo" } });
     const category = await prisma.category.findFirstOrThrow({ where: { isActive: true } });

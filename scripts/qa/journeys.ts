@@ -323,6 +323,47 @@ async function customerJourney(browser: Browser) {
     await snap(page, "customer-home-phone");
   });
 
+  // Phase J (2026-10-02): the new home, Go Big AI recommendations, Settings, About and Help.
+  await step(page, J, "home search → Go Big AI recommends", async () => {
+    await go(page, "/");
+    await page.getByRole("heading", { level: 1 }).waitFor();
+    await page.getByRole("searchbox").first().fill("nahitaji fundi bomba");
+    await page.getByRole("searchbox").first().press("Enter");
+    await page.waitForURL(/\/ask\?/, { timeout: 20_000 });
+    await page.getByRole("heading", { name: "Go Big AI recommends" }).waitFor({ timeout: 30_000 });
+    const picks = await page.locator("section[aria-labelledby='ai-picks'] ol > li").count();
+    if (picks < 1 || picks > 3) throw new Error(`${picks} recommendations`);
+    await noOverflow(page);
+    await snap(page, "customer-ask-recommends-phone");
+    return `${picks} recommended`;
+  });
+
+  await step(page, J, "area from the home search reaches Go Big AI", async () => {
+    await go(page, "/ask?q=fundi%20bomba&area=sinza");
+    // The "understood" chips, not the (hidden) options of the header's area menu.
+    await page.locator("section").filter({ has: page.locator("#understood") }).locator("li").filter({ hasText: "Sinza" }).first().waitFor({ timeout: 20_000 });
+  });
+
+  await step(page, J, "settings page", async () => {
+    await go(page, "/settings");
+    await page.waitForURL(/\/account$/, { timeout: 20_000 });
+    await page.getByRole("heading", { level: 1, name: "Settings" }).waitFor();
+    for (const name of ["Profile", "Preferences", "Location", "Security", "Delete account"]) await page.getByRole("heading", { name }).first().waitFor();
+    await noOverflow(page);
+    await snap(page, "customer-settings-phone");
+  });
+
+  await step(page, J, "about and help", async () => {
+    await go(page, "/about");
+    await page.getByRole("heading", { level: 1, name: "About Go Big" }).waitFor();
+    await noOverflow(page);
+    await go(page, "/help");
+    await page.getByRole("heading", { level: 1, name: "Help" }).waitFor();
+    await page.getByText("What is Go Big AI?").click();
+    await page.getByText(/never makes up prices/).waitFor();
+    await noOverflow(page);
+  });
+
   await step(page, J, "search", async () => {
     // Home now sends typed requests to the AI search; the plain search is under Explore.
     await go(page, "/search");
@@ -357,7 +398,12 @@ async function customerJourney(browser: Browser) {
 
   await step(page, J, "compare two providers", async () => {
     await makeSecondProvider();
-    await go(page, "/search?q=fundi%20bomba");
+    // Search results are cached for up to PUBLIC_CACHE_SEC (20 s): reload until the new business shows.
+    for (let i = 0; i < 6; i++) {
+      await go(page, "/search?q=fundi%20bomba");
+      if (await page.locator("article").filter({ hasText: SECOND }).count()) break;
+      await page.waitForTimeout(5000);
+    }
     for (const name of [BUSINESS, SECOND]) {
       const row = page.locator("article").filter({ hasText: name }).first();
       await row.getByRole("button", { name: /Add to compare/ }).click();
@@ -540,8 +586,29 @@ async function adminJourney(browser: Browser) {
     await page.locator("#automation").waitFor();
     await noOverflow(page);
     await snap(page, "admin-settings-desktop");
-    await page.locator("#automation").scrollIntoViewIfNeeded();
-    await snap(page, "admin-settings-automation");
+  });
+
+  // Phase I/J: the Automation Control Center and risk flags.
+  await step(page, J, "automation control center (every tab)", async () => {
+    for (const tab of ["", "rules", "runs", "failed", "deliveries", "audit"]) {
+      await go(page, `/admin/automation${tab ? `?tab=${tab}` : ""}`);
+      await page.getByRole("heading", { level: 1, name: "Automation Control Center" }).waitFor({ timeout: 20_000 });
+      await noOverflow(page);
+      if (!tab || tab === "rules") await snap(page, `admin-automation-${tab || "overview"}`);
+    }
+    await go(page, "/admin/automation?tab=rules");
+    await page.getByRole("heading", { name: "Trust & safety" }).waitFor();
+  });
+
+  await step(page, J, "risk flags", async () => {
+    await go(page, "/admin/risk");
+    await page.getByRole("heading", { level: 1, name: "Risk flags" }).waitFor();
+    await noOverflow(page);
+  });
+
+  await step(page, J, "weekly and monthly summaries", async () => {
+    await go(page, "/admin/analytics");
+    await page.getByRole("heading", { name: "Weekly and monthly summaries" }).waitFor({ timeout: 20_000 });
   });
 
   await step(page, J, "manage providers", async () => {
@@ -592,7 +659,8 @@ async function adminJourney(browser: Browser) {
 
   await step(page, J, "manage requests", async () => {
     await go(page, "/admin/requests?status=COMPLETED");
-    await page.locator("main").getByText("Pipe & leak repair").filter({ visible: true }).first().waitFor({ timeout: 15_000 });
+    // Listed under its category; the customer's own description identifies it.
+    await page.locator("main").getByText("Bomba la jikoni linavuja").filter({ visible: true }).first().waitFor({ timeout: 15_000 });
   });
 
   await step(page, J, "featured listings (monetization)", async () => {

@@ -782,3 +782,13 @@ Failed (rule runs and background jobs that gave up, each with Retry), Deliveries
 skipped / failed with the reasons, e.g. VAPID or SMTP not set up) and Audit (who changed what, and what
 the system did by itself). The health verdict flags a queue waiting more than 10 minutes, work that
 gave up, and failures in the last 24 hours. Texts are server-only.
+
+## ADR-070 — Indexes for the automation sweeps (Automation Engine Phase J, 2026-10-02)
+
+The trust sweeps (hourly), rollups (weekly/monthly), plan reminders (daily) and the Control Center
+filter big tables by time alone. Thirteen plain indexes were added so these stay cheap as the data
+grows: Message/Review/ServiceRequest `createdAt`, ServiceRequest `(status, completedAt)`, Trip
+`(cancelledBy, cancelledAt)`, Report `(providerId, createdAt)`, AutomationRun `(ruleId, updatedAt)`,
+NotificationDelivery `(createdAt, channel)`, ProviderMetric and ConnectEvent `day`, RequestMatch
+`notifiedAt` and `firstResponseAt`, Subscription `(status, currentPeriodEnd)`. The migration only
+creates indexes; nothing is dropped or rewritten.

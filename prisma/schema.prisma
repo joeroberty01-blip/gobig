@@ -542,6 +542,8 @@ model Review {
   /// One review per customer per provider (edit it instead of posting again).
   @@unique([providerId, authorId])
   @@index([providerId, status, createdAt])
+  /// Phase J: review-burst sweeps and rollups read all recent reviews.
+  @@index([createdAt])
 }
 
 /// The provider's public reply. Separate row: a reply can never alter the customer's review.
@@ -615,6 +617,8 @@ model ConnectEvent {
 
   @@unique([providerId, action, visitorHash, day])
   @@index([providerId, day])
+  /// Phase J: rollups across all businesses.
+  @@index([day])
 }
 
 // ─── Phase 7: service requests ──────────────────────────────────────────────────────────────
@@ -696,6 +700,9 @@ model ServiceRequest {
 
   @@index([customerId, createdAt])
   @@index([status, expiresAt])
+  /// Phase J: spam sweeps and rollups (by creation and completion time).
+  @@index([createdAt])
+  @@index([status, completedAt])
 }
 
 /// Private bucket; readable only by the customer, matched providers and admins via signed URLs.
@@ -731,6 +738,9 @@ model RequestMatch {
 
   @@unique([requestId, providerId])
   @@index([providerId, status])
+  /// Phase J: rollups (requests received / answered in a period).
+  @@index([notifiedAt])
+  @@index([firstResponseAt])
 }
 
 /// One quote per provider per request (a provider may revise it while it's SENT).
@@ -765,6 +775,8 @@ model Message {
   sender User         @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
 
   @@index([matchId, createdAt])
+  /// Phase J: trust sweeps count messages per sender per hour.
+  @@index([createdAt])
 }
 
 /// In-app notification. Stores a type + ids; the text is rendered in the reader's language.
@@ -832,6 +844,8 @@ model ProviderMetric {
 
   @@unique([providerId, kind, visitorHash, day])
   @@index([providerId, kind, day])
+  /// Phase J: weekly/monthly rollups across all businesses.
+  @@index([day])
 }
 
 /// A customer's saved provider.
@@ -943,6 +957,8 @@ model Subscription {
   payments Payment[]
 
   @@index([providerId, status])
+  /// Phase J: renewal reminders.
+  @@index([status, currentPeriodEnd])
 }
 
 /// Paid visibility, shown only in a labelled "Sponsored" slot. Must still match the search.
@@ -1053,6 +1069,8 @@ model Report {
 
   @@unique([reporterId, targetType, targetId])
   @@index([status, createdAt])
+  /// Phase J: repeated-reports sweep.
+  @@index([providerId, createdAt])
 }
 
 enum AnnouncementAudience {
@@ -1285,6 +1303,8 @@ model Trip {
   @@index([driverProviderId, status])
   @@index([status, expiresAt])
   @@index([status, completedAt])
+  /// Phase J: trip-cancellation sweep.
+  @@index([cancelledBy, cancelledAt])
 }
 
 /// A trip offered to one nearby driver. The first to accept wins (the trip row is updated with a
@@ -1374,6 +1394,8 @@ model AutomationRun {
   @@unique([ruleId, subjectKey])
   @@index([ruleId, createdAt])
   @@index([status, updatedAt])
+  /// Phase J: Control Center performance and history.
+  @@index([ruleId, updatedAt])
 }
 
 // ─── Notifications (Automation Engine, Phase C) ─────────────────────────────────────────────
@@ -1439,6 +1461,8 @@ model NotificationDelivery {
   @@unique([notificationId, channel])
   @@index([userId, channel, createdAt])
   @@index([status, createdAt])
+  /// Phase J: delivery stats over a period.
+  @@index([createdAt, channel])
 }
 
 /// A browser/app install that accepted push. Removed when the push service says it's gone.

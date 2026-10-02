@@ -85,6 +85,7 @@
     },
     "@auth/core": {
       "nodemailer": "$nodemailer"
-    }
+    },
+    "mysql2": "^3.24.5"
   }
 }
