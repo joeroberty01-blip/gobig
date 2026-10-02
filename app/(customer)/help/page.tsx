@@ -3,6 +3,7 @@ import { ChevronDown, Sparkles } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { infoText } from "@/lib/i18n/info";
 import { ButtonLink } from "@/components/ui";
+import { getPlatformSettings } from "@/lib/services/platformSettings";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { locale } = await getServerDictionary();
@@ -10,8 +11,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HelpPage() {
-  const { locale } = await getServerDictionary();
+  const [{ t, locale }, platform] = await Promise.all([getServerDictionary(), getPlatformSettings()]);
   const h = infoText(locale).help;
+  // Only contacts the admin has actually set in Platform settings; nothing is shown otherwise.
+  const support = [platform.supportPhone, platform.supportWhatsapp && `WhatsApp ${platform.supportWhatsapp}`, platform.supportEmail].filter(Boolean);
   return (
     <div className="mx-auto max-w-3xl">
       <h1 className="text-3xl font-black tracking-tight sm:text-4xl">{h.title}</h1>
@@ -39,6 +42,12 @@ export default async function HelpPage() {
           {h.stillTitle}
         </h2>
         <p className="mt-1 text-sm text-ink-muted">{h.stillBody}</p>
+        {support.length > 0 && (
+          <p className="mt-3 text-sm">
+            <span className="font-semibold">{t.account.support}: </span>
+            <span className="text-ink-muted">{support.join(" · ")}</span>
+          </p>
+        )}
         <div className="mt-4 flex flex-wrap gap-2">
           <ButtonLink href="/ask" className="rounded-full px-6">{h.askCta}</ButtonLink>
           <ButtonLink href="/categories" variant="secondary" className="rounded-full px-6">{h.browseCta}</ButtonLink>
