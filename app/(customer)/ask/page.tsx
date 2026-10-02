@@ -35,7 +35,10 @@ async function aiAllowed(): Promise<boolean> {
 }
 
 export default async function AskPage({ searchParams }: Props) {
-  const raw = (await searchParams).q;
+  const sp = await searchParams;
+  const raw = sp.q;
+  // Area chosen in the home hero's dropdown; aiSearch checks it against the real list of areas.
+  const pickedArea = typeof sp.area === "string" && /^[a-z0-9-]{1,60}$/.test(sp.area) ? sp.area : null;
   const q = (typeof raw === "string" ? raw : "").trim().replace(/\s+/g, " ");
   const tooLong = q.length > MAX_QUERY_CHARS;
   const { t, locale } = await getServerDictionary();
@@ -43,7 +46,7 @@ export default async function AskPage({ searchParams }: Props) {
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
 
   const point = await getSavedPoint();
-  const result = q && !tooLong ? await aiSearch(q, point, new Date(), { useAi: await aiAllowed() }) : null;
+  const result = q && !tooLong ? await aiSearch(q, point, new Date(), { useAi: await aiAllowed(), area: pickedArea }) : null;
   const [catalog, categories] = await Promise.all([loadCatalog(), result?.intent.clarify?.reason === "SERVICE_UNKNOWN" ? topCategories() : []]);
   const serviceOf = new Map(catalog.services.map((s) => [s.slug, s]));
   const categoryOf = new Map(catalog.categories.map((c) => [c.slug, c]));
@@ -67,6 +70,7 @@ export default async function AskPage({ searchParams }: Props) {
         {!q && <p className="mt-2 max-w-xl text-sm text-ink-muted">{a.intro}</p>}
         {/* Plain GET form: works before JavaScript loads, like the main search box. */}
         <form action="/ask" method="get" role="search" className="relative mt-5">
+          {pickedArea && <input type="hidden" name="area" value={pickedArea} />}
           <Search aria-hidden className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-ink-subtle" />
           <input
             type="search"

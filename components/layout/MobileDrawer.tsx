@@ -14,7 +14,9 @@ import { SignOutLink } from "./SignOutButton";
  * Phones: the ☰ button in the header opens the same navy sidebar as a slide-in panel, so every
  * section is one tap away (the bottom tabs stay for the main five).
  */
-export function MobileDrawer({ items, homeHref, userName }: { items: NavItem[]; homeHref: string; userName: string | null }) {
+export function MobileDrawer({ items, homeHref, userName, hideFrom = "md" }: { items: NavItem[]; homeHref: string; userName: string | null; hideFrom?: "md" | "lg" }) {
+  // Static class names (Tailwind must see them whole): the drawer hides where the desktop menu shows.
+  const hide = hideFrom === "lg" ? "lg:hidden" : "md:hidden";
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
@@ -39,14 +41,14 @@ export function MobileDrawer({ items, homeHref, userName }: { items: NavItem[]; 
         onClick={() => setOpen(true)}
         aria-label={t.ui.nav.menu}
         aria-expanded={open}
-        className="grid size-10 shrink-0 place-items-center rounded-xl text-ink transition hover:bg-canvas md:hidden"
+        className={`grid size-10 shrink-0 place-items-center rounded-xl text-ink transition hover:bg-canvas ${hide}`}
       >
         <Menu aria-hidden className="size-5.5" />
       </button>
       {/* Rendered on <body>: the header's backdrop blur would otherwise trap a fixed panel inside it. */}
       {open &&
         createPortal(
-        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label={t.ui.nav.menu}>
+        <div className={`fixed inset-0 z-50 ${hide}`} role="dialog" aria-modal="true" aria-label={t.ui.nav.menu}>
           <button type="button" aria-label={t.ui.nav.close} onClick={() => setOpen(false)} className="absolute inset-0 bg-night-900/50 backdrop-blur-sm" />
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col nav-gradient px-3 py-5 text-white shadow-lift animate-rise">
             <div className="mb-6 flex items-center justify-between px-3">

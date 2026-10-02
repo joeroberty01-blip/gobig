@@ -623,7 +623,8 @@ export async function topCategories() {
     prisma.category.findMany({
       where: { parentId: null, isActive: true },
       orderBy: { sortOrder: "asc" },
-      select: { slug: true, nameEn: true, nameSw: true, icon: true },
+      // Phase "reference design": the first few services name what a category covers on its card.
+      select: { slug: true, nameEn: true, nameSw: true, icon: true, services: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 3, select: { nameEn: true, nameSw: true } } },
     }),
   );
 }

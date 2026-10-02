@@ -101,12 +101,12 @@ export function TopNav({ items }: { items: NavItem[] }) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                    active ? "text-ink" : "text-ink-muted hover:text-ink"
+                  className={`relative flex items-center rounded-lg px-3.5 py-2 text-[15px] transition-colors ${
+                    active ? "font-bold text-ink" : "font-medium text-ink-muted hover:text-ink"
                   }`}
                 >
                   {item.label}
-                  {active && <span aria-hidden className="absolute inset-x-3 -bottom-[13px] h-0.5 rounded-full bg-brand-500" />}
+                  {active && <span aria-hidden className="absolute inset-x-3.5 -bottom-[17px] h-[3px] rounded-full bg-action" />}
                 </Link>
               </li>
             );

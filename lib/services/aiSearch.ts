@@ -70,8 +70,14 @@ export type AiSearchResult = { intent: SearchIntent; search: SearchResult | null
  * Runs the normal search for what was understood. When we couldn't tell the service at all, no
  * search runs and the page asks instead — we never show "matches" we aren't sure of.
  */
-export async function aiSearch(query: string, point: Point | null, now: Date = new Date(), opts: { useAi?: boolean } = {}): Promise<AiSearchResult> {
-  const intent = await understand(query, opts);
+/**
+ * `opts.area` is the area picked next to the search box (home hero). It only applies when the text
+ * names no area itself, and only if it is a real area slug; anything else is ignored.
+ */
+export async function aiSearch(query: string, point: Point | null, now: Date = new Date(), opts: { useAi?: boolean; area?: string | null } = {}): Promise<AiSearchResult> {
+  const understood = await understand(query, opts);
+  const picked = !understood.area && opts.area ? (await loadCatalog()).areas.find((x) => x.slug === opts.area)?.slug : undefined;
+  const intent = picked ? { ...understood, area: picked } : understood;
   if (!intent.service && !intent.category) return { intent, search: null };
   const params = { ...parseSearchParams({}), service: intent.service, category: intent.service ? null : intent.category, area: intent.area };
   return { intent, search: await searchProviders(params, now, intent.area ? null : point) };

@@ -193,7 +193,7 @@ export const en = {
     maxRequestMatches: "Providers each request is sent to",
     requestTtlDays: "Days an undated request stays open",
     ai: "AI search",
-    aiSearchEnabled: "Use the AI model for Ask Go Big (off = built-in parser only)",
+    aiSearchEnabled: "Use the AI model for Go Big AI (off = built-in parser only)",
     superOnly: "Only a super admin can change these.",
     // Phase 17: settings centre
     sections: { status: "System status", general: "Support", features: "Features", requests: "Requests", trips: "Rides & deliveries", automation: "Automation", activity: "Activity" },
@@ -463,7 +463,7 @@ export const sw: AdminPlatformDictionary = {
     maxRequestMatches: "Watoa huduma wanaotumiwa kila ombi",
     requestTtlDays: "Siku ombi lisilo na tarehe linabaki wazi",
     ai: "Utafutaji wa AI",
-    aiSearchEnabled: "Tumia modeli ya AI kwa Uliza Go Big (ikizimwa = kichanganuzi cha ndani tu)",
+    aiSearchEnabled: "Tumia modeli ya AI kwa Go Big AI (ikizimwa = kichanganuzi cha ndani tu)",
     superOnly: "Ni msimamizi mkuu tu anayeweza kubadilisha haya.",
     sections: { status: "Hali ya mfumo", general: "Msaada", features: "Huduma", requests: "Maombi", trips: "Usafiri na mizigo", automation: "Otomatiki", activity: "Shughuli" },
     features: "Kuwasha na kuzima huduma",

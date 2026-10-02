@@ -5,9 +5,21 @@ import type { NavItem } from "./NavLinks";
 // a raised round search button in the middle (`fab`). Desktop: every area gets the navy sidebar
 // with all of its sections (`side`).
 
-export type Nav = { tabs: NavItem[]; side?: NavItem[] };
+export type Nav = {
+  tabs: NavItem[];
+  side?: NavItem[];
+  /** Owner's reference design (2026-10-01): customers get a top menu on desktop instead of a sidebar. */
+  top?: NavItem[];
+};
 
 export const customerNav = (t: Dictionary): Nav => ({
+  top: [
+    { href: "/", label: t.nav.home, icon: "home", exact: true },
+    { href: "/categories", label: t.ui.nav.services, icon: "search" },
+    { href: "/ask", label: t.ai.title, icon: "sparkles" },
+    { href: "/about", label: t.ui.nav.about, icon: "store" },
+    { href: "/help", label: t.ui.nav.help, icon: "bell" },
+  ],
   tabs: [
     { href: "/", label: t.nav.home, icon: "home", exact: true },
     { href: "/search", label: t.ui.nav.explore, icon: "search" },
@@ -21,6 +33,8 @@ export const customerNav = (t: Dictionary): Nav => ({
     { href: "/ask", label: t.ai.title, icon: "sparkles" },
     { href: "/trips", label: t.trips.trips, icon: "car" },
     { href: "/requests", label: t.nav.requests, icon: "requests" },
+    { href: "/categories", label: t.ui.nav.services, icon: "categories" },
+    { href: "/help", label: t.ui.nav.help, icon: "bell" },
     { href: "/saved", label: t.nav.saved, icon: "saved" },
     { href: "/account", label: t.ui.nav.profile, icon: "account" },
   ],

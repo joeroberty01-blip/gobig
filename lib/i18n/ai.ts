@@ -1,7 +1,7 @@
 // AI search (Phase 9). Every sentence shown to customers is written here — never by the model.
 
 export const en = {
-  title: "Ask Go Big",
+  title: "Go Big AI",
   intro: "Describe what you need in your own words — in Swahili or English. We'll find the service, the area and when you need it.",
   placeholder: "e.g. I need AC repair in Mikocheni today",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],
@@ -69,7 +69,7 @@ export const en = {
 export type AiDictionary = typeof en;
 
 export const sw: AiDictionary = {
-  title: "Uliza Go Big",
+  title: "Go Big AI",
   intro: "Eleza unachohitaji kwa maneno yako — kwa Kiswahili au Kiingereza. Tutatambua huduma, eneo na lini unaihitaji.",
   placeholder: "mf. Nahitaji fundi AC Mikocheni leo",
   examples: ["Nahitaji fundi bomba Sinza leo", "AC repair in Mikocheni today", "Mtu wa kusafisha nyumba kesho Kimara"],

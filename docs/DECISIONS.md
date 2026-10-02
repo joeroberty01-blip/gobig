@@ -702,3 +702,16 @@ mark (navy tile, white "G" with an orange crossbar) in the app icon, favicon and
 notifications, and the two-factor issuer ("Go Big", encoded in otpauth links). Technical identifiers
 nobody sees keep their names — the `@demo.nexa.local` sample-account domain (existing samples and
 `db:demo:remove` depend on it) and internal cache/global keys. Earlier ADRs keep their wording as history.
+
+## ADR-063 — New home design, About and Help (2026-10-01)
+
+The owner sent a reference design. Customers now get a top menu on desktop (Home, Services, Go Big AI,
+About, Help) instead of a sidebar; phones keep the bottom tabs and the drawer. The home hero has a
+badge, the question with "today?" in a blue→orange gradient, one search bar with the area inside it
+(sent to Go Big AI as `area`), quick filters and a trust row. The third trust item is "Go Big AI · Ask
+anytime" instead of the reference's "24/7 Support", because there is no 24/7 support team to promise.
+On phones the photo sits under the words, in full (owner, 2026-10-02). "Popular Services" cards use
+real sample photos where we have them (`public/categories/<slug>.webp`) and a tinted icon otherwise.
+About and Help only describe what the app does today; their text lives in `lib/i18n/info.ts`
+(server-only), not in the client dictionary. The area picked next to the search only applies when the
+question names no area, and only if it is a real area slug.

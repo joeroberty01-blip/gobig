@@ -12,7 +12,11 @@ export function pushConfigured(): boolean {
   const priv = process.env.VAPID_PRIVATE_KEY?.trim();
   if (!pub || !priv) return (configured = false);
   try {
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT?.trim() || "mailto:support@nexa.co.tz", pub, priv);
+    // The contact push services use if something goes wrong: VAPID_SUBJECT (mailto: or https:), else
+    // the site's own address. Never a made-up mailbox.
+    const site = process.env.APP_URL?.trim();
+    const subject = process.env.VAPID_SUBJECT?.trim() || (site?.startsWith("https://") ? site : "https://gobig-jfcp.onrender.com");
+    webpush.setVapidDetails(subject, pub, priv);
     return (configured = true);
   } catch {
     return (configured = false);

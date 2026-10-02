@@ -22,13 +22,13 @@
 
   --color-whatsapp: #22c55e;
   /* Call-to-action orange (search button, Request Service, Respond) — the reference design. */
-  --color-cta: #f7931e;
+  --color-cta: #ff9500;
   /* Links, active tabs and small icons: the reference's royal blue. */
-  --color-link: #1d4ed8;
+  --color-link: #1f5ff2;
   --color-cta-hover: #e3800b;
   /* Other main actions: navy; green in the dark theme. */
-  --color-action: #0b1b33;
-  --color-action-hover: #1d3354;
+  --color-action: #1f5ff2;
+  --color-action-hover: #1749c9;
 
   --color-ink: #0b1b33;
   --color-ink-muted: #475569;

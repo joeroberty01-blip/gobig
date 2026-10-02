@@ -37,7 +37,8 @@ export async function AppShell({
   // Customers and providers get the bell (admins have no notifications yet).
   const bellHref = user?.status === "ACTIVE" ? (user.role === "PROVIDER" ? "/provider/notifications" : user.role === "CUSTOMER" ? "/notifications" : null) : null;
   const unread = bellHref ? await unreadCount(user!.id) : 0;
-  const sidebar = !!nav.side;
+  // Customers (top menu) have no desktop sidebar; the side list still fills the phone drawer.
+  const sidebar = !!nav.side && !nav.top;
   const accountHref = user ? (user.role === "PROVIDER" ? "/provider/account" : user.role === "CUSTOMER" ? "/account" : "/admin/account") : "/login";
   const avatar = user && (
     <Link
@@ -98,18 +99,22 @@ export async function AppShell({
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/85 backdrop-blur-xl">
-          <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : "max-w-6xl"}`}>
-            {sidebar && <MobileDrawer items={nav.side!} homeHref={homeHref} userName={user?.name ?? null} />}
+        <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/90 backdrop-blur-xl">
+          <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : nav.top ? "max-w-7xl lg:h-[4.5rem] lg:px-8" : "max-w-6xl"}`}>
+            {nav.side && <MobileDrawer items={nav.side} homeHref={homeHref} userName={user?.name ?? null} hideFrom={sidebar ? "md" : "lg"} />}
             {/* Customer phones: the reference header is the location pill and EN | SW; the logo shows from tablet width. */}
             <Link href={homeHref} className={`shrink-0 items-center gap-2 ${location ? "hidden sm:flex" : "flex"} ${sidebar ? "md:hidden" : ""}`}>
-              <Logo className="size-8" />
-              <Wordmark className="text-lg text-ink" />
+              <Logo className="size-8 lg:size-10" />
+              <Wordmark className="text-lg text-ink lg:text-2xl" tagline={nav.top ? t.ui.nav.tagline : undefined} />
               {areaLabel && <span className="hidden text-xs font-semibold text-ink-subtle uppercase sm:inline">{areaLabel}</span>}
             </Link>
-            <div className="flex min-w-0 flex-1 items-center">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
               {location}
-              {!sidebar && <TopNav items={nav.tabs} />}
+              {!sidebar && (
+                <div className="ml-auto">
+                  <TopNav items={nav.top ?? nav.tabs} />
+                </div>
+              )}
             </div>
             <div className={location ? "" : "hidden sm:block"}>
               <LanguageSwitch />
@@ -118,17 +123,17 @@ export async function AppShell({
             {avatar}
             {!user && (
               <div className="hidden items-center gap-2 sm:flex">
-                <ButtonLink href="/login" variant="ghost" className="min-h-9">
+                <ButtonLink href="/login" variant="secondary" className="min-h-10 rounded-full px-5">
                   {t.nav.login}
                 </ButtonLink>
-                <ButtonLink href="/signup" variant="night" className="min-h-9">
+                <ButtonLink href="/signup" variant="primary" className="min-h-10 rounded-full px-6">
                   {t.nav.signup}
                 </ButtonLink>
               </div>
             )}
           </div>
         </header>
-        <main className={`pb-bottom-nav mx-auto w-full max-w-6xl flex-1 px-4 py-6 md:pb-12 ${sidebar ? "md:px-6 lg:px-8" : ""}`}>{children}</main>
+        <main className={`pb-bottom-nav mx-auto w-full flex-1 px-4 py-6 md:pb-12 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : nav.top ? "max-w-7xl lg:px-8" : "max-w-6xl"}`}>{children}</main>
       </div>
       {/* Phones and tablets: bottom tabs. Desktop: header links (customers) or the sidebar. */}
       <BottomNav items={nav.tabs} hideFrom={sidebar ? "md" : "lg"} />
