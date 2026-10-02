@@ -6,6 +6,7 @@ import { refreshRating } from "@/lib/services/reviews";
 import { autoOfflineDrivers } from "@/lib/services/trips";
 import { defineRule, type AnyRule } from "./registry";
 import { claimOnce } from "./once";
+import { messageSpam, newAccountReviews, raiseFlags, repeatedReports, requestSpam, reviewBursts, tripCancellations, verificationAges } from "@/lib/trust/risk";
 
 // ─── Customer follow-ups (Phase C) ──────────────────────────────────────────────────────────
 // Each sends one in-app notification (push/email follow the person's preferences) at most once
@@ -189,6 +190,31 @@ async function nudgeProviders(ruleId: string, keySuffix: string, providers: { id
   return sent;
 }
 
+// ─── Trust & safety (Phase F): flag only ────────────────────────────────────────────────────
+// These rules only raise RiskFlags for an admin (and remind businesses about verification). They
+// never ban, hide or change anything (owner's rule).
+
+/** Reminds each business once per verification period, and flags it for admins. */
+async function verificationExpiry(months: number, warnDays: number, now: Date) {
+  const { expiring, expired } = await verificationAges(months, warnDays, now);
+  let reminded = 0;
+  for (const [list, type] of [
+    [expiring, "VERIFICATION_EXPIRING"],
+    [expired, "VERIFICATION_EXPIRED"],
+  ] as const) {
+    for (const p of list) {
+      if (!(await claimOnce(`trust.verification-expiry:${type}`, `${p.id}:${p.verifiedAt.toISOString()}`))) continue;
+      await notify(prisma, await providerUserIds(prisma, p.id), type, {});
+      reminded++;
+    }
+  }
+  const flags = await raiseFlags([
+    ...expiring.map((p) => ({ kind: "VERIFICATION_EXPIRING" as const, subjectType: "PROVIDER" as const, subjectId: p.id, count: 0, threshold: 0, window: p.verifiedAt.toISOString().slice(0, 10), extra: { expiresAt: p.expiresAt.toISOString().slice(0, 10) } })),
+    ...expired.map((p) => ({ kind: "VERIFICATION_EXPIRED" as const, subjectType: "PROVIDER" as const, subjectId: p.id, count: 0, threshold: 0, window: p.verifiedAt.toISOString().slice(0, 10), extra: { expiredAt: p.expiresAt.toISOString().slice(0, 10) } })),
+  ]);
+  return { expiring: expiring.length, expired: expired.length, reminded, flags };
+}
+
 // ─── Registry ───────────────────────────────────────────────────────────────────────────────
 
 export const RULES: AnyRule[] = [
@@ -321,6 +347,69 @@ export const RULES: AnyRule[] = [
     fields: [{ key: "days", min: 3, max: 60 }],
     defaults: { days: 14 },
     run: async ({ params, now }) => ({ sent: await nudgeProviders("provider.inactive", now.toISOString().slice(0, 10), await inactiveBusinessesWithLeads(params.days, now), "PROVIDER_INACTIVE") }),
+  }),
+  defineRule({
+    id: "trust.review-burst",
+    group: "trust",
+    trigger: { kind: "schedule", every: "hourly" },
+    enabledByDefault: true,
+    params: z.object({ count: z.number().int().min(2).max(100), hours: z.number().int().min(1).max(72), newAccounts: z.number().int().min(2).max(50), accountDays: z.number().int().min(1).max(30) }),
+    fields: [
+      { key: "count", min: 2, max: 100 },
+      { key: "hours", min: 1, max: 72 },
+      { key: "newAccounts", min: 2, max: 50 },
+      { key: "accountDays", min: 1, max: 30 },
+    ],
+    defaults: { count: 5, hours: 24, newAccounts: 3, accountDays: 2 },
+    run: async ({ params, now }) => ({
+      flags: await raiseFlags([...(await reviewBursts(params.count, params.hours, now)), ...(await newAccountReviews(params.newAccounts, params.accountDays, now))]),
+    }),
+  }),
+  defineRule({
+    id: "trust.spam",
+    group: "trust",
+    trigger: { kind: "schedule", every: "hourly" },
+    enabledByDefault: true,
+    params: z.object({ requestsPerDay: z.number().int().min(3).max(200), messagesPerHour: z.number().int().min(10).max(1000) }),
+    fields: [
+      { key: "requestsPerDay", min: 3, max: 200 },
+      { key: "messagesPerHour", min: 10, max: 1000 },
+    ],
+    defaults: { requestsPerDay: 10, messagesPerHour: 60 },
+    run: async ({ params, now }) => ({ flags: await raiseFlags([...(await requestSpam(params.requestsPerDay, now)), ...(await messageSpam(params.messagesPerHour, now))]) }),
+  }),
+  defineRule({
+    id: "trust.repeated-reports",
+    group: "trust",
+    trigger: { kind: "schedule", every: "hourly" },
+    enabledByDefault: true,
+    params: z.object({ reporters: z.number().int().min(2).max(50) }),
+    fields: [{ key: "reporters", min: 2, max: 50 }],
+    defaults: { reporters: 3 },
+    run: async ({ params, now }) => ({ flags: await raiseFlags(await repeatedReports(params.reporters, now)) }),
+  }),
+  defineRule({
+    id: "trust.trip-cancellations",
+    group: "trust",
+    trigger: { kind: "schedule", every: "hourly" },
+    enabledByDefault: true,
+    params: z.object({ perDay: z.number().int().min(2).max(100) }),
+    fields: [{ key: "perDay", min: 2, max: 100 }],
+    defaults: { perDay: 5 },
+    run: async ({ params, now }) => ({ flags: await raiseFlags(await tripCancellations(params.perDay, now)) }),
+  }),
+  defineRule({
+    id: "trust.verification-expiry",
+    group: "trust",
+    trigger: { kind: "schedule", every: "daily@08:00" },
+    enabledByDefault: true,
+    params: z.object({ months: z.number().int().min(6).max(36), warnDays: z.number().int().min(7).max(90) }),
+    fields: [
+      { key: "months", min: 6, max: 36 },
+      { key: "warnDays", min: 7, max: 90 },
+    ],
+    defaults: { months: 12, warnDays: 30 },
+    run: async ({ params, now }) => verificationExpiry(params.months, params.warnDays, now),
   }),
 ];
 

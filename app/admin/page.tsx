@@ -46,7 +46,7 @@ export default async function AdminOverviewPage() {
   const groups = [
     { title: d.people, links: [[L.users, "/admin/users"], [L.providers, "/admin/providers"]] },
     { title: d.catalogue, links: [[L.categories, "/admin/categories"], [L.locations, "/admin/locations"]] },
-    { title: d.activity, links: [[L.verification, "/admin/verification"], [L.reviews, "/admin/reviews"], [L.requests, "/admin/requests"], [L.reports, "/admin/reports"]] },
+    { title: d.activity, links: [[L.verification, "/admin/verification"], [L.reviews, "/admin/reviews"], [L.requests, "/admin/requests"], [L.reports, "/admin/reports"], [L.risk, "/admin/risk"]] },
     { title: d.platform, links: [[L.monetization, "/admin/monetization"], [L.analytics, "/admin/analytics"], [L.announcements, "/admin/announcements"], [L.audit, "/admin/audit"], [L.ranking, "/admin/ranking"], [L.settings, "/admin/settings"]] },
   ];
 

@@ -1491,3 +1491,50 @@ model Booking {
   @@index([providerId, scheduledAt])
   @@index([status, scheduledAt])
 }
+
+// ─── Automation Engine, Phase F: trust & safety flags ───────────────────────────────────────
+
+enum RiskKind {
+  REVIEW_BURST
+  NEW_ACCOUNT_REVIEWS
+  REQUEST_SPAM
+  MESSAGE_SPAM
+  REPEATED_REPORTS
+  TRIP_CANCELLATIONS
+  VERIFICATION_EXPIRING
+  VERIFICATION_EXPIRED
+}
+
+enum RiskSeverity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RiskStatus {
+  OPEN
+  DISMISSED
+  ACTIONED
+}
+
+/// Something unusual for an admin to look at. Flags never ban, hide or change anything by
+/// themselves (owner's rule). details holds counts and ids only — no message text or contact data.
+model RiskFlag {
+  id           String       @id @default(cuid())
+  kind         RiskKind
+  severity     RiskSeverity
+  status       RiskStatus   @default(OPEN)
+  /// PROVIDER or USER. Not a foreign key, so a flag outlives what it was about (like the audit log).
+  subjectType  String
+  subjectId    String
+  details      Json         @default("{}")
+  /// One flag per kind, subject and window: sweeps can run any number of times.
+  dedupeKey    String       @unique
+  resolvedById String?
+  resolvedAt   DateTime?
+  note         String?
+  createdAt    DateTime     @default(now())
+
+  @@index([status, createdAt])
+  @@index([subjectType, subjectId])
+}

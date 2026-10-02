@@ -30,6 +30,9 @@ export type NotificationType =
   | "REVIEW_REPLY_REMINDER" // provider: reviews waiting for your reply
   | "PROFILE_INCOMPLETE" // provider: finish your profile to appear in search
   | "PROVIDER_INACTIVE" // provider: customers asked while you were away
+  // Phase F: verification is valid for 12 months
+  | "VERIFICATION_EXPIRING" // provider: your verification ends soon — renew it
+  | "VERIFICATION_EXPIRED" // provider: your verification has ended — renew it
   | "ANNOUNCEMENT" // everyone: a message from Go Big (Phase 12)
   // Phase 17: rides & deliveries
   | "TRIP_OFFER" // driver: a nearby trip is offered to you

@@ -1,3 +1,4 @@
+import { NUDGE_HREF } from "@/lib/notifications/nudges";
 import Link from "next/link";
 import { Bell, Car, Megaphone, Settings } from "lucide-react";
 import { prisma } from "@/lib/db";
@@ -28,12 +29,6 @@ const REQUEST_TYPES: NotificationType[] = [
   "BOOKING_REMINDER",
   "BOOKING_AT_RISK",
 ];
-/** Phase D: business nudges with no request — each opens a fixed page. */
-const NUDGE_HREF: Partial<Record<NotificationType, string>> = {
-  REVIEW_REPLY_REMINDER: "/provider/reviews",
-  PROFILE_INCOMPLETE: "/provider/setup",
-  PROVIDER_INACTIVE: "/provider/requests",
-};
 const TRIP_TYPES: NotificationType[] = ["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"];
 type TripType = (typeof TRIP_TYPES)[number] & keyof Dictionary["trips"]["notif"];
 

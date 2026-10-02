@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { NUDGE_HREF } from "./nudges";
 import { fill, getDictionary, type Locale } from "@/lib/i18n/dictionaries";
 import type { NotificationData, NotificationType } from "@/lib/services/notifications";
 import { requestLabels } from "@/lib/services/requests";
@@ -27,8 +28,7 @@ export async function renderNotification(n: { type: string; data: unknown }, rea
 
   const nudge = (t.notify.nudges as Record<string, string>)[type];
   if (nudge) {
-    const href = type === "REVIEW_REPLY_REMINDER" ? "/provider/reviews" : type === "PROFILE_INCOMPLETE" ? "/provider/setup" : "/provider/requests";
-    return { title, body: nudge, url: href };
+    return { title, body: nudge, url: NUDGE_HREF[type as NotificationType] ?? "/provider/notifications" };
   }
 
   if (TRIP_TYPES.has(type)) {

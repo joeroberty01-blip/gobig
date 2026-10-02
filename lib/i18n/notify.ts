@@ -37,6 +37,8 @@ export const en = {
     REVIEW_REPLY_REMINDER: "Customers left reviews waiting for your reply",
     PROFILE_INCOMPLETE: "Finish your business profile so customers can find you",
     PROVIDER_INACTIVE: "Customers sent requests while you were away — have a look",
+    VERIFICATION_EXPIRING: "Your verification ends within a month — renew it to keep your badge",
+    VERIFICATION_EXPIRED: "Your verification is more than a year old — renew it so customers keep trusting your badge",
   },
 };
 
@@ -77,5 +79,7 @@ export const sw: typeof en = {
     REVIEW_REPLY_REMINDER: "Wateja wameacha maoni yanayosubiri jibu lako",
     PROFILE_INCOMPLETE: "Kamilisha wasifu wa biashara yako ili wateja wakupate",
     PROVIDER_INACTIVE: "Wateja walituma maombi ukiwa haupo — angalia",
+    VERIFICATION_EXPIRING: "Uthibitisho wako unaisha ndani ya mwezi mmoja — uhuishe ili ubaki na beji",
+    VERIFICATION_EXPIRED: "Uthibitisho wako una zaidi ya mwaka mmoja — uhuishe ili wateja waendelee kuamini beji yako",
   },
 };

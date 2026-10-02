@@ -80,6 +80,7 @@ export const adminNav = (t: Dictionary): Nav => {
       { href: "/admin/verification", label: L.verification, icon: "verification" },
       { href: "/admin/reports", label: L.reports, icon: "reports" },
       { href: "/admin/reviews", label: L.reviews, icon: "reviews" },
+      { href: "/admin/risk", label: L.risk, icon: "reports" },
       { href: "/admin/requests", label: L.requests, icon: "requests" },
       { href: "/admin/trips", label: t.trips.adminTitle, icon: "car" },
       { href: "/admin/categories", label: L.categories, icon: "categories" },

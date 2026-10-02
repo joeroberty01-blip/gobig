@@ -63,7 +63,9 @@ export type AuditAction =
   // Settings page
   | "account.password_changed"
   | "account.signed_out_everywhere"
-  | "account.deleted";
+  | "account.deleted"
+  // Phase F: trust & safety
+  | "risk.resolved";
 
 export async function audit(
   db: Prisma.TransactionClient | typeof prisma,

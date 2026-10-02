@@ -738,3 +738,15 @@ listing: it is immediate for customers and wipes personal details but keeps revi
 under "Deleted user" for businesses' records. The database requires an email or phone on every row,
 so a deleted account keeps `deleted-<id>@deleted.invalid`, which can never receive mail. Business
 owners and staff close accounts through support, so no business loses its owner by accident.
+
+## ADR-066 — Trust & safety flags, never automatic bans (Automation Engine Phase F, 2026-10-02)
+
+Five rules in the automation registry look for unusual activity: bursts of reviews (and reviews from
+accounts only days old), one account posting many requests or messages, a business reported by
+several different people in 30 days, a customer cancelling many trips, and verifications older than
+12 months. They only create `RiskFlag` rows for admins (Admin → Risk flags), who close each with a
+note (audited). Nothing is banned, hidden or unpublished by a rule, and a verification badge is not
+removed automatically: the business is reminded 30 days before and when it passes 12 months, and an
+admin decides. Thresholds are settings on each rule; a flag is raised at most once per kind, subject
+and day (verification: once per verification), so sweeps can repeat safely. The existing
+`review.auto-hide` rule stays off by default.
