@@ -16,6 +16,8 @@ import { ProviderCard } from "@/components/discovery/ProviderCard";
 import { Alert, ButtonLink, Card, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
 import { matchReasons } from "@/lib/discovery/reasons";
+import { recommendProviders } from "@/lib/services/aiRecommend";
+import type { PickReason, Recommendation } from "@/lib/ai/recommend";
 import { LocateMe } from "@/components/discovery/LocateMe";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -46,7 +48,9 @@ export default async function AskPage({ searchParams }: Props) {
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
 
   const point = await getSavedPoint();
-  const result = q && !tooLong ? await aiSearch(q, point, new Date(), { useAi: await aiAllowed(), area: pickedArea }) : null;
+  const useAi = q && !tooLong ? await aiAllowed() : false;
+  const result = q && !tooLong ? await aiSearch(q, point, new Date(), { useAi, area: pickedArea }) : null;
+  const recommendation = result?.search && result.search.total > 0 ? await recommendProviders(q, result.intent, result.search.results, { useAi }) : null;
   const [catalog, categories] = await Promise.all([loadCatalog(), result?.intent.clarify?.reason === "SERVICE_UNKNOWN" ? topCategories() : []]);
   const serviceOf = new Map(catalog.services.map((s) => [s.slug, s]));
   const categoryOf = new Map(catalog.categories.map((c) => [c.slug, c]));
@@ -190,6 +194,7 @@ export default async function AskPage({ searchParams }: Props) {
                 <EmptyState icon={<SearchX aria-hidden />} title={a.noResults} />
               ) : (
                 <>
+                  {recommendation && recommendation.picks.length > 0 && <Recommends rec={recommendation} t={t} />}
                   <h2 className="mb-3 text-lg font-bold tracking-tight">{t.ui.ask.matching}</h2>
                   {filters && (
                     <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
@@ -249,6 +254,49 @@ export default async function AskPage({ searchParams }: Props) {
 const POPULAR_AREAS = ["kariakoo", "sinza", "mikocheni", "kinondoni", "masaki", "mbezi", "kimara", "tegeta"];
 
 /** Phase E: explanation built only from facts on the card (lib/discovery/reasons.ts). */
+/** Go Big AI's picks: real businesses from the results, each with reasons checked against its facts. */
+function Recommends({ rec, t }: { rec: Recommendation; t: Awaited<ReturnType<typeof getServerDictionary>>["t"] }) {
+  const a = t.ai;
+  return (
+    <section aria-labelledby="ai-picks" className="mb-6 rounded-3xl bg-gradient-to-br from-[#eef4ff] to-surface p-4 ring-1 ring-action/15 sm:p-5">
+      <h2 id="ai-picks" className="flex items-center gap-2 text-lg font-bold tracking-tight">
+        <span className="grid size-8 place-items-center rounded-full bg-action text-white">
+          <Sparkles aria-hidden className="size-4" />
+        </span>
+        {a.recommendTitle}
+      </h2>
+      <ol className="mt-3 grid gap-2 sm:grid-cols-3">
+        {rec.picks.map(({ card, reasons }, i) => (
+          <li key={card.id}>
+            <Link href={`/p/${card.slug}`} className="flex h-full flex-col rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/60 transition hover:shadow-lift">
+              <span className="flex items-center gap-2">
+                <span className="grid size-6 shrink-0 place-items-center rounded-full bg-action/10 text-xs font-bold text-action">{i + 1}</span>
+                <span className="line-clamp-1 font-semibold">{card.name}</span>
+              </span>
+              <ul className="mt-2 space-y-1">
+                {reasons.map((r) => (
+                  <li key={r.code} className="flex items-center gap-1.5 text-xs text-ink-muted">
+                    <CheckCircle2 aria-hidden className="size-3.5 shrink-0 text-success" />
+                    {reasonText(r, a.reasons)}
+                  </li>
+                ))}
+              </ul>
+              <span className="mt-auto pt-2 text-xs font-semibold text-action">{a.viewProfile} →</span>
+            </Link>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-3 text-[11px] text-ink-subtle">{rec.source === "ai" ? a.recommendAiNote : a.recommendRulesNote}</p>
+    </section>
+  );
+}
+
+function reasonText(r: PickReason, text: Record<string, string>): string {
+  if (r.code === "NEAR" || r.code === "CLOSEST") return fill(text[r.code]!, { km: r.km.toFixed(1) });
+  if (r.code === "MOST_REVIEWS") return fill(text.MOST_REVIEWS!, { count: r.count });
+  return text[r.code] ?? "";
+}
+
 function WhyThisMatch({ reasons, title, text }: { reasons: ReturnType<typeof matchReasons>; title: string; text: Record<string, string> }) {
   if (!reasons.length) return null;
   return (

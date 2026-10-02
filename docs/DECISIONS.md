@@ -715,3 +715,14 @@ real sample photos where we have them (`public/categories/<slug>.webp`) and a ti
 About and Help only describe what the app does today; their text lives in `lib/i18n/info.ts`
 (server-only), not in the client dictionary. The area picked next to the search only applies when the
 question names no area, and only if it is a real area slug.
+
+## ADR-064 — Go Big AI recommends businesses (2026-10-02)
+
+The owner asked for "Go Big AI" that knows every business and recommends them. It does not train on
+or copy business data: on every question it reads the live search results (up to 10 real businesses,
+with current prices, hours, ratings, badges and distance) and Claude picks up to three that fit the
+question best ("cheap", "urgent", "trusted", a place). Claude can only return ids from that list and
+fixed reason codes; the server re-checks each reason against the facts (`lib/ai/recommend.ts`), so
+the panel can never show an invented price, rating or opening time. Businesses' own free text is not
+sent (SEC-058). Without an API key, over the AI allowance, or on any failure, the panel shows the top
+three of the trust ranking instead and says so. Paid placement never enters this list.
