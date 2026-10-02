@@ -16,6 +16,7 @@ export const en = {
     activity: "Activity",
     platform: "Platform",
     links: {
+      automation: "Automation",
       risk: "Risk flags",
       users: "Users",
       providers: "Providers",
@@ -209,6 +210,8 @@ export const en = {
     tripMaxKm: "Longest trip allowed (km)",
     tripPurgeDays: "Days before exact trip locations are erased (7–90)",
     automation: "Automation rules",
+    automationCenter: "Automation Control Center",
+    automationCenterHint: "Rules, run history, failures and retries, notification delivery and health.",
     automationHint: "These run by themselves every 5 minutes. Set a number to 0 to turn a rule off. Everything they do is written to the audit log.",
     autoHideReviewAtReports: "Hide a review automatically after this many reports",
     autoHideReviewAtReportsHint: "Admins can restore it under Reviews → Recently hidden.",
@@ -298,6 +301,7 @@ export const sw: AdminPlatformDictionary = {
     activity: "Shughuli",
     platform: "Jukwaa",
     links: {
+      automation: "Otomatiki",
       risk: "Alama za hatari",
       users: "Watumiaji",
       providers: "Watoa huduma",
@@ -490,6 +494,8 @@ export const sw: AdminPlatformDictionary = {
     tripMaxKm: "Safari ndefu zaidi inayoruhusiwa (km)",
     tripPurgeDays: "Siku kabla mahali halisi pa safari kufutwa (7–90)",
     automation: "Kanuni za otomatiki",
+    automationCenter: "Kituo cha Otomatiki",
+    automationCenterHint: "Kanuni, historia, zilizoshindwa na kujaribu tena, uwasilishaji wa arifa na hali ya mfumo.",
     automationHint: "Hizi zinajiendesha kila dakika 5. Weka 0 kuzima kanuni. Kila zinachofanya kinaandikwa kwenye kumbukumbu za ukaguzi.",
     autoHideReviewAtReports: "Ficha maoni yenyewe baada ya ripoti hizi",
     autoHideReviewAtReportsHint: "Wasimamizi wanaweza kuyarudisha kwenye Maoni → Yaliyofichwa hivi karibuni.",

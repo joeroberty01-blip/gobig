@@ -771,3 +771,14 @@ hours for payment, and before a sponsored campaign's last day; finished campaign
 give a business a free trial of a paid plan for 1–90 days from Monetization; it is stored as a
 subscription with `isTrial`, price 0 and no payment, and is audited. Which plans get trials, and for
 how long, is the owner's call — nothing grants trials on its own.
+
+## ADR-069 — Automation Control Center (Automation Engine Phase I, 2026-10-02)
+
+Everything that runs by itself is now managed from Admin → Automation (`/admin/automation`) instead
+of a section of Settings. Tabs: Overview (health verdict, key counts, and per-rule performance over 7
+days: runs, failures, average and 95th-percentile time, last run), Rules (grouped; switch on/off and
+tune settings — super admin only), History (filter by rule and status, with results and errors),
+Failed (rule runs and background jobs that gave up, each with Retry), Deliveries (push and email sent /
+skipped / failed with the reasons, e.g. VAPID or SMTP not set up) and Audit (who changed what, and what
+the system did by itself). The health verdict flags a queue waiting more than 10 minutes, work that
+gave up, and failures in the last 24 hours. Texts are server-only.

@@ -61,6 +61,7 @@ export type AuditAction =
   // Automation Engine (Phase B)
   | "automation.rule_saved"
   | "automation.run_retried"
+  | "automation.job_retried"
   // Settings page
   | "account.password_changed"
   | "account.signed_out_everywhere"

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Activity, Bot, CheckCircle2, CircleAlert, CircleDashed } from "lucide-react";
+import Link from "next/link";
+import { Activity, Bot, CheckCircle2, ChevronRight, CircleAlert, CircleDashed } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
-import { fill } from "@/lib/i18n/dictionaries";
 import { can } from "@/lib/permissions";
 import { requirePageAccess } from "@/lib/session";
 import { prisma } from "@/lib/db";
@@ -10,24 +10,19 @@ import { encryptionConfigured } from "@/lib/crypto/fieldCipher";
 import { getPlatformSettings } from "@/lib/services/platformSettings";
 import { PlatformSettingsForm } from "@/components/admin/platform/Controls";
 import { PageHeader } from "@/components/ui";
-import { RuleCards } from "@/components/admin/automation/RuleCards";
-import { allRuleSettings, registry } from "@/lib/automation/engine";
-import { RULE_IDS } from "@/lib/automation/rules";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
   return { title: t.adminPlatform.settings.title };
 }
 
-const AUTOMATION_ACTIONS = ["review.auto_hidden", "automation.request_reminders", "automation.drivers_offline"] as const;
-
-/** Settings centre (Phase 17): live system status, every platform setting, automation and its activity. */
+/** Settings centre (Phase 17): live system status and every platform setting. Automation has its own Control Center (Phase I). */
 export default async function AdminSettingsPage() {
   // Admins can see the settings; only a super admin can change them.
   const actor = await requirePageAccess("admin-area:access", "/admin/settings");
   const { t, locale } = await getServerDictionary();
   const s = t.adminPlatform.settings;
-  const [settings, db, jobsWaiting, jobsDead, driversOnline, lastAutomation, activity] = await Promise.all([
+  const [settings, db, jobsWaiting, jobsDead, driversOnline, lastAutomation] = await Promise.all([
     getPlatformSettings({ fresh: true }),
     prisma.$queryRaw`SELECT 1`.then(
       () => true,
@@ -37,22 +32,7 @@ export default async function AdminSettingsPage() {
     prisma.job.count({ where: { status: "DEAD" } }),
     prisma.driverProfile.count({ where: { online: true } }),
     prisma.automationRun.findFirst({ where: { status: { in: ["DONE", "SKIPPED"] } }, orderBy: { updatedAt: "desc" }, select: { updatedAt: true } }),
-    prisma.auditLog.findMany({ where: { action: { in: [...AUTOMATION_ACTIONS] } }, orderBy: { createdAt: "desc" }, take: 20, select: { id: true, action: true, metadata: true, createdAt: true } }),
   ]);
-  const [ruleSettings, runs] = await Promise.all([
-    allRuleSettings(),
-    prisma.automationRun.findMany({ where: { NOT: { status: "SKIPPED" } }, orderBy: { updatedAt: "desc" }, take: 15, select: { id: true, ruleId: true, status: true, durationMs: true, result: true, error: true, updatedAt: true } }),
-  ]);
-  const rules = registry()
-    .filter((r) => RULE_IDS.includes(r.id))
-    .map((r) => ({
-      id: r.id,
-      trigger: r.trigger.kind === "schedule" ? { kind: "schedule" as const, every: r.trigger.every } : { kind: "event" as const },
-      enabled: ruleSettings.get(r.id)!.enabled,
-      params: ruleSettings.get(r.id)!.params as Record<string, number>,
-      fields: r.fields,
-    }));
-  const ruleTitle = (id: string) => (s.rules as Record<string, { title: string }>)[id]?.title ?? id;
   const r = redis();
   const time = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Africa/Dar_es_Salaam" });
   const encryption = encryptionConfigured();
@@ -84,7 +64,6 @@ export default async function AdminSettingsPage() {
             ["requests", sections.requests],
             ["trips", sections.trips],
             ["automation", sections.automation],
-            ["activity", sections.activity],
           ] as const
         ).map(([id, label]) => (
           <a key={id} href={`#${id}`} className="shrink-0 rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:border-link/40">
@@ -114,51 +93,20 @@ export default async function AdminSettingsPage() {
 
       <PlatformSettingsForm initial={settings} canEdit={can(actor, "settings:manage")} />
 
-      <section id="automation" className="mt-4 scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-soft">
-        <h2 className="font-bold">{s.automation}</h2>
-        <p className="mt-1 mb-4 text-sm text-ink-muted">{s.automationHint}</p>
-        <RuleCards rules={rules} canEdit={can(actor, "settings:manage")} />
-        {runs.length > 0 && (
-          <div className="mt-5">
-            <h3 className="mb-2 text-sm font-semibold">{s.runsTitle}</h3>
-            <ul className="divide-y divide-line text-sm">
-              {runs.map((r) => (
-                <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-                  <span className="min-w-0 flex-1 truncate">{ruleTitle(r.ruleId)}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${r.status === "DONE" ? "bg-success-soft text-success" : r.status === "DEAD" || r.status === "FAILED" ? "bg-danger-soft text-danger" : "bg-canvas text-ink-muted"}`}>{s.runStatus[r.status]}</span>
-                  <span className="text-xs text-ink-subtle">
-                    {r.result && typeof r.result === "object" ? Object.entries(r.result as Record<string, unknown>).map(([k, v]) => `${k}: ${String(v)}`).join(", ") : ""}
-                    {r.durationMs != null ? ` · ${r.durationMs} ms` : ""} · {time.format(r.updatedAt)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
-
-      <section id="activity" className="mt-4 scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-soft">
-        <h2 className="flex items-center gap-2 font-bold">
-          <Bot aria-hidden className="size-5 text-link" />
-          {s.activity}
-        </h2>
-        {activity.length === 0 ? (
-          <p className="mt-3 text-sm text-ink-muted">{s.activityEmpty}</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-line text-sm">
-            {activity.map((a) => {
-              const m = (a.metadata ?? {}) as Record<string, string | number>;
-              const text = s.activityActions[a.action as (typeof AUTOMATION_ACTIONS)[number]];
-              return (
-                <li key={a.id} className="flex items-start justify-between gap-3 py-2.5">
-                  <span>{fill(text, Object.fromEntries(Object.entries(m).map(([k, v]) => [k, String(v)])))}</span>
-                  <span className="shrink-0 text-xs text-ink-subtle">{time.format(a.createdAt)}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+      <Link
+        id="automation"
+        href="/admin/automation"
+        className="mt-4 flex scroll-mt-24 items-center gap-3 rounded-2xl border border-line bg-surface p-5 shadow-soft transition hover:shadow-lift"
+      >
+        <span className="grid size-10 place-items-center rounded-full bg-action/10 text-action">
+          <Bot aria-hidden className="size-5" />
+        </span>
+        <span className="flex-1">
+          <span className="block font-bold">{s.automationCenter}</span>
+          <span className="block text-sm text-ink-muted">{s.automationCenterHint}</span>
+        </span>
+        <ChevronRight aria-hidden className="size-5 text-ink-subtle" />
+      </Link>
     </div>
   );
 }

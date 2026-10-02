@@ -90,6 +90,7 @@ export const adminNav = (t: Dictionary): Nav => {
       { href: "/admin/announcements", label: L.announcements, icon: "megaphone" },
       { href: "/admin/ranking", label: L.ranking, icon: "ranking" },
       { href: "/admin/audit", label: L.audit, icon: "audit" },
+      { href: "/admin/automation", label: L.automation, icon: "settings" },
       { href: "/admin/settings", label: L.settings, icon: "settings" },
       { href: "/admin/account", label: t.settings.title, icon: "account" },
     ],
