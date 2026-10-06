@@ -822,3 +822,10 @@ the whole hero; a light veil (the page colour, 85% → 50% → clear; lightened 
 search and chips readable and fades out so the photo shows fully below. Large screens keep the
 photo on the right with the curved edge. The header's area menu now shrinks on narrow phones so it
 never covers the language switch.
+
+## ADR-074 — Lighter text with Poppins (2026-10-06)
+
+The owner found the text too dense. Poppins is wide and heavy, so every weight is one step lighter
+across the app (theme tokens in `app/globals.css`: black/extrabold → 700, bold → 600, semibold → 500)
+and `tracking-tight` is -0.01em instead of squeezing letters; the hero heading has a little more line
+spacing. The "Go Big" wordmark keeps weight 800 so the logo still stands out.

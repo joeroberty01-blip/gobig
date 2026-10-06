@@ -41,7 +41,7 @@ export function Hero({ t, districts, area, quick }: { t: Dictionary; districts: 
           <Sparkles aria-hidden className="size-4" />
           {h.badge}
         </span>
-        <h1 className="mt-3 text-[2.1rem] leading-[1.02] font-black tracking-tight text-ink sm:text-6xl lg:text-7xl">
+        <h1 className="mt-3 text-[2.1rem] leading-[1.1] font-black tracking-tight text-ink sm:text-6xl lg:text-7xl">
           {h.heroLine1}
           <br />
           <span className="bg-gradient-to-r from-[#1f5ff2] via-[#7b3ff2] to-[#ff9500] bg-clip-text pr-1 text-transparent">{h.heroLine2}</span>

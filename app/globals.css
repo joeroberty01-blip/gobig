@@ -6,6 +6,13 @@
  * Brand green = trust and action; "night" navy = hero and feature surfaces.
  */
 @theme {
+  /* Poppins is wide and heavy (owner, 2026-10-06: "font density"): every weight one step lighter
+     and natural letter spacing, so text breathes. The wordmark sets its own weight. */
+  --font-weight-black: 700;
+  --font-weight-extrabold: 700;
+  --font-weight-bold: 600;
+  --font-weight-semibold: 500;
+  --tracking-tight: -0.01em;
   --color-brand-50: #ecfdf6;
   --color-brand-100: #d1fae8;
   --color-brand-500: #10a37a;
