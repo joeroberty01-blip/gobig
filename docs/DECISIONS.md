@@ -863,3 +863,12 @@ quick filters fit in one row, trust items have the icon beside the text, service
 so more show, and the header has a bordered "Dar es Salaam" pill, a larger wordmark and a bolder ☰.
 Large screens: the search button is its own square beside the bar, the photo card runs the full
 height of the hero, and the trust row is one line. The E2E journey types into the new search box.
+
+## ADR-078 — Hero photo in "gradient form" (2026-10-06)
+
+Owner: the photo must not be cut out into a corner or a separate card; as directed earlier, the Dar
+es Salaam waterfront fills the WHOLE hero and a gradient sits over it — page-light behind the words on
+the left, fading to the clear photo on the right (phones: clear from about 80%; large screens: from
+65%, with a soft lift at the bottom on phones behind the search bar). On large screens the filters and
+trust row sit inside the hero on the light side and the real-numbers badge sits on the photo.
+Supersedes the photo placement in ADR-076/077.
