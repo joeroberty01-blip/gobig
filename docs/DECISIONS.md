@@ -818,7 +818,7 @@ icon mark in ADR-071 (the platform set and manifest from ADR-071 stay).
 
 The owner found the font unattractive: the app now uses Poppins (400–800) everywhere, and the app
 icons and store art are redrawn in it. On phones and tablets the Dar es Salaam waterfront now fills
-the whole hero; a light veil (the page colour, 92% → 65% → clear) over the top keeps the heading,
+the whole hero; a light veil (the page colour, 85% → 50% → clear; lightened at the owner's request) over the top keeps the heading,
 search and chips readable and fades out so the photo shows fully below. Large screens keep the
 photo on the right with the curved edge. The header's area menu now shrinks on narrow phones so it
 never covers the language switch.
