@@ -839,3 +839,17 @@ categories page uses the same photo cards with coloured icon circles as "Popular
 `components/home/CategoryCard.tsx`). On a business page both "Request service" buttons are the orange
 call to action. Result cards: Ride and Deliver are slim matching pills, and the opening-hours chip
 wraps instead of being cut off.
+
+## ADR-076 — Home page from the owner's phone and desktop mockups (2026-10-06)
+
+The home follows the owner's two mockups: "Find the right help. / Right around you." (second line in
+the brand gradient), a light hero card with the waterfront in the top-right corner behind a curved
+edge on phones and as a rounded photo card on large screens, the search bar with the area menu inside
+and a round search button, quick filters, the trust row, "Explore services" cards with a white icon
+tile in the category colour, and a "Need help deciding?" card for Go Big AI. Phone header: "Go Big"
+with the tagline, the area menu, and ☰ on the right; the language switch and Log in / Sign up moved
+into that menu. Three mockup claims were not real and were replaced: "Trusted by thousands" and
+"Trusted by 10,000+ happy customers" became real counts from the database (verified businesses,
+average rating and number of reviews, or businesses listed — sample businesses excluded, hidden when
+zero), and "Background checked" became "Documents checked", which is what verification does. The
+mockup's bottom tabs (Bookings, Messages) were not copied: bookings and messages live inside Requests.

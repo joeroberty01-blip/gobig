@@ -100,7 +100,12 @@ export async function AppShell({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/90 backdrop-blur-xl">
           <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : nav.top ? "max-w-7xl lg:h-[4.5rem] lg:px-8" : "max-w-6xl"}`}>
-            {nav.side && <MobileDrawer items={nav.side} homeHref={homeHref} userName={user?.name ?? null} hideFrom={sidebar ? "md" : "lg"} />}
+            {nav.side && (
+              // Customers' phones (owner's mockup): ☰ at the far right, with language and Log in inside.
+              <div className={`flex ${nav.top ? "order-last" : ""}`}>
+                <MobileDrawer items={nav.side} homeHref={homeHref} userName={user?.name ?? null} hideFrom={sidebar ? "md" : "lg"} side={nav.top ? "right" : "left"} extras={!!nav.top} />
+              </div>
+            )}
             {/* The words are the logo (owner, 2026-10-06), so they show on phones too, next to the location pill. */}
             <Link href={homeHref} className={`flex shrink-0 items-center gap-2 ${sidebar ? "md:hidden" : ""}`}>
               <Wordmark className="text-lg text-ink sm:text-xl lg:text-[1.75rem]" tagline={nav.top ? t.ui.nav.tagline : undefined} />
@@ -114,7 +119,7 @@ export async function AppShell({
                 </div>
               )}
             </div>
-            <div className={location ? "" : "hidden sm:block"}>
+            <div className={location && !nav.top ? "" : "hidden sm:block"}>
               <LanguageSwitch />
             </div>
             {bell}

@@ -13,11 +13,13 @@ import { ProviderCard } from "@/components/discovery/ProviderCard";
 import { Section } from "@/components/discovery/Section";
 import { Hero } from "@/components/home/Hero";
 import { PopularServices } from "@/components/home/PopularServices";
+import { AiPromo } from "@/components/home/AiPromo";
+import { homeStats } from "@/lib/services/homeStats";
 import { ButtonLink, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
 
 const HOME_CARDS = 8;
-const HOME_CATEGORIES = 8;
+const HOME_CATEGORIES = 6;
 
 // Customer home (owner's reference design, 2026-10-01): hero with search + area, quick filters,
 // Popular Services cards, and real nearby / available-now providers. Nothing is faked here.
@@ -27,9 +29,10 @@ export default async function HomePage() {
   const savedArea = point ? null : savedAreaCookie;
   const base: SearchParams = { q: "", area: savedArea, category: null, service: null, openNow: false, priced: false, verified: false, sort: "best", page: 1, view: "list" };
 
-  const [categories, districts, nearby, openNow] = await Promise.all([
+  const [categories, districts, stats, nearby, openNow] = await Promise.all([
     topCategories(),
     getAreaPickerOptions(),
+    homeStats(),
     searchProviders(base, undefined, point),
     searchProviders({ ...base, openNow: true }, undefined, point),
   ]);
@@ -56,7 +59,7 @@ export default async function HomePage() {
   );
   return (
     <div className="mx-auto max-w-7xl">
-      <Hero t={t} districts={districts} area={savedArea} quick={quick} />
+      <Hero t={t} districts={districts} area={savedArea} quick={quick} stats={stats} />
       {user && user.role !== "CUSTOMER" && (
         <Link href={roleHome(user.role)} className="mt-3 flex items-center gap-1 text-sm font-semibold text-action">
           {user.role === "PROVIDER" ? t.nav.dashboard : t.nav.overview}
@@ -65,6 +68,7 @@ export default async function HomePage() {
       )}
 
       <PopularServices t={t} locale={locale} categories={categories} max={HOME_CATEGORIES} />
+      <AiPromo t={t} />
 
       <Section
         title={h.nearYouTitle}

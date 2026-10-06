@@ -624,7 +624,15 @@ export async function topCategories() {
       where: { parentId: null, isActive: true },
       orderBy: { sortOrder: "asc" },
       // Phase "reference design": the first few services name what a category covers on its card.
-      select: { slug: true, nameEn: true, nameSw: true, icon: true, services: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 3, select: { nameEn: true, nameSw: true } } },
+      // A category whose services sit in sub-categories names those instead.
+      select: {
+        slug: true,
+        nameEn: true,
+        nameSw: true,
+        icon: true,
+        services: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 3, select: { nameEn: true, nameSw: true } },
+        children: { where: { isActive: true }, orderBy: { sortOrder: "asc" }, take: 3, select: { nameEn: true, nameSw: true } },
+      },
     }),
   );
 }

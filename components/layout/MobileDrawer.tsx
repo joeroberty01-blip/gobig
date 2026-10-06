@@ -9,12 +9,29 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { SideNav, type NavItem } from "./NavLinks";
 import { Wordmark } from "./Logo";
 import { SignOutLink } from "./SignOutButton";
+import { LanguageSwitch } from "./LanguageSwitch";
 
 /**
  * Phones: the ☰ button in the header opens the same navy sidebar as a slide-in panel, so every
  * section is one tap away (the bottom tabs stay for the main five).
  */
-export function MobileDrawer({ items, homeHref, userName, hideFrom = "md" }: { items: NavItem[]; homeHref: string; userName: string | null; hideFrom?: "md" | "lg" }) {
+export function MobileDrawer({
+  items,
+  homeHref,
+  userName,
+  hideFrom = "md",
+  side = "left",
+  extras = false,
+}: {
+  items: NavItem[];
+  homeHref: string;
+  userName: string | null;
+  hideFrom?: "md" | "lg";
+  /** Customers' phone header has the ☰ on the right (owner's mockup), so the panel opens from there. */
+  side?: "left" | "right";
+  /** Customers: language, and Log in / Sign up for guests, live in the menu on phones. */
+  extras?: boolean;
+}) {
   // Static class names (Tailwind must see them whole): the drawer hides where the desktop menu shows.
   const hide = hideFrom === "lg" ? "lg:hidden" : "md:hidden";
   const { t } = useI18n();
@@ -50,7 +67,7 @@ export function MobileDrawer({ items, homeHref, userName, hideFrom = "md" }: { i
         createPortal(
         <div className={`fixed inset-0 z-50 ${hide}`} role="dialog" aria-modal="true" aria-label={t.ui.nav.menu}>
           <button type="button" aria-label={t.ui.nav.close} onClick={() => setOpen(false)} className="absolute inset-0 bg-night-900/50 backdrop-blur-sm" />
-          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col nav-gradient px-3 py-5 text-white shadow-lift animate-rise">
+          <aside className={`absolute inset-y-0 ${side === "right" ? "right-0" : "left-0"} flex w-72 max-w-[85%] flex-col nav-gradient px-3 py-5 text-white shadow-lift animate-rise`}>
             <div className="mb-6 flex items-center justify-between px-3">
               <Link href={homeHref} className="flex items-center gap-2.5">
                 <Wordmark className="text-xl" />
@@ -62,6 +79,21 @@ export function MobileDrawer({ items, homeHref, userName, hideFrom = "md" }: { i
             <div className="flex-1 overflow-y-auto no-scrollbar">
               <SideNav items={items} />
             </div>
+            {extras && (
+              <div className="mt-4 flex flex-col gap-3 border-t border-white/10 px-3 pt-4">
+                <LanguageSwitch />
+                {!userName && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/login" className="grid min-h-11 place-items-center rounded-full bg-white/10 text-sm font-semibold hover:bg-white/15">
+                      {t.nav.login}
+                    </Link>
+                    <Link href="/signup" className="grid min-h-11 place-items-center rounded-full bg-action text-sm font-semibold hover:bg-action-hover">
+                      {t.nav.signup}
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
             {userName && (
               <div className="mt-4 border-t border-white/10 pt-4">
                 <p className="truncate px-3 text-sm font-semibold">{userName}</p>
