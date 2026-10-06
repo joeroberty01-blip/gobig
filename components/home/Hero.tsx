@@ -24,7 +24,7 @@ export function Hero({ t, districts, area, quick }: { t: Dictionary; districts: 
           over the top keeps the words and search readable, and fades out so the photo shows below. */}
       <div aria-hidden className="pointer-events-none absolute inset-0 lg:hidden">
         <Image src="/hero-dar.webp" alt="" fill priority sizes="100vw" className="object-cover object-[70%_center]" />
-        <div className="absolute inset-0 bg-gradient-to-b from-canvas/92 via-canvas/65 via-50% to-canvas/0" />
+        <div className="absolute inset-0 bg-gradient-to-b from-canvas/85 via-canvas/50 via-45% to-canvas/0" />
       </div>
       {/* Large screens: the waterfront fills the right half behind a curved edge. */}
       <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] lg:block">
