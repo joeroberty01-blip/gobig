@@ -8,7 +8,7 @@ import { ButtonLink } from "@/components/ui";
 import { BottomNav, SideNav, TopNav } from "./NavLinks";
 import type { Nav } from "./navItems";
 import { LanguageSwitch } from "./LanguageSwitch";
-import { Logo, Wordmark } from "./Logo";
+import { Wordmark } from "./Logo";
 import { SignOutLink } from "./SignOutButton";
 import { MobileDrawer } from "./MobileDrawer";
 
@@ -70,9 +70,8 @@ export async function AppShell({
       {sidebar && (
         <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-white/10 nav-gradient px-3 py-5 text-white md:flex">
           <Link href={homeHref} className="mb-6 flex items-center gap-2.5 px-3">
-            <Logo className="size-8" />
             <span className="flex flex-col leading-tight">
-              <Wordmark className="text-lg" />
+              <Wordmark className="text-xl" />
               {areaLabel && <span className="text-[11px] font-medium text-white/50">{areaLabel}</span>}
             </span>
           </Link>
@@ -102,10 +101,9 @@ export async function AppShell({
         <header className="sticky top-0 z-20 border-b border-line/70 bg-surface/90 backdrop-blur-xl">
           <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:h-16 sm:gap-3 sm:px-4 ${sidebar ? "max-w-6xl md:px-6 lg:px-8" : nav.top ? "max-w-7xl lg:h-[4.5rem] lg:px-8" : "max-w-6xl"}`}>
             {nav.side && <MobileDrawer items={nav.side} homeHref={homeHref} userName={user?.name ?? null} hideFrom={sidebar ? "md" : "lg"} />}
-            {/* Customer phones: the reference header is the location pill and EN | SW; the logo shows from tablet width. */}
-            <Link href={homeHref} className={`shrink-0 items-center gap-2 ${location ? "hidden sm:flex" : "flex"} ${sidebar ? "md:hidden" : ""}`}>
-              <Logo className="size-8 lg:size-10" />
-              <Wordmark className="text-lg text-ink lg:text-2xl" tagline={nav.top ? t.ui.nav.tagline : undefined} />
+            {/* The words are the logo (owner, 2026-10-06), so they show on phones too, next to the location pill. */}
+            <Link href={homeHref} className={`flex shrink-0 items-center gap-2 ${sidebar ? "md:hidden" : ""}`}>
+              <Wordmark className="text-lg text-ink sm:text-xl lg:text-[1.75rem]" tagline={nav.top ? t.ui.nav.tagline : undefined} />
               {areaLabel && <span className="hidden text-xs font-semibold text-ink-subtle uppercase sm:inline">{areaLabel}</span>}
             </Link>
             <div className="flex min-w-0 flex-1 items-center gap-4">

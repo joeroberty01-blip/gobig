@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { LogOut, Menu, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { SideNav, type NavItem } from "./NavLinks";
-import { Logo, Wordmark } from "./Logo";
+import { Wordmark } from "./Logo";
 import { SignOutLink } from "./SignOutButton";
 
 /**
@@ -53,8 +53,7 @@ export function MobileDrawer({ items, homeHref, userName, hideFrom = "md" }: { i
           <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col nav-gradient px-3 py-5 text-white shadow-lift animate-rise">
             <div className="mb-6 flex items-center justify-between px-3">
               <Link href={homeHref} className="flex items-center gap-2.5">
-                <Logo className="size-8" />
-                <Wordmark className="text-lg" />
+                <Wordmark className="text-xl" />
               </Link>
               <button type="button" onClick={() => setOpen(false)} aria-label={t.ui.nav.close} className="grid size-9 place-items-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white">
                 <X aria-hidden className="size-5" />

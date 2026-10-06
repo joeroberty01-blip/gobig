@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, LocateFixed, Star } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { LanguageSwitch } from "@/components/layout/LanguageSwitch";
-import { Logo, Wordmark } from "@/components/layout/Logo";
+import { Wordmark } from "@/components/layout/Logo";
 
 /**
  * Frame for login / sign-up / password reset (Phase 14): the form alone on phones; on large
@@ -25,7 +25,6 @@ export async function AuthCard({
     <div className="flex min-h-dvh">
       <aside className="nav-gradient relative hidden w-[44%] max-w-xl flex-col justify-between overflow-hidden p-12 text-white lg:flex">
         <Link href="/" className="flex items-center gap-2.5">
-          <Logo className="size-9" />
           <Wordmark className="text-xl" />
         </Link>
         <div>
@@ -54,8 +53,7 @@ export async function AuthCard({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="mx-auto flex h-16 w-full max-w-md items-center justify-between px-4 lg:max-w-lg">
           <Link href="/" className="flex items-center gap-2 lg:invisible">
-            <Logo className="size-8" />
-            <Wordmark className="text-lg" />
+            <Wordmark className="text-xl" />
           </Link>
           <LanguageSwitch />
         </header>

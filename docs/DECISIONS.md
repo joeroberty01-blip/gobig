@@ -804,3 +804,12 @@ notification badge, link previews (`app/opengraph-image.png`, `twitter-image.png
 Store listing icon and 1024×500 feature graphic in `docs/store/`. The manifest gained an id,
 shortcuts (Go Big AI, Services, My requests), categories and a branded launch screen. In the app the
 gradients are defined once (`BrandDefs` in the root layout) so logos in hidden menus keep their colour.
+
+## ADR-072 — The logo is the words only (2026-10-06)
+
+The owner preferred no icon: the logo is the wordmark "Go Big" ("Big" in the orange gradient), and it
+now also shows in the phone header. Every app icon (browser tab, iPhone, Android incl. maskable and
+monochrome, notification badge, Play Store) is the words "Go" over "Big" on the blue→indigo tile, and
+the link previews and Play Store banner use the wordmark large. `scripts/brand/icons.ts` draws them in
+Chrome with the app's font; transparent wordmark files for print are in `design/logo/`. Supersedes the
+icon mark in ADR-071 (the platform set and manifest from ADR-071 stay).
