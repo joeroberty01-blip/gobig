@@ -327,8 +327,10 @@ async function customerJourney(browser: Browser) {
   await step(page, J, "home search → Go Big AI recommends", async () => {
     await go(page, "/");
     await page.getByRole("heading", { level: 1 }).waitFor();
-    await page.getByRole("searchbox").first().fill("nahitaji fundi bomba");
-    await page.getByRole("searchbox").first().press("Enter");
+    // The hero's search is a two-line text box (owner's mockup) that submits on Enter.
+    const box = page.locator('form[role="search"] textarea[name="q"]');
+    await box.fill("nahitaji fundi bomba");
+    await box.press("Enter");
     await page.waitForURL(/\/ask\?/, { timeout: 20_000 });
     await page.getByRole("heading", { name: "Go Big AI recommends" }).waitFor({ timeout: 30_000 });
     const picks = await page.locator("section[aria-labelledby='ai-picks'] ol > li").count();

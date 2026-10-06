@@ -66,6 +66,7 @@ export const en = {
     aiPromoTitle: "Need help deciding?",
     aiPromoBody: "Let Go Big AI recommend the best services for you.",
     aiPromoCta: "Ask Go Big AI",
+    searchPlaceholderShort: "Search for a service or need",
   },
   card: {
     from: "From {price}",
@@ -254,6 +255,7 @@ export const sw: typeof en = {
     aiPromoTitle: "Unahitaji msaada kuchagua?",
     aiPromoBody: "Go Big AI ikupendekezee huduma bora kwako.",
     aiPromoCta: "Uliza Go Big AI",
+    searchPlaceholderShort: "Tafuta huduma unayohitaji",
   },
   card: {
     from: "Kuanzia {price}",

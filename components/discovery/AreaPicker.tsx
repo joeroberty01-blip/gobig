@@ -44,11 +44,11 @@ export function AreaPicker({
     <label
       className={`relative flex items-center text-ink ${
         pill
-          ? "min-h-9 min-w-0 max-w-32 gap-1 rounded-full bg-surface/80 px-2.5 hover:bg-surface sm:max-w-44"
+          ? "min-h-10 min-w-0 max-w-[11.75rem] gap-1 rounded-full border border-line bg-surface px-2 shadow-soft hover:border-ink-subtle/40 sm:max-w-48"
           : `gap-2 rounded-xl border border-line bg-surface px-3 shadow-soft ${compact ? "min-h-10" : "min-h-12"}`
       } ${pending ? "opacity-60" : ""}`}
     >
-      <MapPin aria-hidden className={`shrink-0 ${pill ? "size-3.5 text-ink-muted" : "size-4 text-brand-700"}`} />
+      <MapPin aria-hidden className={`shrink-0 ${pill ? "size-4 text-ink" : "size-4 text-brand-700"}`} />
       <span className="sr-only">{t.discovery.yourArea}</span>
       <select
         value={value ?? ""}
@@ -56,7 +56,8 @@ export function AreaPicker({
         disabled={pending}
         className={`min-w-0 flex-1 bg-transparent py-2 font-medium focus:outline-none ${pill ? "text-xs" : "text-sm"}`}
       >
-        <option value="">{t.discovery.allOfDar}</option>
+        {/* The header pill just says "Dar es Salaam" (owner's mockup); filters keep "All of Dar es Salaam". */}
+        <option value="">{pill ? "Dar es Salaam" : t.discovery.allOfDar}</option>
         {districts.map((d) => (
           <optgroup key={d.slug} label={d.name}>
             <option value={d.slug}>{fill(t.profile.fields.wholeDistrict, { district: d.name })}</option>

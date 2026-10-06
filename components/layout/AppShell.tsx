@@ -108,7 +108,7 @@ export async function AppShell({
             )}
             {/* The words are the logo (owner, 2026-10-06), so they show on phones too, next to the location pill. */}
             <Link href={homeHref} className={`flex shrink-0 items-center gap-2 ${sidebar ? "md:hidden" : ""}`}>
-              <Wordmark className="text-lg text-ink sm:text-xl lg:text-[1.75rem]" tagline={nav.top ? t.ui.nav.tagline : undefined} />
+              <Wordmark className="text-[1.45rem] text-ink lg:text-[1.75rem]" tagline={nav.top ? t.ui.nav.tagline : undefined} />
               {areaLabel && <span className="hidden text-xs font-semibold text-ink-subtle uppercase sm:inline">{areaLabel}</span>}
             </Link>
             <div className="flex min-w-0 flex-1 items-center gap-4">

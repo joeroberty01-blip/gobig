@@ -853,3 +853,13 @@ into that menu. Three mockup claims were not real and were replaced: "Trusted by
 average rating and number of reviews, or businesses listed — sample businesses excluded, hidden when
 zero), and "Background checked" became "Documents checked", which is what verification does. The
 mockup's bottom tabs (Bookings, Messages) were not copied: bookings and messages live inside Requests.
+
+## ADR-077 — Home closer to the mockups (2026-10-06)
+
+Owner: "still not exactly". Phone: the headline fits on two lines beside the photo (Poppins 700 at
+21.6px, -0.03em), the photo sits narrower in the top-right corner, the badge is one line, the search
+hint wraps over two lines (a textarea that submits on Enter, with a shorter hint on phones), all four
+quick filters fit in one row, trust items have the icon beside the text, service cards are narrower
+so more show, and the header has a bordered "Dar es Salaam" pill, a larger wordmark and a bolder ☰.
+Large screens: the search button is its own square beside the bar, the photo card runs the full
+height of the hero, and the trust row is one line. The E2E journey types into the new search box.

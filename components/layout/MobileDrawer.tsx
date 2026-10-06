@@ -60,7 +60,7 @@ export function MobileDrawer({
         aria-expanded={open}
         className={`grid size-10 shrink-0 place-items-center rounded-xl text-ink transition hover:bg-canvas ${hide}`}
       >
-        <Menu aria-hidden className="size-5.5" />
+        <Menu aria-hidden className="size-7" strokeWidth={2.25} />
       </button>
       {/* Rendered on <body>: the header's backdrop blur would otherwise trap a fixed panel inside it. */}
       {open &&
