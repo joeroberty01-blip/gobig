@@ -1,3 +1,4 @@
+import { BrandDefs } from "@/components/layout/Logo";
 import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} className={sans.variable} data-theme={theme} suppressHydrationWarning>
       <body className="min-h-dvh antialiased">
+        <BrandDefs />
         <I18nProvider t={publicDictionary(t)} locale={locale}>
           {children}
         </I18nProvider>

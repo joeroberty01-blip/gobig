@@ -792,3 +792,15 @@ grows: Message/Review/ServiceRequest `createdAt`, ServiceRequest `(status, compl
 NotificationDelivery `(createdAt, channel)`, ProviderMetric and ConnectEvent `day`, RequestMatch
 `notifiedAt` and `firstResponseAt`, Subscription `(status, currentPeriodEnd)`. The migration only
 creates indexes; nothing is dropped or rewritten.
+
+## ADR-071 — New Go Big mark and the full icon set (2026-10-06)
+
+The owner asked for a more stylish, unique logo with what each platform needs. The mark is a bold
+white "G" with an orange arrow launching out of its opening (growth, "go big") on a blue→indigo tile;
+the wordmark is "Go Big" with "Big" in the arrow's orange. One script, `scripts/brand/icons.ts`,
+draws every asset from the same paths: favicon (`app/icon.svg`), iPhone (`app/apple-icon.png`), PWA
+icons, Android maskable (glyph inside the 80% safe zone) and monochrome (themed icons), the
+notification badge, link previews (`app/opengraph-image.png`, `twitter-image.png`) and the Play
+Store listing icon and 1024×500 feature graphic in `docs/store/`. The manifest gained an id,
+shortcuts (Go Big AI, Services, My requests), categories and a branded launch screen. In the app the
+gradients are defined once (`BrandDefs` in the root layout) so logos in hidden menus keep their colour.

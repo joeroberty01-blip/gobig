@@ -18,7 +18,8 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(title, {
       body,
       icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      // Small white glyph for the Android status bar.
+      badge: "/icons/badge-96.png",
       tag: typeof data.tag === "string" ? data.tag : undefined,
       data: { url },
     }),
