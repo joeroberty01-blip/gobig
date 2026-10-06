@@ -829,3 +829,13 @@ The owner found the text too dense. Poppins is wide and heavy, so every weight i
 across the app (theme tokens in `app/globals.css`: black/extrabold → 700, bold → 600, semibold → 500)
 and `tracking-tight` is -0.01em instead of squeezing letters; the hero heading has a little more line
 spacing. The "Go Big" wordmark keeps weight 800 so the logo still stands out.
+
+## ADR-075 — One look across the whole app (2026-10-06)
+
+Owner: "attractiveness of whole system". The old green brand scale (links, focus rings, selected
+states, the Verified badge) is now Go Big blue in both themes, so every screen uses the same blue /
+orange as the redesigned home; "Open now" and other trust greens keep their own success colour. The
+categories page uses the same photo cards with coloured icon circles as "Popular Services" (shared
+`components/home/CategoryCard.tsx`). On a business page both "Request service" buttons are the orange
+call to action. Result cards: Ride and Deliver are slim matching pills, and the opening-hours chip
+wraps instead of being cut off.

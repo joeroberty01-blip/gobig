@@ -13,12 +13,14 @@
   --font-weight-bold: 600;
   --font-weight-semibold: 500;
   --tracking-tight: -0.01em;
-  --color-brand-50: #ecfdf6;
-  --color-brand-100: #d1fae8;
-  --color-brand-500: #10a37a;
-  --color-brand-600: #0b8a66;
-  --color-brand-700: #0a6e53;
-  --color-brand-900: #063d2f;
+  /* The brand scale is Go Big blue (owner's redesign, 2026-10-06; it was green until then). Trust
+     greens ("Open now") use the separate success tokens. */
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6ff;
+  --color-brand-500: #2f6bff;
+  --color-brand-600: #1f5ff2;
+  --color-brand-700: #1749c9;
+  --color-brand-900: #142f80;
   --color-accent-400: #fbbf24;
   --color-accent-500: #f59e0b;
 
@@ -88,12 +90,12 @@
     --color-action: #19946f;
     --color-link: #7aa7ff;
     --color-action-hover: #22aa80;
-    --color-brand-50: #0f2a23;
-    --color-brand-100: #15392f;
-    --color-brand-500: #2cc596;
-    --color-brand-600: #22aa80;
-    --color-brand-700: #19946f;
-    --color-brand-900: #b7f0dc;
+    --color-brand-50: #142046;
+    --color-brand-100: #1b2b5c;
+    --color-brand-500: #6b95ff;
+    --color-brand-600: #5585ff;
+    --color-brand-700: #8aabff;
+    --color-brand-900: #d6e2ff;
     --color-ink: #e8edf4;
     --color-ink-muted: #a7b3c4;
     --color-ink-subtle: #8492a6;
@@ -115,12 +117,12 @@
       --color-action: #19946f;
       --color-link: #7aa7ff;
       --color-action-hover: #22aa80;
-      --color-brand-50: #0f2a23;
-      --color-brand-100: #15392f;
-      --color-brand-500: #2cc596;
-      --color-brand-600: #22aa80;
-      --color-brand-700: #19946f;
-      --color-brand-900: #b7f0dc;
+      --color-brand-50: #142046;
+      --color-brand-100: #1b2b5c;
+      --color-brand-500: #6b95ff;
+      --color-brand-600: #5585ff;
+      --color-brand-700: #8aabff;
+      --color-brand-900: #d6e2ff;
       --color-ink: #e8edf4;
       --color-ink-muted: #a7b3c4;
       --color-ink-subtle: #8492a6;

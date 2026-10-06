@@ -1,9 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { ChevronRight } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { prisma } from "@/lib/db";
-import { CategoryIcon } from "@/components/discovery/CategoryIcon";
+import { CategoryCard, photoFor } from "@/components/home/CategoryCard";
 import { PageHeader } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,21 +26,20 @@ export default async function CategoriesPage() {
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
       <PageHeader title={t.discovery.allCategories} />
-      <ul className="flex flex-col gap-2">
-        {categories.map((c) => (
+      {/* Same cards as "Popular Services" on the home page (owner's redesign, 2026-10-06). */}
+      <ul className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
+        {categories.map((c, i) => (
           <li key={c.slug}>
-            <Link href={`/c/${c.slug}`} className="flex min-h-16 items-center gap-4 rounded-2xl border border-line bg-surface p-3 hover:border-brand-500">
-              <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-brand-50 text-brand-700">
-                <CategoryIcon name={c.icon} className="size-6" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-semibold">{name(c)}</span>
-                <span className="block truncate text-sm text-ink-muted">{(c.children.length ? c.children : c.services).map(name).join(" · ")}</span>
-              </span>
-              <ChevronRight aria-hidden className="size-5 shrink-0 text-ink-subtle" />
-            </Link>
+            <CategoryCard
+              href={`/c/${c.slug}`}
+              name={name(c)}
+              icon={c.icon}
+              subtitle={(c.children.length ? c.children : c.services).map(name).join(" · ")}
+              index={i}
+              photo={photoFor(c.slug)}
+            />
           </li>
         ))}
       </ul>

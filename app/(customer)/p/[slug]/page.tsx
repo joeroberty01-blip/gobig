@@ -434,7 +434,7 @@ export default async function ProviderProfilePage({ params, searchParams }: Prop
                 <p className="truncate text-base font-bold">{priceText}</p>
               </div>
             )}
-            <ButtonLink href={requestHref} variant="night" className="flex-1">
+            <ButtonLink href={requestHref} variant="cta" className="flex-1">
               {u.requestService}
               <ArrowRight aria-hidden className="size-4" />
             </ButtonLink>

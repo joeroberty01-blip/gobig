@@ -62,12 +62,12 @@ function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className
 function GoButtons({ slug, t, className = "" }: { slug: string; t: Dictionary; className?: string }) {
   return (
     <div className={`relative z-10 grid grid-cols-2 gap-1.5 ${className}`}>
-      <Link href={`/ride?to=${slug}`} title={t.trips.takeMeThereHint} className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1 leading-none sm:min-h-9 sm:flex-row sm:gap-1 bg-cta/12 px-1.5 text-[11px] font-bold text-cta transition hover:bg-cta/20 active:scale-95 sm:text-xs">
-        <Bike aria-hidden className="size-3.5 shrink-0" />
+      <Link href={`/ride?to=${slug}`} title={t.trips.takeMeThereHint} className="flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-canvas px-2 text-xs font-semibold text-ink ring-1 ring-line transition hover:ring-cta/40 active:scale-95">
+        <Bike aria-hidden className="size-4 shrink-0 text-cta" />
         <span className="max-w-full truncate">{t.trips.cardRide}</span>
       </Link>
-      <Link href={`/delivery?from=${slug}`} title={t.trips.deliverToMeHint} className="flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-lg py-1 leading-none sm:min-h-9 sm:flex-row sm:gap-1 bg-link/10 px-1.5 text-[11px] font-bold text-link transition hover:bg-link/20 active:scale-95 sm:text-xs">
-        <Package aria-hidden className="size-3.5 shrink-0" />
+      <Link href={`/delivery?from=${slug}`} title={t.trips.deliverToMeHint} className="flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-canvas px-2 text-xs font-semibold text-ink ring-1 ring-line transition hover:ring-link/40 active:scale-95">
+        <Package aria-hidden className="size-4 shrink-0 text-link" />
         <span className="max-w-full truncate">{t.trips.cardDelivery}</span>
       </Link>
     </div>
@@ -152,7 +152,7 @@ export function ProviderCard({
   ) : (
     <span className="text-ink-subtle">{t.trust.rating.noReviews}</span>
   );
-  const availPill = avail && <span className={`inline-flex min-w-0 truncate rounded-full px-2 py-0.5 text-[11px] font-semibold ${TONE[avail.tone]}`}>{avail.text}</span>;
+  const availPill = avail && <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap ${TONE[avail.tone]}`}>{avail.text}</span>;
 
   if (variant === "list") {
     return (
@@ -210,10 +210,11 @@ export function ProviderCard({
           <div className="relative z-10 mt-1.5">
             <CompareToggle slug={p.slug} name={p.name} />
           </div>
-          <div className="mt-auto flex items-end justify-between gap-2 pt-1.5">
+          {/* Wraps instead of cutting "Open · closes 18:00" short when the price needs the room. */}
+          <div className="mt-auto flex flex-wrap items-end justify-between gap-x-2 gap-y-1 pt-1.5">
             {availPill ?? <span />}
             {priceText && (
-              <span className="shrink-0 text-right leading-tight whitespace-nowrap">
+              <span className="ml-auto shrink-0 text-right leading-tight whitespace-nowrap">
                 {!askForPrice && fromWord && <span className="block text-[10px] text-ink-subtle">{fromWord}</span>}
                 <span className={`text-[13px] ${askForPrice ? "font-medium text-ink-muted" : "font-bold text-ink"}`}>{priceValue}</span>
               </span>
