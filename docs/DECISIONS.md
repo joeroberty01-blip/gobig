@@ -813,3 +813,12 @@ monochrome, notification badge, Play Store) is the words "Go" over "Big" on the 
 the link previews and Play Store banner use the wordmark large. `scripts/brand/icons.ts` draws them in
 Chrome with the app's font; transparent wordmark files for print are in `design/logo/`. Supersedes the
 icon mark in ADR-071 (the platform set and manifest from ADR-071 stay).
+
+## ADR-073 — Poppins, and the photo fills the phone hero (2026-10-06)
+
+The owner found the font unattractive: the app now uses Poppins (400–800) everywhere, and the app
+icons and store art are redrawn in it. On phones and tablets the Dar es Salaam waterfront now fills
+the whole hero; a light veil (the page colour, 92% → 65% → clear) over the top keeps the heading,
+search and chips readable and fades out so the photo shows fully below. Large screens keep the
+photo on the right with the curved edge. The header's area menu now shrinks on narrow phones so it
+never covers the language switch.

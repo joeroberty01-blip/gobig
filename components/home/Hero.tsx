@@ -20,6 +20,12 @@ export function Hero({ t, districts, area, quick }: { t: Dictionary; districts: 
   ];
   return (
     <section className="relative -mx-4 -mt-6 overflow-hidden bg-gradient-to-b from-[#eef4ff] to-canvas px-4 pt-5 pb-6 sm:mx-0 sm:mt-0 sm:rounded-[2rem] sm:px-10 sm:pt-12 sm:pb-10 lg:min-h-[30rem]">
+      {/* Phones and tablets (owner, 2026-10-06): the waterfront fills the whole hero; a soft light veil
+          over the top keeps the words and search readable, and fades out so the photo shows below. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 lg:hidden">
+        <Image src="/hero-dar.webp" alt="" fill priority sizes="100vw" className="object-cover object-[70%_center]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-canvas/92 via-canvas/65 via-50% to-canvas/0" />
+      </div>
       {/* Large screens: the waterfront fills the right half behind a curved edge. */}
       <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-[52%] lg:block">
         <Image src="/hero-dar.webp" alt="" fill priority sizes="55vw" className="object-cover object-right [clip-path:ellipse(92%_120%_at_100%_50%)]" />
@@ -90,10 +96,8 @@ export function Hero({ t, districts, area, quick }: { t: Dictionary; districts: 
           })}
         </ul>
 
-        {/* Phones and tablets (owner, 2026-10-01): the words first, then the photo below them, in full. */}
-        <div aria-hidden className="relative mt-5 h-44 overflow-hidden rounded-3xl shadow-soft sm:h-64 lg:hidden">
-          <Image src="/hero-dar.webp" alt="" fill priority sizes="100vw" className="object-cover object-right" />
-        </div>
+        {/* Room at the bottom for the photo to show clearly (phones and tablets). */}
+        <div aria-hidden className="h-36 sm:h-52 lg:hidden" />
 
         <ul className="mt-6 hidden flex-wrap gap-x-6 gap-y-3 sm:flex">
           {trust.map(({ Icon, title, sub }, i) => (

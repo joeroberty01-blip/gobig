@@ -44,7 +44,7 @@ export function AreaPicker({
     <label
       className={`relative flex items-center text-ink ${
         pill
-          ? "min-h-9 max-w-44 gap-1 rounded-full bg-surface/80 px-2.5 hover:bg-surface"
+          ? "min-h-9 min-w-0 max-w-32 gap-1 rounded-full bg-surface/80 px-2.5 hover:bg-surface sm:max-w-44"
           : `gap-2 rounded-xl border border-line bg-surface px-3 shadow-soft ${compact ? "min-h-10" : "min-h-12"}`
       } ${pending ? "opacity-60" : ""}`}
     >

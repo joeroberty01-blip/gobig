@@ -1,7 +1,7 @@
 // Go Big brand assets — words only (owner, 2026-10-06: "kusiwe na icon, just words").
 //   npx tsx scripts/brand/icons.ts
 // Every image is the wordmark "Go Big" ("Big" in the orange gradient), drawn in the installed Chrome
-// so it uses the app's real font (Plus Jakarta Sans). Writes: app/icon.png (browser tab),
+// so it uses the app's real font (Poppins). Writes: app/icon.png (browser tab),
 // app/apple-icon.png (iPhone), public/icons/* (PWA / Android / TWA, incl. maskable + monochrome +
 // notification badge), app/opengraph-image.png + twitter-image.png (link previews), the Play Store
 // listing graphics in docs/store/, and transparent wordmark files in design/logo/.
@@ -14,9 +14,9 @@ const CHROME = process.env.QA_CHROME ?? "C:/Program Files/Google/Chrome/Applicat
 
 export const COLORS = { blue: "#2f6bff", indigo: "#3a1fc9", orange: "#ff6a00", amber: "#ffb000", ink: "#0b1b33" };
 
-const FONT = `<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;800&display=block" rel="stylesheet">`;
+const FONT = `<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=block" rel="stylesheet">`;
 const BASE_CSS = `*{margin:0;box-sizing:border-box} html,body{overflow:hidden;background:transparent}
-  body{font-family:'Plus Jakarta Sans',sans-serif}
+  body{font-family:'Poppins',sans-serif}
   .w{font-weight:800;letter-spacing:-.045em;line-height:.86}
   .big{background:linear-gradient(90deg,${COLORS.amber},${COLORS.orange});-webkit-background-clip:text;background-clip:text;color:transparent;padding:0 .04em .16em 0;margin-bottom:-.16em;display:inline-block;line-height:1}
   .tile{background:linear-gradient(135deg,${COLORS.blue},${COLORS.indigo});position:relative;overflow:hidden}

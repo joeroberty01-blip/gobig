@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { publicDictionary } from "@/lib/i18n/clientDictionary";
 import { cookies } from "next/headers";
@@ -7,8 +7,8 @@ import { getServerDictionary } from "@/lib/i18n/server";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
-// The approved design (2026-09-26) uses Plus Jakarta Sans throughout.
-const sans = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-app" });
+// Poppins throughout (owner, 2026-10-06: the earlier font wasn't attractive enough).
+const sans = Poppins({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"], variable: "--font-app", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
