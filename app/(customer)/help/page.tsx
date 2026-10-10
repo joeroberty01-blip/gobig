@@ -4,6 +4,7 @@ import { getServerDictionary } from "@/lib/i18n/server";
 import { infoText } from "@/lib/i18n/info";
 import { ButtonLink } from "@/components/ui";
 import { getPlatformSettings } from "@/lib/services/platformSettings";
+import { DeskCall, DeskWhatsApp } from "@/components/support/DeskWhatsApp";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { locale } = await getServerDictionary();
@@ -49,6 +50,8 @@ export default async function HelpPage() {
           </p>
         )}
         <div className="mt-4 flex flex-wrap gap-2">
+          <DeskWhatsApp number={platform.supportWhatsapp} locale={locale} className="rounded-full px-6" />
+          <DeskCall number={platform.supportPhone} locale={locale} className="rounded-full px-6" />
           <ButtonLink href="/ask" className="rounded-full px-6">{h.askCta}</ButtonLink>
           <ButtonLink href="/categories" variant="secondary" className="rounded-full px-6">{h.browseCta}</ButtonLink>
         </div>

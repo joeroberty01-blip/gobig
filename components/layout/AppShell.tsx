@@ -123,7 +123,8 @@ export async function AppShell({
               <LanguageSwitch />
             </div>
             {bell}
-            {avatar}
+            {/* Customers' phones have "Wasifu" in the bottom tabs; dropping the duplicate keeps the area pill readable. */}
+            {avatar && <div className={nav.top ? "hidden sm:block" : ""}>{avatar}</div>}
             {!user && (
               <div className="hidden items-center gap-2 sm:flex">
                 <ButtonLink href="/login" variant="secondary" className="min-h-10 rounded-full px-5">

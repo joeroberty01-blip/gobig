@@ -3,11 +3,14 @@ import { bookingFor } from "@/lib/services/bookings";
 import { BookingPanel } from "@/components/bookings/BookingPanel";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MessageCircle, Phone, Star } from "lucide-react";
+import { ArrowLeft, MessageCircle, Phone, RotateCcw, Star } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { requirePageAccess } from "@/lib/session";
 import { customerRequest } from "@/lib/services/requests";
+import { requestTimeline } from "@/lib/requests/timeline";
+import { RequestTimeline } from "@/components/requests/RequestTimeline";
+import { timelineText } from "@/lib/i18n/timeline";
 import { formatTzs } from "@/lib/provider/format";
 import { formatPhone } from "@/lib/phone";
 import { RequestDetails, requestTitle, StatusBadge } from "@/components/requests/RequestSummary";
@@ -38,7 +41,8 @@ export default async function CustomerRequestPage({
   const d = t.requests.detail;
   // Phase D: the agreed time with the chosen business.
   const booking = r.acceptedProviderId ? await bookingFor(r.id) : null;
-  const chosenName = r.matches.find((m) => m.provider.id === r.acceptedProviderId)?.provider.profile?.displayName ?? "";
+  const chosen = r.matches.find((m) => m.provider.id === r.acceptedProviderId);
+  const chosenName = chosen?.provider.profile?.displayName ?? "";
   const date = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeZone: "Africa/Dar_es_Salaam" });
   const shortDate = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { dateStyle: "medium", timeZone: "UTC" });
 
@@ -72,6 +76,29 @@ export default async function CustomerRequestPage({
           <CustomerControls requestId={r.id} canCancel={r.status === "OPEN" || r.status === "ACCEPTED"} canComplete={r.status === "ACCEPTED"} />
         </div>
       </Card>
+
+      <RequestTimeline
+        locale={locale}
+        steps={requestTimeline({
+          createdAt: r.createdAt,
+          effective: r.effective,
+          acceptedAt: r.acceptedAt,
+          completedAt: r.completedAt,
+          cancelledAt: r.cancelledAt,
+          expiresAt: r.expiresAt,
+          matches: r.matches,
+          quotes: r.quotes,
+          booking,
+        })}
+      />
+
+      {/* Design wave 2: a finished job is one tap from the next one with the same business. */}
+      {r.effective === "COMPLETED" && chosen && (
+        <ButtonLink href={`/requests/new?provider=${encodeURIComponent(chosen.provider.slug)}`} variant="cta" className="self-start">
+          <RotateCcw aria-hidden className="size-4" />
+          {fill(timelineText(locale).bookAgain, { name: chosenName })}
+        </ButtonLink>
+      )}
 
       {r.acceptedProviderId && (
         <BookingPanel requestId={r.id} side="CUSTOMER" otherName={chosenName} canBook={r.status === "ACCEPTED"} booking={booking ? { status: booking.status, scheduledAt: booking.scheduledAt.toISOString(), proposedBy: booking.proposedBy, note: booking.note, cancelledBy: booking.cancelledBy } : null} />

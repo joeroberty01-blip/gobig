@@ -234,11 +234,16 @@ export async function customerRequest(customerId: string, requestId: string) {
     select: {
       ...requestCore,
       addressText: true,
+      acceptedAt: true,
+      completedAt: true,
+      cancelledAt: true,
       matches: {
         orderBy: { notifiedAt: "asc" },
         select: {
           id: true,
           status: true,
+          notifiedAt: true,
+          firstResponseAt: true,
           provider: {
             select: {
               id: true,
@@ -252,7 +257,7 @@ export async function customerRequest(customerId: string, requestId: string) {
           messages: { orderBy: { createdAt: "asc" }, take: 200, select: { id: true, senderRole: true, body: true, createdAt: true, readAt: true } },
         },
       },
-      quotes: { select: { providerId: true, amount: true, note: true, validUntil: true, status: true, updatedAt: true } },
+      quotes: { select: { providerId: true, amount: true, note: true, validUntil: true, status: true, updatedAt: true, createdAt: true } },
     },
   });
   if (!r) return null;

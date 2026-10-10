@@ -15,6 +15,8 @@ import { PopularServices } from "@/components/home/PopularServices";
 import { AiPromo } from "@/components/home/AiPromo";
 import { homeStats } from "@/lib/services/homeStats";
 import { ButtonLink, EmptyState } from "@/components/ui";
+import { DeskWhatsApp } from "@/components/support/DeskWhatsApp";
+import { getPlatformSettings } from "@/lib/services/platformSettings";
 import { trackAppearances } from "@/lib/analytics";
 
 const HOME_CARDS = 8;
@@ -28,11 +30,12 @@ export default async function HomePage() {
   const savedArea = point ? null : savedAreaCookie;
   const base: SearchParams = { q: "", area: savedArea, category: null, service: null, openNow: false, priced: false, verified: false, sort: "best", page: 1, view: "list" };
 
-  const [categories, stats, nearby, openNow] = await Promise.all([
+  const [categories, stats, nearby, openNow, platform] = await Promise.all([
     topCategories(),
     homeStats(),
     searchProviders(base, undefined, point),
     searchProviders({ ...base, openNow: true }, undefined, point),
+    getPlatformSettings(),
   ]);
   const areaName = nearby.area?.name ?? null;
   await trackAppearances([...nearby.results.slice(0, HOME_CARDS), ...openNow.results.slice(0, HOME_CARDS)].map((r) => r.id), "HOME");
@@ -84,7 +87,20 @@ export default async function HomePage() {
             icon={<Store aria-hidden />}
             title={t.discovery.noProvidersYetTitle}
             body={t.discovery.noProvidersYetBody}
-            action={!user && <ButtonLink href="/signup?role=provider">{t.discovery.listBusiness}</ButtonLink>}
+            action={
+              <>
+                {/* Design wave 2: until businesses join, show the ways a customer can still get help. */}
+                <ButtonLink href="/ask" variant="night">
+                  {t.ui.home.askButton}
+                </ButtonLink>
+                <DeskWhatsApp number={platform.supportWhatsapp} locale={locale} />
+                {!user && (
+                  <ButtonLink href="/signup?role=provider" variant="secondary">
+                    {t.discovery.listBusiness}
+                  </ButtonLink>
+                )}
+              </>
+            }
           />
         ) : (
           list(nearby.results)

@@ -16,6 +16,8 @@ import { Alert, ButtonLink, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
 import { sponsoredFor } from "@/lib/services/billing";
 import { SponsoredResults } from "@/components/monetization/Sponsored";
+import { DeskWhatsApp } from "@/components/support/DeskWhatsApp";
+import { getPlatformSettings } from "@/lib/services/platformSettings";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -59,11 +61,12 @@ function toMarkers(results: Card[], t: Dictionary, locale: "sw" | "en"): MapMark
 
 export default async function SearchPage({ searchParams }: Props) {
   const { params, effective, point } = await resolveSearchParams(await searchParams);
-  const [{ t, locale }, districts, categories, result] = await Promise.all([
+  const [{ t, locale }, districts, categories, result, platform] = await Promise.all([
     getServerDictionary(),
     getAreaPickerOptions(),
     topCategories(),
     searchProviders(effective, undefined, point),
+    getPlatformSettings(),
   ]);
   const name = (x: { nameEn: string; nameSw: string }) => (locale === "sw" ? x.nameSw : x.nameEn);
   // Phase 10: the providers this person was shown (this page of the list, or the map).
@@ -163,6 +166,8 @@ export default async function SearchPage({ searchParams }: Props) {
               <ButtonLink href={`/ask${params.q ? `?q=${encodeURIComponent(params.q)}` : ""}`} variant="night">
                 {t.ui.home.askButton}
               </ButtonLink>
+              {/* Design wave 2: a person can still help when search can't. */}
+              <DeskWhatsApp number={platform.supportWhatsapp} locale={locale} query={params.q} />
             </>
           }
         />
