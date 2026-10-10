@@ -1,6 +1,25 @@
 // AI search (Phase 9). Every sentence shown to customers is written here — never by the model.
 
 export const en = {
+  // Floating chat (owner, 2026-10-10)
+  chatHello: "Habari! I'm Go Big AI. Tell me what you need and where — I'll find businesses on Go Big for you.",
+  chatPlaceholder: "Type what you need…",
+  chatSend: "Send",
+  chatOpen: "Chat with Go Big AI",
+  chatClose: "Close chat",
+  chatNew: "New chat",
+  chatUnderstood: "I understood:",
+  chatFound: "Here are my top picks:",
+  chatNone: "I couldn't find a business for that yet.",
+  chatUnknown: "Which kind of service do you need? Pick one or type it:",
+  chatSeeAll: "See all {count} results",
+  chatRequest: "Post a request",
+  chatThinking: "Looking…",
+  chatError: "Something went wrong. Please try again.",
+  chatRateLimited: "Too many questions for now. Please try again in a while.",
+  chatNote: "I only suggest businesses listed on Go Big, using their own details and real reviews.",
+  chatReviews: "{count} reviews",
+  chatNew2: "New",
   title: "Go Big AI",
   intro: "Describe what you need in your own words — in Swahili or English. We'll find the service, the area and when you need it.",
   placeholder: "e.g. I need AC repair in Mikocheni today",
@@ -76,6 +95,25 @@ export const en = {
 export type AiDictionary = typeof en;
 
 export const sw: AiDictionary = {
+  // Floating chat (owner, 2026-10-10)
+  chatHello: "Habari! Mimi ni Go Big AI. Niambie unachohitaji na wapi — nitakutafutia biashara zilizopo Go Big.",
+  chatPlaceholder: "Andika unachohitaji…",
+  chatSend: "Tuma",
+  chatOpen: "Ongea na Go Big AI",
+  chatClose: "Funga mazungumzo",
+  chatNew: "Mazungumzo mapya",
+  chatUnderstood: "Nimeelewa:",
+  chatFound: "Haya ndiyo mapendekezo yangu:",
+  chatNone: "Bado sijapata biashara ya hilo.",
+  chatUnknown: "Unahitaji huduma ya aina gani? Chagua au andika:",
+  chatSeeAll: "Ona matokeo yote {count}",
+  chatRequest: "Tuma ombi",
+  chatThinking: "Natafuta…",
+  chatError: "Kuna hitilafu. Tafadhali jaribu tena.",
+  chatRateLimited: "Maswali mengi mno kwa sasa. Tafadhali jaribu baadaye.",
+  chatNote: "Napendekeza biashara zilizopo Go Big pekee, kwa taarifa zao na maoni halisi.",
+  chatReviews: "maoni {count}",
+  chatNew2: "Mpya",
   title: "Go Big AI",
   intro: "Eleza unachohitaji kwa maneno yako — kwa Kiswahili au Kiingereza. Tutatambua huduma, eneo na lini unaihitaji.",
   placeholder: "mf. Nahitaji fundi AC Mikocheni leo",

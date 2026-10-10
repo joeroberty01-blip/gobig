@@ -37,6 +37,8 @@ export const LIMITS = {
   // instead, so search keeps working and nothing is charged.
   aiSearchPerVisitor: { name: "ai:visitor", max: 30, windowSec: 60 * 60 },
   aiSearchPerIp: { name: "ai:ip", max: 120, windowSec: 60 * 60 },
+  // Floating Go Big AI chat: a hard cap on questions (each one runs a search), on top of the AI allowance.
+  aiChatPerIp: { name: "aichat:ip", max: 240, windowSec: 60 * 60 },
   // Phase 13 (SEC-036): a platform-wide ceiling on model calls per day, whatever the number of
   // visitors or addresses. Set AI_DAILY_CALL_CAP to change it; 0 turns model calls off.
   aiGlobalDaily: { name: "ai:global", max: aiDailyCap(), windowSec: 24 * 60 * 60 },

@@ -346,6 +346,20 @@ async function customerJourney(browser: Browser) {
     await page.locator("section").filter({ has: page.locator("#understood") }).locator("li").filter({ hasText: "Sinza" }).first().waitFor({ timeout: 20_000 });
   });
 
+  await step(page, J, "Go Big AI floating chat", async () => {
+    await go(page, "/");
+    await page.getByRole("button", { name: "Chat with Go Big AI" }).click();
+    const chat = page.getByRole("dialog", { name: "Go Big AI" });
+    await chat.getByRole("textbox").fill("nahitaji fundi bomba Sinza");
+    await chat.getByRole("textbox").press("Enter");
+    await chat.getByText("Here are my top picks:").waitFor({ timeout: 30_000 });
+    if (!page.url().endsWith("/")) throw new Error(`the chat navigated to ${page.url()}`);
+    await chat.getByRole("link", { name: new RegExp(BUSINESS) }).first().waitFor();
+    await noOverflow(page);
+    await snap(page, "customer-ai-chat-phone");
+    await page.getByRole("button", { name: "Close chat" }).first().click();
+  });
+
   await step(page, J, "settings page", async () => {
     await go(page, "/settings");
     await page.waitForURL(/\/account$/, { timeout: 20_000 });

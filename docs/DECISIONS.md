@@ -872,3 +872,13 @@ the left, fading to the clear photo on the right (phones: clear from about 80%; 
 65%, with a soft lift at the bottom on phones behind the search bar). On large screens the filters and
 trust row sit inside the hero on the light side and the real-numbers badge sits on the photo.
 Supersedes the photo placement in ADR-076/077.
+
+## ADR-079 — Go Big AI as a floating chat (2026-10-10)
+
+The owner wanted Go Big AI as a small round icon that opens a chat over the page instead of going to
+another page. The icon (bottom right, above the phone tabs) opens a floating chat window: a greeting,
+example questions, and for each question the same answer as the Go Big AI page — what was understood
+(service, area, when), up to three real businesses with their rating, area and checked reasons, then
+"See all results" (the full Go Big AI page) and "Post a request". Unclear questions get choices. The
+home "Ask Go Big AI" card opens the same chat. The conversation lives only in the visitor's browser
+tab. The server action reuses the Go Big AI engine (`lib/actions/aiChat.ts`), with its own per-IP cap.

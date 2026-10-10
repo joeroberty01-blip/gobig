@@ -1,14 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { CheckCircle2, MapPin, Search, SearchX, SlidersHorizontal, Sparkles, Zap } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill } from "@/lib/i18n/dictionaries";
 import { searchHref } from "@/lib/discovery/query";
 import { getSavedPoint } from "@/lib/discovery/area";
-import { clientIp } from "@/lib/request";
-import { VISITOR_COOKIE, VISITOR_ID_PATTERN } from "@/lib/visitor";
-import { hit, LIMITS } from "@/lib/services/rateLimit";
 import { aiSearch, loadCatalog } from "@/lib/services/aiSearch";
 import { topCategories } from "@/lib/services/discovery";
 import { MAX_QUERY_CHARS } from "@/lib/ai/intent";
@@ -17,7 +13,9 @@ import { Alert, ButtonLink, Card, EmptyState } from "@/components/ui";
 import { trackAppearances } from "@/lib/analytics";
 import { matchReasons } from "@/lib/discovery/reasons";
 import { recommendProviders } from "@/lib/services/aiRecommend";
-import type { PickReason, Recommendation } from "@/lib/ai/recommend";
+import type { Recommendation } from "@/lib/ai/recommend";
+import { reasonText } from "@/lib/ai/reasonText";
+import { aiAllowed } from "@/lib/services/aiAllow";
 import { LocateMe } from "@/components/discovery/LocateMe";
 
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };
@@ -26,14 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerDictionary();
   // Like search results, these pages aren't for search engines (and may contain personal text).
   return { title: t.ai.title, robots: { index: false } };
-}
-
-/** AI allowance for this visitor: over the limit, the rule-based parser answers (free). */
-async function aiAllowed(): Promise<boolean> {
-  const vid = (await cookies()).get(VISITOR_COOKIE)?.value;
-  const ipOk = (await hit(LIMITS.aiSearchPerIp, await clientIp())).ok;
-  const visitorOk = vid && VISITOR_ID_PATTERN.test(vid) ? (await hit(LIMITS.aiSearchPerVisitor, vid)).ok : true;
-  return ipOk && visitorOk;
 }
 
 export default async function AskPage({ searchParams }: Props) {
@@ -289,12 +279,6 @@ function Recommends({ rec, t }: { rec: Recommendation; t: Awaited<ReturnType<typ
       <p className="mt-3 text-[11px] text-ink-subtle">{rec.source === "ai" ? a.recommendAiNote : a.recommendRulesNote}</p>
     </section>
   );
-}
-
-function reasonText(r: PickReason, text: Record<string, string>): string {
-  if (r.code === "NEAR" || r.code === "CLOSEST") return fill(text[r.code]!, { km: r.km.toFixed(1) });
-  if (r.code === "MOST_REVIEWS") return fill(text.MOST_REVIEWS!, { count: r.count });
-  return text[r.code] ?? "";
 }
 
 function WhyThisMatch({ reasons, title, text }: { reasons: ReturnType<typeof matchReasons>; title: string; text: Record<string, string> }) {

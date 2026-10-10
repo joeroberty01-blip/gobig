@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Bot, Sparkles } from "lucide-react";
+import { OpenAiChat } from "./OpenAiChat";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 
 /** "Need help deciding?" — owner's mockup (2026-10-06): sends people to Go Big AI. */
@@ -20,10 +20,10 @@ export function AiPromo({ t }: { t: Dictionary }) {
           <p className="mt-1 text-sm text-ink-muted">{h.aiPromoBody}</p>
         </div>
       </div>
-      <Link href="/ask" className="inline-flex min-h-12 items-center justify-center gap-2 self-stretch rounded-2xl bg-action px-6 text-sm font-semibold text-white shadow-soft transition hover:bg-action-hover active:scale-[0.98] sm:self-auto">
-        <Sparkles aria-hidden className="size-4" />
-        {h.aiPromoCta}
-      </Link>
+      <OpenAiChat
+        label={h.aiPromoCta}
+        className="inline-flex min-h-12 items-center justify-center gap-2 self-stretch rounded-2xl bg-action px-6 text-sm font-semibold text-white shadow-soft transition hover:bg-action-hover active:scale-[0.98] sm:self-auto"
+      />
     </section>
   );
 }

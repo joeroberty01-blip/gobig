@@ -9,7 +9,7 @@ export function Wordmark({ className = "", tagline }: { className?: string; tagl
       <span className={`font-[800] tracking-[-0.03em] whitespace-nowrap ${className}`}>
         Go <span className="bg-gradient-to-r from-[#ffb000] to-[#ff6a00] bg-clip-text pr-0.5 text-transparent">Big</span>
       </span>
-      {tagline && <span className="mt-1 block text-[9px] font-medium tracking-normal whitespace-nowrap opacity-70 sm:text-[10px]">{tagline}</span>}
+      {tagline && <span className="mt-1 block max-w-[9rem] text-[9px] leading-tight font-medium tracking-normal opacity-70 sm:max-w-none sm:text-[10px] sm:whitespace-nowrap">{tagline}</span>}
     </span>
   );
 }
