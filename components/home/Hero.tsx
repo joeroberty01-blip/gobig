@@ -1,11 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Bot, ChevronDown, Clock, MapPin, Navigation, Search, ShieldCheck, Star, Store, Zap } from "lucide-react";
+import { Bot, Clock, Navigation, Search, ShieldCheck, Star, Store, Zap } from "lucide-react";
 import { fill, type Dictionary } from "@/lib/i18n/dictionaries";
 import type { HomeStats } from "@/lib/services/homeStats";
 import { HeroSearchInput } from "./HeroSearchInput";
 
-type District = { slug: string; name: string; children: { slug: string; name: string }[] };
 
 type Quick = { href: string; label: string; icon: "near" | "now" | "verified" | "top" };
 
@@ -16,7 +15,7 @@ type Quick = { href: string; label: string; icon: "near" | "now" | "verified" | 
  * around you.", subtitle, the search bar with the area inside, quick filters and the trust row.
  * The mockups' "Trusted by 10,000+" was invented; the badges show only real counts (or nothing).
  */
-export function Hero({ t, districts, area, quick, stats }: { t: Dictionary; districts: District[]; area: string | null; quick: Quick[]; stats: HomeStats }) {
+export function Hero({ t, area, quick, stats }: { t: Dictionary; area: string | null; quick: Quick[]; stats: HomeStats }) {
   const h = t.ui.home;
   const badge = stats.verified > 0 ? fill(h.verifiedCount, { count: stats.verified }) : h.badge;
   const stat =
@@ -57,23 +56,8 @@ export function Hero({ t, districts, area, quick, stats }: { t: Dictionary; dist
             <div className="flex min-w-0 flex-1 items-center gap-1 rounded-full bg-surface p-1.5 pl-3.5 shadow-lift ring-1 ring-line/50 sm:p-2 sm:pl-5 lg:rounded-2xl lg:py-2.5">
               <Search aria-hidden className="size-5 shrink-0 text-ink-subtle" />
               <HeroSearchInput placeholder={h.searchPlaceholder} shortPlaceholder={h.searchPlaceholderShort} />
-              <label className="relative flex shrink-0 items-center gap-0.5 border-l border-line pl-1.5 text-ink sm:gap-1.5 sm:pl-3">
-                <MapPin aria-hidden className="size-3.5 shrink-0 text-action sm:size-4" />
-                <span className="sr-only">{h.areaLabel}</span>
-                <select name="area" defaultValue={area ?? ""} className="w-[6rem] appearance-none truncate bg-transparent pr-4 text-[10.5px] font-medium focus:outline-none sm:w-auto sm:max-w-40 sm:text-sm">
-                  <option value="">Dar es Salaam</option>
-                  {districts.map((d) => (
-                    <optgroup key={d.slug} label={d.name}>
-                      {d.children.map((a) => (
-                        <option key={a.slug} value={a.slug}>
-                          {a.name}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-                <ChevronDown aria-hidden className="pointer-events-none absolute right-0 size-4 text-ink-subtle" />
-              </label>
+              {/* One place to choose the area: the header pill (design audit H3). The search uses it. */}
+              {area && <input type="hidden" name="area" value={area} />}
               {/* Phones and tablets: the round button inside the bar. */}
               <button type="submit" aria-label={t.ai.ask} className="grid size-11 shrink-0 place-items-center rounded-full bg-action text-white shadow-soft transition hover:bg-action-hover active:scale-95 lg:hidden">
                 <Search aria-hidden className="size-5" />
@@ -117,7 +101,7 @@ export function Hero({ t, districts, area, quick, stats }: { t: Dictionary; dist
 function QuickFilters({ quick }: { quick: Quick[] }) {
   const QUICK_ICON = { near: Navigation, now: Zap, verified: ShieldCheck, top: Star };
   return (
-    <ul className="-mx-2 mt-4 flex gap-1 overflow-x-auto px-0.5 no-scrollbar sm:mx-0 sm:gap-2 sm:px-0 lg:mt-5">
+    <ul className="-mx-2 mt-4 flex gap-1 overflow-x-auto px-0.5 pr-6 no-scrollbar [mask-image:linear-gradient(to_right,black_85%,transparent)] sm:mx-0 sm:gap-2 sm:px-0 sm:[mask-image:none] lg:mt-5">
       {quick.map(({ href, label, icon }) => {
         const Icon = QUICK_ICON[icon];
         return (

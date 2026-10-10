@@ -19,7 +19,8 @@ describe("reply links", () => {
     const [m, u, e, s] = t.split(".");
     expect(verifyReplyToken([`${m}x`, u, e, s].join("."))).toBeNull();
     expect(verifyReplyToken([m, "cother0000000000001", e, s].join("."))).toBeNull();
-    expect(verifyReplyToken([m, u, e, `${s!.slice(0, -1)}A`].join("."))).toBeNull();
+    // Always a different last character (replacing with a fixed "A" was a no-op 1 time in 64).
+    expect(verifyReplyToken([m, u, e, `${s!.slice(0, -1)}${s!.endsWith("A") ? "B" : "A"}`].join("."))).toBeNull();
     expect(verifyReplyToken("not-a-token")).toBeNull();
     expect(verifyReplyToken("a.b.c.d")).toBeNull();
   });

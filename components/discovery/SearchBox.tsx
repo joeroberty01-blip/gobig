@@ -44,7 +44,7 @@ export function SearchBox({
       <button
         type="submit"
         aria-label={t.discovery.search}
-        className={`absolute top-1/2 right-2 grid -translate-y-1/2 place-items-center rounded-full bg-cta text-white transition hover:bg-cta-hover active:scale-95 ${lg ? "size-9 sm:size-11" : "size-9"}`}
+        className={`absolute top-1/2 right-2 grid -translate-y-1/2 place-items-center rounded-full bg-action text-white transition hover:bg-action-hover active:scale-95 ${lg ? "size-9 sm:size-11" : "size-9"}`}
       >
         <ArrowRight aria-hidden className="size-5" />
       </button>

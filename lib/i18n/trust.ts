@@ -7,6 +7,12 @@ export const en = {
     AVAILABLE: "Available now",
     FAST_RESPONSE: "Fast response",
     verifiedTitle: "{level} — checked by Go Big",
+    explain: {
+      VERIFIED: "Go Big staff checked this business's documents ({level}). It can't be bought.",
+      TOP_RATED: "At least 5 published reviews from customers, averaging 4.5 stars or more.",
+      AVAILABLE: "Open right now, by the hours the business set.",
+      FAST_RESPONSE: "Usually replies to requests within an hour (at least 3 requests in the last 90 days).",
+    },
   },
   rating: {
     noReviews: "No reviews yet",
@@ -156,6 +162,12 @@ export const sw: TrustDictionary = {
     AVAILABLE: "Wanapatikana sasa",
     FAST_RESPONSE: "Hujibu haraka",
     verifiedTitle: "{level} — imekaguliwa na Go Big",
+    explain: {
+      VERIFIED: "Wafanyakazi wa Go Big wamekagua nyaraka za biashara hii ({level}). Haiwezi kununuliwa.",
+      TOP_RATED: "Angalau maoni 5 ya wateja yaliyochapishwa, wastani wa nyota 4.5 au zaidi.",
+      AVAILABLE: "Wako wazi sasa hivi, kwa saa walizoweka wenyewe.",
+      FAST_RESPONSE: "Kwa kawaida hujibu maombi ndani ya saa moja (angalau maombi 3 ndani ya siku 90).",
+    },
   },
   rating: {
     noReviews: "Bado hakuna maoni",

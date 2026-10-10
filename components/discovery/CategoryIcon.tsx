@@ -41,7 +41,7 @@ const ICONS: Record<string, LucideIcon> = {
 /** Icon names an admin can choose for a category (Phase 12). */
 export const CATEGORY_ICON_NAMES = Object.keys(ICONS);
 
-export function CategoryIcon({ name, className }: { name: string | null; className?: string }) {
+export function CategoryIcon({ name, className, style }: { name: string | null; className?: string; style?: React.CSSProperties }) {
   const Icon = (name && ICONS[name]) || Wrench;
-  return <Icon aria-hidden className={className} />;
+  return <Icon aria-hidden className={className} style={style} />;
 }

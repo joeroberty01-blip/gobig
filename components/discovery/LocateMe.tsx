@@ -76,7 +76,12 @@ export function LocateMe({ active, areaName, onDark = false }: { active: boolean
           {error}
         </p>
       ) : (
-        <p className={`text-[11px] leading-snug ${tone}`}>{t.location.locationPrivacyNote}</p>
+        <details className={`text-xs leading-snug ${tone}`}>
+          <summary className="cursor-pointer list-none">
+            {t.location.locationPrivacyShort} <span className="font-semibold underline">{t.location.locationPrivacyWhy}</span>
+          </summary>
+          <p className="mt-1">{t.location.locationPrivacyNote}</p>
+        </details>
       )}
     </div>
   );

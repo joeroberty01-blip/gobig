@@ -34,5 +34,5 @@ export function Section({
 }
 
 export function CardGrid({ children }: { children: React.ReactNode }) {
-  return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">{children}</div>;
+  return <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 [&>*]:min-w-0">{children}</div>;
 }

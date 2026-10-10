@@ -14,35 +14,59 @@ export function photoFor(slug: string): string | null {
 }
 
 /**
- * The category card from the owner's reference design (home "Popular Services" and the categories
- * page): photo or tinted illustration, a coloured round icon, the name, and what's inside.
+ * The category card (home "Popular Services" and the categories page): photo or tinted
+ * illustration, the name with its icon inline in the category's colour, and what's inside.
+ * `rowOnPhone`: a compact row (thumbnail, text, arrow) under 640 px so a phone shows 6–7 categories
+ * instead of 4 — design system v2, "content over containers".
  */
-export function CategoryCard({ href, name, icon, subtitle, index, photo }: { href: string; name: string; icon: string | null; subtitle: string; index: number; photo?: string | null }) {
+export function CategoryCard({
+  href,
+  name,
+  icon,
+  subtitle,
+  index,
+  photo,
+  rowOnPhone = false,
+}: {
+  href: string;
+  name: string;
+  icon: string | null;
+  subtitle: string;
+  index: number;
+  photo?: string | null;
+  rowOnPhone?: boolean;
+}) {
   const accent = ACCENTS[index % ACCENTS.length]!;
+  const row = rowOnPhone;
   return (
-    <Link href={href} className="group flex h-full flex-col overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-line/60 transition hover:-translate-y-0.5 hover:shadow-lift">
-      <span className="relative block aspect-[5/4] overflow-hidden">
+    <Link
+      href={href}
+      className={`group flex h-full overflow-hidden rounded-2xl bg-surface shadow-soft ring-1 ring-line/60 transition hover:-translate-y-0.5 hover:shadow-lift ${
+        row ? "items-center gap-3 p-2 sm:flex-col sm:items-stretch sm:gap-0 sm:p-0" : "flex-col"
+      }`}
+    >
+      <span className={`relative block shrink-0 overflow-hidden ${row ? "size-[72px] rounded-xl sm:aspect-[5/4] sm:size-auto sm:w-full sm:rounded-none" : "aspect-[5/4]"}`}>
         {photo ? (
-          <Image src={photo} alt="" fill sizes="(max-width: 640px) 50vw, 240px" className="object-cover object-top transition duration-500 group-hover:scale-105" />
+          <Image src={photo} alt="" fill sizes={row ? "(max-width: 640px) 72px, 240px" : "(max-width: 640px) 50vw, 240px"} className="object-cover object-top transition duration-500 group-hover:scale-105" />
         ) : (
           <span className="grid size-full place-items-center" style={{ background: `linear-gradient(135deg, ${accent}22, ${accent}55)` }}>
-            <CategoryIcon name={icon} className="size-14 opacity-60" />
+            <CategoryIcon name={icon} className={row ? "size-8 opacity-60 sm:size-14" : "size-14 opacity-60"} />
           </span>
         )}
       </span>
-      <span className="relative flex flex-1 flex-col px-3 pt-7 pb-3 sm:px-4">
-        {/* White tile with the icon in the category's colour (owner's mockup), over the photo's corner. */}
-        <span className="absolute -top-6 left-3 grid size-11 place-items-center rounded-xl bg-surface shadow-lift ring-1 ring-line/60 sm:left-4" style={{ color: accent }}>
-          <CategoryIcon name={icon} className="size-5" />
+      <span className={`flex min-w-0 flex-1 flex-col ${row ? "sm:px-4 sm:pt-3 sm:pb-3" : "px-3 pt-3 pb-3 sm:px-4"}`}>
+        <span className="flex min-w-0 items-start gap-1.5">
+          <CategoryIcon name={icon} className="mt-0.5 size-4 shrink-0" style={{ color: accent }} />
+          <span className="line-clamp-2 text-[13px] leading-tight font-semibold sm:text-[15px]">{name}</span>
         </span>
-        <span className="line-clamp-2 text-[13px] leading-tight font-semibold sm:text-[15px]">{name}</span>
-        {subtitle && <span className="mt-1 line-clamp-2 text-[11px] leading-snug text-ink-muted sm:text-xs">{subtitle}</span>}
-        <span className="mt-auto flex justify-end pt-2">
+        {subtitle && <span className={`mt-1 text-[11px] leading-snug text-ink-muted sm:text-xs ${row ? "line-clamp-1 sm:line-clamp-2" : "line-clamp-2"}`}>{subtitle}</span>}
+        <span className={`mt-auto justify-end pt-2 ${row ? "hidden sm:flex" : "flex"}`}>
           <span className="grid size-7 place-items-center rounded-full bg-action/10 text-action transition group-hover:bg-action group-hover:text-white">
             <ArrowRight aria-hidden className="size-3.5" />
           </span>
         </span>
       </span>
+      {row && <ArrowRight aria-hidden className="mr-2 size-4 shrink-0 text-action sm:hidden" />}
     </Link>
   );
 }

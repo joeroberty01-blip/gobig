@@ -41,15 +41,23 @@ const TONE = {
 /** Which buttons a card shows first when a provider enabled many (the profile has them all). */
 const ACTION_ORDER: Card["actions"][number]["action"][] = ["WHATSAPP", "CALL", "REQUEST_QUOTE", "BOOK_SERVICE", "MESSAGE", "DIRECTIONS", "BOOK_RIDE", "WEBSITE", "EMAIL"];
 
-/** Cover photo, else logo, else the business initial on the brand gradient — never a stock photo. */
+/** Initials of the business name ("Fundi Bomba Sinza" → "FB"), for cards without any photo. */
+export function initials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return ((words[0]?.[0] ?? "") + (words[1]?.[0] ?? "")).toUpperCase() || "?";
+}
+
+/** Cover photo, else logo, else the business initials on a light tint — never a stock photo. */
 function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className?: string }) {
   const src = p.coverUrl ?? p.logoUrl;
   return (
-    <div className={`relative overflow-hidden bg-hero ${className}`}>
+    <div className={`relative overflow-hidden ${src ? "bg-hero" : "bg-brand-50"} ${className}`}>
       {src ? (
         <Image src={src} alt="" fill sizes={sizes} className="object-cover object-[center_20%] transition duration-500 group-hover:scale-[1.03]" />
       ) : (
-        <span className="grid size-full place-items-center text-4xl font-black text-white/90">{p.name.trim().slice(0, 1).toUpperCase()}</span>
+        <span className="absolute inset-0 grid place-items-center">
+          <span className="grid size-14 place-items-center rounded-full bg-brand-600 text-lg font-bold tracking-wide text-white sm:size-16 sm:text-xl">{initials(p.name)}</span>
+        </span>
       )}
     </div>
   );
@@ -59,9 +67,9 @@ function Photo({ p, sizes, className = "" }: { p: Card; sizes: string; className
  * Phase 17 (owner's request): every business offers transport to it — a ride there, or a rider
  * bringing something from it. Above the card's link overlay so they don't open the profile.
  */
-function GoButtons({ slug, t, className = "" }: { slug: string; t: Dictionary; className?: string }) {
+function GoButtons({ slug, t, className = "", stackOnPhone = false }: { slug: string; t: Dictionary; className?: string; stackOnPhone?: boolean }) {
   return (
-    <div className={`relative z-10 grid grid-cols-2 gap-1.5 ${className}`}>
+    <div className={`relative z-10 grid gap-1.5 ${stackOnPhone ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"} ${className}`}>
       <Link href={`/ride?to=${slug}`} title={t.trips.takeMeThereHint} className="flex min-h-10 items-center justify-center gap-1.5 rounded-full bg-canvas px-2 text-xs font-semibold text-ink ring-1 ring-line transition hover:ring-cta/40 active:scale-95">
         <Bike aria-hidden className="size-4 shrink-0 text-cta" />
         <span className="max-w-full truncate">{t.trips.cardRide}</span>
@@ -243,8 +251,8 @@ export function ProviderCard({
     <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:shadow-lift has-[a:focus-visible]:ring-2 has-[a:focus-visible]:ring-brand-500">
       <div className="relative">
         {/* Portrait: provider photos are mostly people at work, so keep faces in frame. */}
-        <Photo p={p} sizes="(max-width: 768px) 50vw, 300px" className="aspect-[4/5]" />
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />
+        <Photo p={p} sizes="(max-width: 768px) 50vw, 300px" className={p.coverUrl ?? p.logoUrl ? "aspect-[4/5]" : "aspect-[4/3]"} />
+        {(p.coverUrl ?? p.logoUrl) && <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/45 to-transparent" />}
         {verified && <VerifiedPill t={t} className="absolute top-2 left-2" />}
         {p.demo && (
           <span className="absolute bottom-2 left-2 rounded-full bg-cta px-2 py-0.5 text-[9.5px] font-bold tracking-wide text-white uppercase">{t.ui.demo.tag}</span>
@@ -268,8 +276,8 @@ export function ProviderCard({
             <span className={askForPrice ? "" : "font-bold text-ink"}>{priceValue}</span>
           </p>
         )}
-        {availPill && <div className="mt-2">{availPill}</div>}
-        <GoButtons slug={p.slug} t={t} className="mt-auto pt-2.5" />
+        {availPill && <div className="mt-2 [&>span]:whitespace-normal">{availPill}</div>}
+        <GoButtons slug={p.slug} t={t} className="mt-auto pt-2.5" stackOnPhone />
       </div>
     </article>
   );

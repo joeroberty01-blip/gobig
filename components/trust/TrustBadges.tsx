@@ -1,4 +1,4 @@
-import { BadgeCheck, Clock, Star, Trophy, Zap } from "lucide-react";
+import { BadgeCheck, Clock, Info, Star, Trophy, Zap } from "lucide-react";
 import type { Dictionary, Locale } from "@/lib/i18n/dictionaries";
 import { fill } from "@/lib/i18n/dictionaries";
 import type { TrustBadge } from "@/lib/provider/trust";
@@ -18,16 +18,21 @@ export function TrustBadges({ badges, t, locale, size = "md" }: { badges: TrustB
     <ul className="flex flex-wrap gap-1.5">
       {badges.map((b) => {
         const Icon = ICON[b.kind];
-        const title = b.kind === "VERIFIED" ? fill(t.trust.badges.verifiedTitle, { level: locale === "sw" ? b.level.nameSw : b.level.nameEn }) : undefined;
+        const level = b.kind === "VERIFIED" ? (locale === "sw" ? b.level.nameSw : b.level.nameEn) : "";
+        const explain = fill(t.trust.badges.explain[b.kind], { level });
+        // Tap a badge to see what it means (design system v2: every badge explains itself).
         return (
-          <li
-            key={b.kind}
-            title={title}
-            className={`inline-flex items-center gap-1 rounded-full font-semibold ring-1 ${STYLE[b.kind]} ${size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"}`}
-          >
-            <Icon aria-hidden className={size === "sm" ? "size-3" : "size-3.5"} />
-            {t.trust.badges[b.kind]}
-            {title && <span className="sr-only">: {title}</span>}
+          <li key={b.kind} className="relative">
+            <details className="group/badge">
+              <summary
+                className={`inline-flex cursor-pointer list-none items-center gap-1 rounded-full font-semibold ring-1 ${STYLE[b.kind]} ${size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs"}`}
+              >
+                <Icon aria-hidden className={size === "sm" ? "size-3" : "size-3.5"} />
+                {t.trust.badges[b.kind]}
+                <Info aria-hidden className="size-3 opacity-60" />
+              </summary>
+              <p className="absolute top-full left-0 z-30 mt-1.5 w-60 rounded-xl bg-surface p-3 text-xs leading-snug font-normal text-ink shadow-lift ring-1 ring-line">{explain}</p>
+            </details>
           </li>
         );
       })}

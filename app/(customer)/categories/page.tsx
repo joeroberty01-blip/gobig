@@ -29,7 +29,7 @@ export default async function CategoriesPage() {
     <div className="mx-auto max-w-5xl">
       <PageHeader title={t.discovery.allCategories} />
       {/* Same cards as "Popular Services" on the home page (owner's redesign, 2026-10-06). */}
-      <ul className="grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="grid gap-2 sm:grid-cols-3 sm:gap-x-3 sm:gap-y-4 lg:grid-cols-4">
         {categories.map((c, i) => (
           <li key={c.slug}>
             <CategoryCard
@@ -39,6 +39,7 @@ export default async function CategoriesPage() {
               subtitle={(c.children.length ? c.children : c.services).map(name).join(" · ")}
               index={i}
               photo={photoFor(c.slug)}
+              rowOnPhone
             />
           </li>
         ))}

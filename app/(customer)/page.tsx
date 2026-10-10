@@ -7,7 +7,6 @@ import { roleHome } from "@/lib/roles";
 import { getSavedArea, getSavedPoint } from "@/lib/discovery/area";
 import { searchHref, type SearchParams } from "@/lib/discovery/query";
 import { searchProviders, topCategories } from "@/lib/services/discovery";
-import { getAreaPickerOptions } from "@/lib/data/discovery";
 import { LocateMe } from "@/components/discovery/LocateMe";
 import { ProviderCard } from "@/components/discovery/ProviderCard";
 import { Section } from "@/components/discovery/Section";
@@ -29,9 +28,8 @@ export default async function HomePage() {
   const savedArea = point ? null : savedAreaCookie;
   const base: SearchParams = { q: "", area: savedArea, category: null, service: null, openNow: false, priced: false, verified: false, sort: "best", page: 1, view: "list" };
 
-  const [categories, districts, stats, nearby, openNow] = await Promise.all([
+  const [categories, stats, nearby, openNow] = await Promise.all([
     topCategories(),
-    getAreaPickerOptions(),
     homeStats(),
     searchProviders(base, undefined, point),
     searchProviders({ ...base, openNow: true }, undefined, point),
@@ -59,7 +57,7 @@ export default async function HomePage() {
   );
   return (
     <div className="mx-auto max-w-7xl">
-      <Hero t={t} districts={districts} area={savedArea} quick={quick} stats={stats} />
+      <Hero t={t} area={savedArea} quick={quick} stats={stats} />
       {user && user.role !== "CUSTOMER" && (
         <Link href={roleHome(user.role)} className="mt-3 flex items-center gap-1 text-sm font-semibold text-action">
           {user.role === "PROVIDER" ? t.nav.dashboard : t.nav.overview}
