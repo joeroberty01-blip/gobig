@@ -146,3 +146,28 @@ export async function setAway(providerId: string, untilLocal: string | null, not
 }
 
 export const isAway = (p: { awayUntil: Date | null }, now = new Date()) => !!p.awayUntil && p.awayUntil > now;
+
+// ─── Provider dashboard (design wave 3) ────────────────────────────────────────────────────
+
+/** Start of today in Dar es Salaam (UTC+3, no daylight saving), as a UTC instant. */
+export function darStartOfDay(now = new Date()): Date {
+  const dar = new Date(now.getTime() + 3 * 3_600_000);
+  return new Date(Date.UTC(dar.getUTCFullYear(), dar.getUTCMonth(), dar.getUTCDate()) - 3 * 3_600_000);
+}
+
+/** The business's agreed or proposed times from today through the next `days` days, soonest first. */
+export async function providerUpcomingBookings(providerId: string, now = new Date(), days = 7) {
+  const from = darStartOfDay(now);
+  const to = new Date(from.getTime() + (days + 1) * 86_400_000);
+  return prisma.booking.findMany({
+    where: { providerId, status: { in: ["PENDING", "CONFIRMED"] }, scheduledAt: { gte: from, lt: to } },
+    orderBy: { scheduledAt: "asc" },
+    take: 10,
+    select: {
+      id: true,
+      status: true,
+      scheduledAt: true,
+      request: { select: { id: true, service: { select: { nameEn: true, nameSw: true } }, category: { select: { nameEn: true, nameSw: true } }, location: { select: { name: true } } } },
+    },
+  });
+}

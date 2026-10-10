@@ -551,3 +551,21 @@ export async function requestLabels(requestIds: string[]) {
   });
   return new Map(rows.map((r) => [r.id, r.service ?? r.category]));
 }
+
+/**
+ * Jobs this business finished on Go Big in the last `days` days, and the total of the prices it
+ * quoted and the customer accepted. Payment happens off the app, so this is "agreed prices", not
+ * money received.
+ */
+export async function providerJobsSummary(providerId: string, days = 30, now = new Date()) {
+  const since = new Date(now.getTime() - days * 86_400_000);
+  const jobs = await prisma.serviceRequest.findMany({
+    where: { acceptedProviderId: providerId, status: "COMPLETED", completedAt: { gte: since } },
+    select: { quotes: { where: { providerId, status: "ACCEPTED" }, select: { amount: true } } },
+  });
+  return {
+    jobs: jobs.length,
+    agreedTotal: jobs.reduce((sum, j) => sum + (j.quotes[0]?.amount ?? 0), 0),
+    withoutPrice: jobs.filter((j) => j.quotes.length === 0).length,
+  };
+}

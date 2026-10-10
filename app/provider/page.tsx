@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowDownRight, ArrowRight, ArrowUpRight, BadgeCheck, Check, ChevronRight, Circle, ClipboardList, CreditCard, Eye, MapPin, MessageSquareText, Settings, Store } from "lucide-react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, BadgeCheck, CalendarDays, Check, ChevronRight, Circle, ClipboardList, CreditCard, Eye, MapPin, MessageSquareText, Settings, Store } from "lucide-react";
 import { getServerDictionary } from "@/lib/i18n/server";
 import { fill, type Dictionary } from "@/lib/i18n/dictionaries";
 import { requirePageAccess } from "@/lib/session";
@@ -10,8 +10,14 @@ import { SETUP_STEPS } from "@/lib/provider/steps";
 import { PublishControls } from "@/components/provider/PublishControls";
 import { dashboardToday, providerAnalytics, type DayPair } from "@/lib/services/metrics";
 import { DailyBars } from "@/components/insights/DailyBars";
-import { providerInbox } from "@/lib/services/requests";
-import { requestTitle, StatusBadge, areaText } from "@/components/requests/RequestSummary";
+import { providerInbox, providerJobsSummary } from "@/lib/services/requests";
+import { providerUpcomingBookings } from "@/lib/services/bookings";
+import { createReplyToken } from "@/lib/requests/replyLink";
+import { replyLinkText } from "@/lib/i18n/replyLink";
+import { providerHomeText } from "@/lib/i18n/providerHome";
+import { formatTzs } from "@/lib/provider/format";
+import { QuickReplies } from "@/components/provider/QuickReplies";
+import { requestTitle, areaText } from "@/components/requests/RequestSummary";
 import { ButtonLink, Card, EmptyState } from "@/components/ui";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -63,7 +69,21 @@ export default async function ProviderDashboardPage() {
     );
   }
 
-  const [data, today, inbox, month] = await Promise.all([getEditorData(providerId), dashboardToday(providerId), providerInbox(providerId), providerAnalytics(providerId, 30)]);
+  const [data, today, inbox, month, upcoming, jobs] = await Promise.all([
+    getEditorData(providerId),
+    dashboardToday(providerId),
+    providerInbox(providerId),
+    providerAnalytics(providerId, 30),
+    providerUpcomingBookings(providerId),
+    providerJobsSummary(providerId, 30),
+  ]);
+  // Design wave 3: requests nobody at this business has answered yet come first, with quick replies
+  // through a signed reply link for this member (same rules as the SMS link, SEC-067).
+  const fresh = inbox.filter((m) => m.status === "NOTIFIED" && m.effective === "OPEN");
+  const ph = providerHomeText(locale);
+  const rl = replyLinkText(locale);
+  const quickText = { interested: rl.interested, quick: rl.quick, done: rl.done, closed: rl.closed, limit: rl.limit, invalid: rl.invalid, error: rl.error };
+  const when = new Intl.DateTimeFormat(locale === "sw" ? "sw-TZ" : "en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Africa/Dar_es_Salaam" });
   const { completion, status } = data;
   // Resume onboarding at the first step after the furthest one reached, until the profile is live.
   const resumeStep = SETUP_STEPS[Math.min((data.profile?.onboardingStep ?? 0) + 1, SETUP_STEPS.length - 1)];
@@ -97,6 +117,43 @@ export default async function ProviderDashboardPage() {
           <Settings aria-hidden className="size-5" />
         </Link>
       </div>
+
+      <section aria-labelledby="new-requests" className="mb-5 rounded-2xl bg-surface p-4 shadow-soft ring-1 ring-line/60 sm:p-5">
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <h2 id="new-requests" className="flex items-center gap-2 text-lg font-bold">
+            {fill(ph.newRequests, { n: fresh.length })}
+            {fresh.length > 0 && <span className="size-2 rounded-full bg-cta" aria-hidden />}
+          </h2>
+          <Link href="/provider/requests" className="flex items-center text-sm font-semibold text-link">
+            {ph.more}
+            <ChevronRight aria-hidden className="size-4" />
+          </Link>
+        </div>
+        {fresh.length === 0 ? (
+          <p className="text-sm text-ink-muted">{ph.newRequestsNone}</p>
+        ) : (
+          <ul className="divide-y divide-line">
+            {fresh.slice(0, 3).map((m) => (
+              <li key={m.id} className="relative py-3 first:pt-1 last:pb-0">
+                <div className="flex items-start gap-3">
+                  <span className="min-w-0 flex-1">
+                    <Link href={`/provider/requests/${m.request.id}`} className="block truncate text-sm font-bold after:absolute after:inset-0 after:content-['']">
+                      {requestTitle(m.request, locale, t)}
+                    </Link>
+                    <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-muted">
+                      <MapPin aria-hidden className="size-3.5 shrink-0" />
+                      {areaText(m.request.location)}
+                    </span>
+                    <span className="mt-1 line-clamp-2 text-xs text-ink">{m.request.description}</span>
+                  </span>
+                  <span className="shrink-0 text-xs font-semibold text-link">{ph.openRequest}</span>
+                </div>
+                <QuickReplies token={createReplyToken(m.id, user.id)} text={quickText} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {status === "ACTIVE" && (
         <section aria-label={d.today} className="mb-5 grid grid-cols-4 divide-x divide-white/10 rounded-2xl bg-night-900 px-1 py-4 text-white shadow-lift">
@@ -158,46 +215,42 @@ export default async function ProviderDashboardPage() {
         </Card>
 
         <Card>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">{d.recentRequests}</h2>
-            {inbox.length > 0 && (
-              <Link href="/provider/requests" className="flex items-center text-sm font-semibold text-link">
-                {d.viewAll}
-                <ChevronRight aria-hidden className="size-4" />
-              </Link>
-            )}
-          </div>
-          {inbox.length === 0 ? (
-            <p className="rounded-xl bg-canvas px-4 py-6 text-center text-sm text-ink-muted">{d.noRequests}</p>
+          <h2 className="mb-3 flex items-center gap-2 text-lg font-bold">
+            <CalendarDays aria-hidden className="size-5 text-action" />
+            {ph.upcoming}
+          </h2>
+          {upcoming.length === 0 ? (
+            <p className="rounded-xl bg-canvas px-4 py-5 text-center text-sm text-ink-muted">{ph.upcomingNone}</p>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {inbox.slice(0, 3).map((m) => (
-                <li key={m.id} className="rounded-2xl border border-line p-3">
-                  <div className="flex items-start gap-3">
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-canvas text-ink">
-                      <ClipboardList aria-hidden className="size-4.5" />
-                    </span>
+            <ul className="flex flex-col gap-2">
+              {upcoming.map((b) => (
+                <li key={b.id}>
+                  <Link href={`/provider/requests/${b.request.id}`} className="flex items-center gap-3 rounded-xl border border-line p-3 transition hover:bg-canvas">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-bold">{requestTitle(m.request, locale, t)}</span>
-                      <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-ink-muted">
-                        <MapPin aria-hidden className="size-3.5 shrink-0" />
-                        {areaText(m.request.location)}
+                      <span className="block text-sm font-bold">{when.format(b.scheduledAt)}</span>
+                      <span className="block truncate text-xs text-ink-muted">
+                        {requestTitle(b.request, locale, t)} · {b.request.location.name}
                       </span>
                     </span>
-                    <StatusBadge status={m.effective} t={t} />
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <ButtonLink href={`/provider/requests/${m.request.id}`} variant="cta" className="min-h-9 rounded-full">
-                      {d.respond}
-                    </ButtonLink>
-                    <ButtonLink href={`/provider/requests/${m.request.id}`} variant="secondary" className="min-h-9 rounded-full">
-                      {d.view}
-                    </ButtonLink>
-                  </div>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold ${b.status === "CONFIRMED" ? "bg-success-soft text-success" : "bg-warning-soft text-warning"}`}>
+                      {b.status === "CONFIRMED" ? ph.confirmed : ph.proposed}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>
           )}
+          <div className="mt-5 border-t border-line pt-4">
+            <h3 className="text-sm font-semibold text-ink-muted">{ph.jobs}</h3>
+            <p className="mt-1 text-2xl font-extrabold tabular-nums">{fill(ph.jobsCount, { n: jobs.jobs })}</p>
+            {jobs.jobs > 0 && (
+              <>
+                <p className="mt-1 text-sm font-semibold">{fill(ph.agreed, { amount: formatTzs(jobs.agreedTotal) })}</p>
+                {jobs.withoutPrice > 0 && <p className="text-xs text-ink-subtle">{fill(ph.noPrice, { n: jobs.withoutPrice })}</p>}
+                <p className="mt-1 text-xs text-ink-subtle">{ph.agreedNote}</p>
+              </>
+            )}
+          </div>
         </Card>
       </div>
 
