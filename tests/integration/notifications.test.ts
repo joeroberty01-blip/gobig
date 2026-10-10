@@ -72,6 +72,7 @@ describe("delivery decisions", () => {
     expect(d.map((x) => [x.channel, x.status, x.reason])).toEqual([
       ["PUSH", "SKIPPED", "noSubscription"],
       ["EMAIL", "SKIPPED", "preference"], // email is opt-in
+      ["SMS", "SKIPPED", "noPhone"], // SMS is on for requests, but this account has no phone
     ]);
     expect(d.every((x) => x.attempts === 1)).toBe(true);
   });

@@ -1416,6 +1416,8 @@ enum NotificationCategory {
 enum NotificationChannel {
   PUSH
   EMAIL
+  /// Product plan (2026-10-10): most fundis and many customers read SMS, not app notifications.
+  SMS
 }
 
 enum DeliveryStatus {
@@ -1432,6 +1434,8 @@ model NotificationPreference {
   category   NotificationCategory
   push       Boolean
   email      Boolean
+  /// Product plan (2026-10-10): SMS per category; defaults in lib/notifications/preferences.ts.
+  sms        Boolean              @default(true)
   /// Quiet hours in Dar es Salaam time, minutes after midnight (null = none). Push and email wait
   /// until they end; urgent trip updates don't.
   quietStart Int?

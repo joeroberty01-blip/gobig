@@ -3,16 +3,19 @@ import { NUDGE_HREF } from "./nudges";
 import { fill, getDictionary, type Locale } from "@/lib/i18n/dictionaries";
 import type { NotificationData, NotificationType } from "@/lib/services/notifications";
 import { requestLabels } from "@/lib/services/requests";
+import { appUrl } from "@/lib/services/notify";
+import { createReplyToken } from "@/lib/requests/replyLink";
 
 // Automation Engine, Phase C: the words and link for a push or email, in the reader's language,
 // rebuilt from the notification's ids — the same text the in-app list shows. Nothing private
 // (message text, phone numbers, exact places) goes into a push: pushes can show on a lock screen.
 
-export type Rendered = { title: string; body: string; url: string };
+/** `smsUrl`: a link only for the SMS (e.g. the one-tap reply link a business can open without signing in). */
+export type Rendered = { title: string; body: string; url: string; smsUrl?: string };
 
 const TRIP_TYPES = new Set<NotificationType>(["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_COMPLETED", "TRIP_CANCELLED", "TRIP_EXPIRED"]);
 
-export async function renderNotification(n: { type: string; data: unknown }, reader: { role: string; locale: Locale }): Promise<Rendered | null> {
+export async function renderNotification(n: { type: string; data: unknown }, reader: { id?: string; role: string; locale: Locale }): Promise<Rendered | null> {
   const t = getDictionary(reader.locale);
   const type = n.type as NotificationType;
   const data = (n.data ?? {}) as NotificationData;
@@ -44,5 +47,14 @@ export async function renderNotification(n: { type: string; data: unknown }, rea
   const service = label ? (reader.locale === "sw" ? label.nameSw : label.nameEn) : t.requests.notifications.fallbackService;
   const text = (t.requests.notifications as Record<string, string>)[type];
   if (!text) return null;
-  return { title, body: fill(text, { service }), url: provider ? `/provider/requests/${data.requestId}` : `/requests/${data.requestId}` };
+  const url = provider ? `/provider/requests/${data.requestId}` : `/requests/${data.requestId}`;
+  // A new request for a business: the SMS carries a one-tap reply link for this member.
+  if (type === "REQUEST_NEW" && provider && reader.id) {
+    const match = await prisma.requestMatch.findFirst({
+      where: { requestId: data.requestId, provider: { members: { some: { userId: reader.id } } } },
+      select: { id: true },
+    });
+    if (match) return { title, body: fill(text, { service }), url, smsUrl: appUrl(`/r/${createReplyToken(match.id, reader.id)}`) };
+  }
+  return { title, body: fill(text, { service }), url };
 }

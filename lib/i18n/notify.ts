@@ -13,8 +13,10 @@ export const en = {
   pushBlocked: "Notifications are blocked. Allow them for Go Big in your browser or phone settings, then try again.",
   pushUnavailable: "Push notifications aren't switched on for Go Big yet.",
   pushFailed: "Couldn't turn on push. Please try again.",
-  channels: { push: "Push", email: "Email" },
+  channels: { push: "Push", email: "Email", sms: "SMS" },
   noEmail: "Add an email address to your account to get emails.",
+  noPhone: "Add a phone number to your account to get SMS.",
+  smsNote: "SMS keeps you informed even without the app. At most 8 a day; switch them off here any time.",
   categories: {
     REQUESTS: { label: "Requests and quotes", hint: "New requests, answers, quotes, choices" },
     MESSAGES: { label: "Messages", hint: "New chat messages" },
@@ -61,8 +63,10 @@ export const sw: typeof en = {
   pushBlocked: "Arifa zimezuiwa. Ziruhusu kwa Go Big kwenye mipangilio ya kivinjari au simu, kisha ujaribu tena.",
   pushUnavailable: "Arifa za simu bado hazijawashwa kwa Go Big.",
   pushFailed: "Imeshindikana kuwasha arifa. Tafadhali jaribu tena.",
-  channels: { push: "Simu", email: "Barua pepe" },
+  channels: { push: "Arifa", email: "Barua pepe", sms: "SMS" },
   noEmail: "Ongeza barua pepe kwenye akaunti yako ili kupokea barua pepe.",
+  noPhone: "Ongeza namba ya simu kwenye akaunti yako ili kupokea SMS.",
+  smsNote: "SMS hukujulisha hata bila programu. Zisizozidi 8 kwa siku; zima wakati wowote hapa.",
   categories: {
     REQUESTS: { label: "Maombi na bei", hint: "Maombi mapya, majibu, bei, uchaguzi" },
     MESSAGES: { label: "Ujumbe", hint: "Ujumbe mpya wa soga" },

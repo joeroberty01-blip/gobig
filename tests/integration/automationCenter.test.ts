@@ -69,8 +69,8 @@ describe("Phase I: Control Center", () => {
     expect(entry).toMatchObject({ action: "automation.job_retried", actorName: "Center Admin" });
   });
 
-  it("delivery stats have both channels", async () => {
+  it("delivery stats have every channel", async () => {
     const d = await deliveryStats(7);
-    expect(d.channels.map((c) => c.channel)).toEqual(["PUSH", "EMAIL"]);
+    expect(d.channels.map((c) => c.channel)).toEqual(["PUSH", "EMAIL", "SMS"]);
   });
 });

@@ -44,7 +44,8 @@ const day = (now: Date) => new Date(now.getTime() + 3 * HOUR).toISOString().slic
 export async function reviewBursts(count: number, hours: number, now: Date): Promise<Finding[]> {
   const rows = await prisma.review.groupBy({
     by: ["providerId"],
-    where: { createdAt: { gt: new Date(now.getTime() - hours * HOUR) } },
+    // Sample businesses (seeded reviews) are not real activity.
+    where: { createdAt: { gt: new Date(now.getTime() - hours * HOUR) }, provider: { isDemo: false } },
     _count: { _all: true },
     having: { providerId: { _count: { gte: count } } },
     orderBy: { _count: { providerId: "desc" } },
@@ -57,7 +58,7 @@ export async function reviewBursts(count: number, hours: number, now: Date): Pro
 export async function newAccountReviews(count: number, accountDays: number, now: Date): Promise<Finding[]> {
   const rows = await prisma.$queryRaw<{ providerId: string; n: bigint }[]>`
     SELECT r."providerId", COUNT(*)::bigint AS n
-    FROM "Review" r JOIN "User" u ON u.id = r."authorId"
+    FROM "Review" r JOIN "User" u ON u.id = r."authorId" JOIN "Provider" p ON p.id = r."providerId" AND p."isDemo" = false
     WHERE r."createdAt" > ${new Date(now.getTime() - 7 * DAY)}
       AND r."createdAt" - u."createdAt" < ${`${accountDays} days`}::interval
     GROUP BY r."providerId" HAVING COUNT(*) >= ${count}
@@ -94,10 +95,10 @@ export async function messageSpam(count: number, now: Date): Promise<Finding[]> 
 /** Several different people reporting the same business (listing, request or chat) in 30 days. */
 export async function repeatedReports(count: number, now: Date): Promise<Finding[]> {
   const rows = await prisma.$queryRaw<{ providerId: string; n: bigint }[]>`
-    SELECT "providerId", COUNT(DISTINCT "reporterId")::bigint AS n
-    FROM "Report"
-    WHERE "providerId" IS NOT NULL AND "createdAt" > ${new Date(now.getTime() - 30 * DAY)}
-    GROUP BY "providerId" HAVING COUNT(DISTINCT "reporterId") >= ${count}
+    SELECT rp."providerId", COUNT(DISTINCT rp."reporterId")::bigint AS n
+    FROM "Report" rp JOIN "Provider" p ON p.id = rp."providerId" AND p."isDemo" = false
+    WHERE rp."createdAt" > ${new Date(now.getTime() - 30 * DAY)}
+    GROUP BY rp."providerId" HAVING COUNT(DISTINCT rp."reporterId") >= ${count}
     LIMIT ${LIMIT}`;
   return rows.map((r) => ({ kind: "REPEATED_REPORTS", subjectType: "PROVIDER", subjectId: r.providerId, count: Number(r.n), threshold: count, window: day(now) }));
 }

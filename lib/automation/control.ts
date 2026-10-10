@@ -119,7 +119,7 @@ export async function deliveryStats(days = 7, now = new Date()) {
       take: 12,
     }),
   ]);
-  const channels = (["PUSH", "EMAIL"] as const).map((channel) => {
+  const channels = (["PUSH", "EMAIL", "SMS"] as const).map((channel) => {
     const get = (status: string) => byStatus.find((r) => r.channel === channel && r.status === status)?._count._all ?? 0;
     const sent = get("SENT");
     const failed = get("FAILED");

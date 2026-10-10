@@ -12,7 +12,7 @@ export function smtpConfigured(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-function smsConfigured(): boolean {
+export function smsConfigured(): boolean {
   return Boolean(process.env.SMS_GATEWAY_USER && process.env.SMS_GATEWAY_PASS);
 }
 
@@ -27,7 +27,7 @@ export async function sendEmail(to: string, subject: string, text: string): Prom
   await transporter.sendMail({ from: process.env.SMTP_FROM || process.env.SMTP_USER, to, subject, text });
 }
 
-async function sendSms(phone: string, text: string): Promise<void> {
+export async function sendSms(phone: string, text: string): Promise<void> {
   const base = (process.env.SMS_GATEWAY_URL || "https://api.sms-gate.app/3rdparty/v1").replace(/\/+$/, "");
   const auth = Buffer.from(`${process.env.SMS_GATEWAY_USER}:${process.env.SMS_GATEWAY_PASS}`).toString("base64");
   const res = await fetch(`${base}/message`, {

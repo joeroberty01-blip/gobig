@@ -54,15 +54,19 @@ export const TYPE_CATEGORY: Record<NotificationType, NotificationCategory> = {
 /** Sent at once, whatever the hour or the day's count. */
 export const URGENT: ReadonlySet<NotificationType> = new Set(["TRIP_OFFER", "TRIP_ACCEPTED", "TRIP_ARRIVED", "TRIP_STARTED", "TRIP_CANCELLED"]);
 
-export const DAILY_CAP: Record<NotificationChannel, number> = { PUSH: 30, EMAIL: 10 };
+// SMS costs money per message (~TZS 20) and phones show every one, so it has the tightest cap.
+export const DAILY_CAP: Record<NotificationChannel, number> = { PUSH: 30, EMAIL: 10, SMS: 8 };
 export const DEFAULT_QUIET = { start: 21 * 60, end: 7 * 60 };
 
-export type CategoryPrefs = { push: boolean; email: boolean };
+export type CategoryPrefs = { push: boolean; email: boolean; sms: boolean };
+
+/** SMS goes on by default only where a missed message costs someone a job or a ride. */
+export const SMS_DEFAULT_ON: ReadonlySet<NotificationCategory> = new Set(["REQUESTS", "TRIPS", "REMINDERS", "ACCOUNT", "SUMMARIES"]);
 export type Preferences = { categories: Record<NotificationCategory, CategoryPrefs>; quietStart: number | null; quietEnd: number | null };
 
-/** Push on for everything except marketing; email is opt-in; quiet 21:00–07:00. */
+/** Push on for everything except marketing; email is opt-in; SMS for jobs, trips, reminders, account and summaries; quiet 21:00–07:00. */
 export function defaultPreferences(): Preferences {
-  const categories = Object.fromEntries(CATEGORIES.map((c) => [c, { push: c !== "MARKETING", email: false }])) as Preferences["categories"];
+  const categories = Object.fromEntries(CATEGORIES.map((c) => [c, { push: c !== "MARKETING", email: false, sms: SMS_DEFAULT_ON.has(c) }])) as Preferences["categories"];
   return { categories, quietStart: DEFAULT_QUIET.start, quietEnd: DEFAULT_QUIET.end };
 }
 
@@ -70,7 +74,7 @@ export async function getPreferences(userId: string): Promise<Preferences> {
   const rows = await prisma.notificationPreference.findMany({ where: { userId } });
   const prefs = defaultPreferences();
   for (const r of rows) {
-    prefs.categories[r.category] = { push: r.push, email: r.email };
+    prefs.categories[r.category] = { push: r.push, email: r.email, sms: r.sms };
     prefs.quietStart = r.quietStart;
     prefs.quietEnd = r.quietEnd;
   }
@@ -80,7 +84,7 @@ export async function getPreferences(userId: string): Promise<Preferences> {
 const minute = z.number().int().min(0).max(1439);
 export const preferencesSchema = z
   .object({
-    categories: z.record(z.enum(CATEGORIES), z.object({ push: z.boolean(), email: z.boolean() })),
+    categories: z.record(z.enum(CATEGORIES), z.object({ push: z.boolean(), email: z.boolean(), sms: z.boolean().optional() })),
     quietStart: minute.nullable(),
     quietEnd: minute.nullable(),
   })
@@ -91,7 +95,10 @@ export async function savePreferences(userId: string, raw: unknown): Promise<{ o
   const parsed = preferencesSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
   const merged = defaultPreferences();
-  for (const [c, v] of Object.entries(parsed.data.categories)) merged.categories[c as NotificationCategory] = v;
+  for (const [c, v] of Object.entries(parsed.data.categories)) {
+    const cat = c as NotificationCategory;
+    merged.categories[cat] = { push: v.push, email: v.email, sms: v.sms ?? merged.categories[cat].sms };
+  }
   await prisma.$transaction(
     CATEGORIES.map((category) =>
       prisma.notificationPreference.upsert({

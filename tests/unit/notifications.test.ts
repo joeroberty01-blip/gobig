@@ -28,10 +28,11 @@ describe("quiet hours (Dar es Salaam time)", () => {
 });
 
 describe("defaults and categories", () => {
-  it("push on except marketing; email opt-in; quiet 21:00–07:00", () => {
+  it("push on except marketing; email opt-in; SMS for jobs not chat or marketing; quiet 21:00–07:00", () => {
     const d = defaultPreferences();
-    expect(d.categories.REQUESTS).toEqual({ push: true, email: false });
-    expect(d.categories.MARKETING).toEqual({ push: false, email: false });
+    expect(d.categories.REQUESTS).toEqual({ push: true, email: false, sms: true });
+    expect(d.categories.MESSAGES).toEqual({ push: true, email: false, sms: false });
+    expect(d.categories.MARKETING).toEqual({ push: false, email: false, sms: false });
     expect([d.quietStart, d.quietEnd]).toEqual([1260, 420]);
   });
 

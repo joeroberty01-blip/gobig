@@ -16,11 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function NotificationSettingsPage() {
   const user = await requirePageAccess("notifications:view", "/account/notifications");
   const { t } = await getServerDictionary();
-  const [prefs, account] = await Promise.all([getPreferences(user.id), prisma.user.findUnique({ where: { id: user.id }, select: { email: true } })]);
+  const [prefs, account] = await Promise.all([getPreferences(user.id), prisma.user.findUnique({ where: { id: user.id }, select: { email: true, phone: true } })]);
   return (
     <div className="mx-auto max-w-2xl">
       <PageHeader title={t.notify.title} subtitle={t.notify.intro} />
-      <NotificationSettings initial={prefs} vapidKey={vapidPublicKey()} hasEmail={!!account?.email} />
+      <NotificationSettings initial={prefs} vapidKey={vapidPublicKey()} hasEmail={!!account?.email} hasPhone={!!account?.phone} />
     </div>
   );
 }

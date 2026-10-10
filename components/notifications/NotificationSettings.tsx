@@ -15,7 +15,7 @@ const fromTime = (v: string) => {
 };
 
 /** Automation Engine, Phase C: push on this device, channels per category, quiet hours. */
-export function NotificationSettings({ initial, vapidKey, hasEmail }: { initial: Preferences; vapidKey: string | null; hasEmail: boolean }) {
+export function NotificationSettings({ initial, vapidKey, hasEmail, hasPhone }: { initial: Preferences; vapidKey: string | null; hasEmail: boolean; hasPhone: boolean }) {
   const { t } = useI18n();
   const n = t.notify;
   const [prefs, setPrefs] = useState(initial);
@@ -23,7 +23,7 @@ export function NotificationSettings({ initial, vapidKey, hasEmail }: { initial:
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const quiet = prefs.quietStart !== null && prefs.quietEnd !== null;
 
-  const toggle = (c: (typeof CATEGORY_ORDER)[number], ch: "push" | "email") =>
+  const toggle = (c: (typeof CATEGORY_ORDER)[number], ch: "push" | "email" | "sms") =>
     setPrefs((p) => ({ ...p, categories: { ...p.categories, [c]: { ...p.categories[c], [ch]: !p.categories[c][ch] } } }));
 
   const save = () =>
@@ -37,25 +37,26 @@ export function NotificationSettings({ initial, vapidKey, hasEmail }: { initial:
       <PushCard vapidKey={vapidKey} />
 
       <Card className="p-0">
-        <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 border-b border-line px-4 py-3 text-xs font-semibold text-ink-muted">
+        <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 border-b border-line px-4 py-3 text-xs font-semibold text-ink-muted sm:gap-x-4">
           <span />
-          <span className="w-12 text-center">{n.channels.push}</span>
-          <span className="w-12 text-center">{n.channels.email}</span>
+          <span className="w-11 text-center">{n.channels.push}</span>
+          <span className="w-11 text-center">{n.channels.sms}</span>
+          <span className="w-11 text-center">{n.channels.email}</span>
         </div>
         <ul className="divide-y divide-line">
           {CATEGORY_ORDER.map((c) => (
-            <li key={c} className="grid grid-cols-[1fr_auto_auto] items-center gap-x-4 px-4 py-3">
+            <li key={c} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 px-4 py-3 sm:gap-x-4">
               <span className="min-w-0">
                 <span className="block text-sm font-semibold">{n.categories[c].label}</span>
                 <span className="block text-xs text-ink-muted">{n.categories[c].hint}</span>
               </span>
-              {(["push", "email"] as const).map((ch) => (
-                <span key={ch} className="flex w-12 justify-center">
+              {(["push", "sms", "email"] as const).map((ch) => (
+                <span key={ch} className="flex w-11 justify-center">
                   <input
                     type="checkbox"
                     aria-label={`${n.categories[c].label} — ${n.channels[ch]}`}
                     checked={prefs.categories[c][ch]}
-                    disabled={ch === "email" && !hasEmail}
+                    disabled={(ch === "email" && !hasEmail) || (ch === "sms" && !hasPhone)}
                     onChange={() => toggle(c, ch)}
                     className="size-5 accent-[var(--color-link)]"
                   />
@@ -65,6 +66,8 @@ export function NotificationSettings({ initial, vapidKey, hasEmail }: { initial:
           ))}
         </ul>
         {!hasEmail && <p className="border-t border-line px-4 py-3 text-xs text-ink-muted">{n.noEmail}</p>}
+        {!hasPhone && <p className="border-t border-line px-4 py-3 text-xs text-ink-muted">{n.noPhone}</p>}
+        <p className="border-t border-line px-4 py-3 text-xs text-ink-muted">{n.smsNote}</p>
       </Card>
 
       <Card className="flex flex-col gap-3">
