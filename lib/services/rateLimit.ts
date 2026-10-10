@@ -39,8 +39,6 @@ export const LIMITS = {
   aiSearchPerIp: { name: "ai:ip", max: 120, windowSec: 60 * 60 },
   // Floating Go Big AI chat: a hard cap on questions (each one runs a search), on top of the AI allowance.
   aiChatPerIp: { name: "aichat:ip", max: 240, windowSec: 60 * 60 },
-  // AI cost guard: Claude calls per day across the whole platform; over it, the free rules answer.
-  aiDailyGlobal: { name: "ai:global", max: Number(process.env.AI_DAILY_LIMIT) > 0 ? Number(process.env.AI_DAILY_LIMIT) : 1500, windowSec: 24 * 60 * 60 },
   // One-tap reply links (SMS): actions per link per hour.
   replyLinkPerToken: { name: "replylink", max: 30, windowSec: 60 * 60 },
   // Phase 13 (SEC-036): a platform-wide ceiling on model calls per day, whatever the number of

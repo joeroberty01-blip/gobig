@@ -12,7 +12,5 @@ export async function aiAllowed(): Promise<boolean> {
   const vid = (await cookies()).get(VISITOR_COOKIE)?.value;
   const ipOk = (await hit(LIMITS.aiSearchPerIp, await clientIp())).ok;
   const visitorOk = vid && VISITOR_ID_PATTERN.test(vid) ? (await hit(LIMITS.aiSearchPerVisitor, vid)).ok : true;
-  if (!ipOk || !visitorOk) return false;
-  // Platform-wide daily budget (AI_DAILY_LIMIT, default 1,500 calls ≈ US$15/day at ~US$0.01 each).
-  return (await hit(LIMITS.aiDailyGlobal, "all")).ok;
+  return ipOk && visitorOk;
 }
